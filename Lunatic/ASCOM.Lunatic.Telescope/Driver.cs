@@ -39,8 +39,9 @@ using ASCOM.Utilities;
 using ASCOM.DeviceInterface;
 using System.Globalization;
 using System.Collections;
+using Microsoft.Practices.ServiceLocation;
 
-namespace ASCOM.Lunatic
+namespace ASCOM.Lunatic.TelescopeDriver
 {
    //
    // Your driver's DeviceID is ASCOM.Lunatic.Telescope
@@ -64,7 +65,7 @@ namespace ASCOM.Lunatic
       /// ASCOM DeviceID (COM ProgID) for this driver.
       /// The DeviceID is used by ASCOM applications to load the driver at runtime.
       /// </summary>
-      internal static string driverID = "ASCOM.Lunatic.Telescope";
+      internal static string driverID = "ASCOM.Lunatic.TelescopeDriver.Telescope";
       // TODO Change the descriptive string for your driver then remove this line
       /// <summary>
       /// Driver description that displays in the ASCOM Chooser.
@@ -138,12 +139,15 @@ namespace ASCOM.Lunatic
          // or call a different dialog if connected
          //if (IsConnected)
          //   System.Windows.Forms.MessageBox.Show("Already connected, just press OK");
+         SetupViewModel setupVm = ViewModelLocator.Current.Setup;
+         // Refresh the com ports
+         setupVm.RefreshCOMPorts();
 
-         //SetupWindow setupWindow = new SetupWindow();
-         //var result = setupWindow.ShowDialog();
-         //if (result.HasValue && result.Value) {
-         //   WriteProfile(); // Persist device configuration values to the ASCOM Profile store
-         //}
+         SetupWindow setupWindow = new SetupWindow(setupVm);
+         var result = setupWindow.ShowDialog();
+         if (result.HasValue && result.Value) {
+            WriteProfile(); // Persist device configuration values to the ASCOM Profile store
+         }
 
       }
 

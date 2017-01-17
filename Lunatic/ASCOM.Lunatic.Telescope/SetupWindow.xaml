@@ -1,12 +1,70 @@
-﻿<Window x:Class="ASCOM.Lunatic.SetupWindow"
+﻿<Window x:Class="ASCOM.Lunatic.TelescopeDriver.SetupWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ASCOM.Lunatic"
+        xmlns:local="clr-namespace:ASCOM.Lunatic.TelescopeDriver"
         mc:Ignorable="d"
-        Title="Lunatic Software Telescope Setup" Height="350" Width="525">
-    <Grid>
-        
+        Title="Lunatic Telescope Setup" 
+        WindowStartupLocation="CenterOwner"
+        d:DesignHeight="214" d:DesignWidth="400"
+        SizeToContent="WidthAndHeight"  MinWidth="400"
+        d:DataContext="{Binding SetupViewMode, Source={StaticResource Locator}}"
+        Style="{DynamicResource PropertyDialogStyle}">
+    <Window.Resources>
+        <ResourceDictionary>
+            <local:ViewModelLocator x:Key="Locator" />
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Skins/MainSkin.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4*" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="Auto" MinWidth="150" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="5" />
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="5" />
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="5" />
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="5" />
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="Comm Port"/>
+            <ComboBox Grid.Column="2" 
+                ItemsSource="{Binding AvailableCOMPorts, Mode=OneTime}"
+                SelectedItem="{Binding SelectedCOMPort}" >
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Description}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Grid.Row="2"  Text="Trace on"/>
+            <CheckBox Grid.Row="2" Grid.Column="2" IsChecked="{Binding TraceState}" />
+        </Grid>
+        <DockPanel Grid.Column="2">
+            <StackPanel DockPanel.Dock="Bottom">
+                <Button Content="OK" Margin="0,0,0,10" Command="{Binding SaveChangesAndCloseCommand}"/>
+                <Button Content="Cancel" Command="{Binding CancelChangesAndCloseCommand}"/>
+            </StackPanel>
+            <Image  
+               HorizontalAlignment="Center" VerticalAlignment="Top" Source="ASCOM.png" Stretch="None" Margin="0,0,0,10" />
+
+
+        </DockPanel>
     </Grid>
 </Window>

@@ -14,7 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace ASCOM.Lunatic
+namespace ASCOM.Lunatic.TelescopeDriver
 {
    [ComVisible(false)]
    /// <summary>
@@ -22,9 +22,33 @@ namespace ASCOM.Lunatic
    /// </summary>
    public partial class SetupWindow : Window
    {
-      public SetupWindow()
+      SetupViewModel _ViewModel;
+      public SetupWindow(SetupViewModel viewModel)
       {
          InitializeComponent();
+         _ViewModel = viewModel;
+         DataContext = viewModel;
+
+         // Hook up to the viewmodels close actions
+         if (_ViewModel.SaveAndCloseAction == null) {
+            _ViewModel.SaveAndCloseAction = new Action(() => {
+               this.DialogResult = true;
+               this.Close();
+            });
+         }
+         if (_ViewModel.CancelAndCloseAction == null) {
+            _ViewModel.CancelAndCloseAction = new Action(() => {
+               this.DialogResult = false;
+               this.Close();
+            });
+         }
+      }
+
+      protected override void OnClosed(EventArgs e)
+      {
+         base.OnClosed(e);
+         _ViewModel.SaveAndCloseAction = null;
+         _ViewModel.CancelAndCloseAction = null;
       }
    }
 }
