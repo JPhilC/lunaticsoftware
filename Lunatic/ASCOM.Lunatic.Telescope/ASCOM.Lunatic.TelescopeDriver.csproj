@@ -111,13 +111,19 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\AxisStatus.cs" />
+    <Compile Include="Classes\Constant.cs" />
+    <Compile Include="Classes\Enums.cs" />
+    <Compile Include="Classes\SyntaMountBase.cs" />
+    <Compile Include="Classes\MountControlException.cs" />
+    <Compile Include="Classes\Driver_SyntaExtenstions.cs" />
     <Compile Include="ViewModel\SetupViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Page Include="SetupWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="Driver.cs" />
+    <Compile Include="Classes\Driver.cs" />
     <Compile Include="Rates.cs" />
     <Compile Include="SetupWindow.xaml.cs">
       <DependentUpon>SetupWindow.xaml</DependentUpon>

@@ -2,7 +2,7 @@
 // --------------------------------------------------------------------------------
 // TODO fill in this information for your driver, then remove this line!
 //
-// ASCOM Telescope driver for Winforms
+// ASCOM Telescope driver for Synta mounts by Lunatic Software
 //
 // Description:	Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam 
 //				nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam 
@@ -10,21 +10,19 @@
 //				dolores et ea rebum. Stet clita kasd gubergren, no sea takimata 
 //				sanctus est Lorem ipsum dolor sit amet.
 //
-// Implements:	ASCOM Telescope interface version: <To be completed by driver developer>
-// Author:		(XXX) Your N. Here <your@email.here>
+// Implements:	ASCOM Telescope interface version: V3
+// Author:		(JPC) Phil Crompton <phil@lunaticsoftware.org>
 //
 // Edit Log:
 //
 // Date			Who	Vers	Description
-// -----------	---	-----	-------------------------------------------------------
-// dd-mmm-yyyy	XXX	6.0.0	Initial edit, created from ASCOM driver template
-// --------------------------------------------------------------------------------
+// -----------	---	-----	---------------------------------------------------------------------------------------
+// dd-mmm-yyyy	XXX	6.2.0	Initial edit, created from ASCOM driver template merged with opensource Skywatcher code
+// ---------------------------------------------------------------------------------------------------------------
 //
 
 
-// This is used to define code in the template that is specific to one class implementation
-// unused code canbe deleted and this definition removed.
-#define Telescope
+// NOTE this is a partial class. The other module is Driver_SyntaExtensions which contains the code form the Skywatcher_Open sources.
 
 using System;
 using System.Collections.Generic;
@@ -40,13 +38,14 @@ using ASCOM.DeviceInterface;
 using System.Globalization;
 using System.Collections;
 using Microsoft.Practices.ServiceLocation;
+using Lunatic.Core.Classes;
 
 namespace ASCOM.Lunatic.TelescopeDriver
 {
    //
-   // Your driver's DeviceID is ASCOM.Lunatic.Telescope
+   // Your driver's DeviceID is ASCOM.Lunatic.TelescopeDriver.SyntaTelescope
    //
-   // The Guid attribute sets the CLSID for ASCOM.Lunatic.Telescope
+   // The Guid attribute sets the CLSID for ASCOM.Lunatic.TelescopeDriver.SyntaTelescope
    // The ClassInterface/None addribute prevents an empty interface called
    // _Winforms from being created and used as the [default] interface
    //
@@ -59,31 +58,25 @@ namespace ASCOM.Lunatic.TelescopeDriver
    /// </summary>
    [Guid("C21225C0-EF9A-43C7-A7FA-F172501F0357")]
    [ClassInterface(ClassInterfaceType.None)]
-   public class Telescope : ITelescopeV3
+   public partial class SyntaTelescope :SyntaMountBase, ITelescopeV3
    {
       /// <summary>
       /// ASCOM DeviceID (COM ProgID) for this driver.
       /// The DeviceID is used by ASCOM applications to load the driver at runtime.
       /// </summary>
-      internal static string driverID = "ASCOM.Lunatic.TelescopeDriver.Telescope";
-      // TODO Change the descriptive string for your driver then remove this line
+      internal static string DRIVER_ID = "ASCOM.Lunatic.TelescopeDriver.SyntaTelescope";
       /// <summary>
       /// Driver description that displays in the ASCOM Chooser.
       /// </summary>
-      private static string driverDescription = "Lunatic ASCOM Synta Telescope Driver";
+      private static string DRIVER_DESCRIPTION = "Lunatic ASCOM Synta Telescope Driver";
 
       internal static string comPortProfileName = "COM Port"; // Constants used for Profile persistence
       internal static string comPortDefault = "COM1";
       internal static string traceStateProfileName = "Trace Level";
       internal static string traceStateDefault = "true";
 
-      internal static string comPort; // Variables to hold the currrent device configuration
-      internal static bool traceState;
-
-      /// <summary>
-      /// Private variable to hold the connected state
-      /// </summary>
-      private bool connectedState;
+      internal static string COM_PORT; // Variables to hold the currrent device configuration
+      internal static bool TRACE_STATE;
 
       /// <summary>
       /// Private variable to hold an ASCOM Utilities object
@@ -104,15 +97,14 @@ namespace ASCOM.Lunatic.TelescopeDriver
       /// Initializes a new instance of the <see cref="Winforms"/> class.
       /// Must be public for COM registration.
       /// </summary>
-      public Telescope()
+      public SyntaTelescope():base()
       {
          ReadProfile(); // Read device configuration from the ASCOM Profile store
 
          tl = new TraceLogger("", "Winforms");
-         tl.Enabled = traceState;
+         tl.Enabled = TRACE_STATE;
          tl.LogMessage("Telescope", "Starting initialisation");
 
-         connectedState = false; // Initialise connected to false
          utilities = new Util(); //Initialise util object
          astroUtilities = new AstroUtils(); // Initialise astro utilities object
                                             //TODO: Implement your additional construction here
@@ -221,15 +213,14 @@ namespace ASCOM.Lunatic.TelescopeDriver
                return;
 
             if (value) {
-               connectedState = true;
-               tl.LogMessage("Connected Set", "Connecting to port " + comPort);
-               // TODO connect to the device
+               tl.LogMessage("Connected Set", "Connecting to port " + COM_PORT);
+               Connect_COM(SyntaTelescope.COM_PORT);      //TODO: Sort out the comPort
             }
             else {
-               connectedState = false;
-               tl.LogMessage("Connected Set", "Disconnecting from port " + comPort);
-               // TODO disconnect from the device
+               Disconnect_COM();
+               tl.LogMessage("Connected Set", "Disconnecting from port " + COM_PORT);
             }
+            RaisePropertyChanged();
          }
       }
 
@@ -238,8 +229,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
          // TODO customise this device description
          get
          {
-            tl.LogMessage("Description Get", driverDescription);
-            return driverDescription;
+            tl.LogMessage("Description Get", DRIVER_DESCRIPTION);
+            return DRIVER_DESCRIPTION;
          }
       }
 
@@ -945,10 +936,10 @@ namespace ASCOM.Lunatic.TelescopeDriver
          using (var P = new ASCOM.Utilities.Profile()) {
             P.DeviceType = "Telescope";
             if (bRegister) {
-               P.Register(driverID, driverDescription);
+               P.Register(DRIVER_ID, DRIVER_DESCRIPTION);
             }
             else {
-               P.Unregister(driverID);
+               P.Unregister(DRIVER_ID);
             }
          }
       }
@@ -1008,8 +999,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            // TODO check that the driver hardware connection exists and is connected to the hardware
-            return connectedState;
+            return (mConnection != null);
          }
       }
 
@@ -1031,8 +1021,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          using (Profile driverProfile = new Profile()) {
             driverProfile.DeviceType = "Telescope";
-            traceState = Convert.ToBoolean(driverProfile.GetValue(driverID, traceStateProfileName, string.Empty, traceStateDefault));
-            comPort = driverProfile.GetValue(driverID, comPortProfileName, string.Empty, comPortDefault);
+            TRACE_STATE = Convert.ToBoolean(driverProfile.GetValue(DRIVER_ID, traceStateProfileName, string.Empty, traceStateDefault));
+            COM_PORT = driverProfile.GetValue(DRIVER_ID, comPortProfileName, string.Empty, comPortDefault);
          }
       }
 
@@ -1043,8 +1033,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          using (Profile driverProfile = new Profile()) {
             driverProfile.DeviceType = "Telescope";
-            driverProfile.WriteValue(driverID, traceStateProfileName, traceState.ToString());
-            driverProfile.WriteValue(driverID, comPortProfileName, comPort.ToString());
+            driverProfile.WriteValue(DRIVER_ID, traceStateProfileName, TRACE_STATE.ToString());
+            driverProfile.WriteValue(DRIVER_ID, comPortProfileName, COM_PORT.ToString());
          }
       }
 

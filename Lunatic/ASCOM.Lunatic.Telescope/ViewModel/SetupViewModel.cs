@@ -92,18 +92,18 @@ namespace ASCOM.Lunatic.TelescopeDriver
          foreach (COMPortInfo comPort in COMPortService.GetCOMPortsInfo()) {
             _AvailableCOMPorts.Add(comPort);
          }
-         SelectedCOMPort = AvailableCOMPorts.Where(port => port.Name == Telescope.comPort).FirstOrDefault();
+         SelectedCOMPort = AvailableCOMPorts.Where(port => port.Name == SyntaTelescope.COM_PORT).FirstOrDefault();
       }
 
       private void Initialise()
       {
-         TraceState = Telescope.traceState;
+         TraceState = SyntaTelescope.TRACE_STATE;
       }
 
       protected override bool OnSaveCommand()
       {
-         Telescope.comPort = this.COMPortName;
-         Telescope.traceState = this.TraceState;
+         SyntaTelescope.COM_PORT = this.COMPortName;
+         SyntaTelescope.TRACE_STATE = this.TraceState;
          return base.OnSaveCommand();
       }
 
