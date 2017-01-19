@@ -67,8 +67,12 @@ namespace ASCOMTester.ViewModel
          {
             return _ConnectCommand
                ?? (_ConnectCommand = new RelayCommand(() => {
-                  _Driver = new ASCOM.DriverAccess.Telescope(Properties.Settings.Default.DriverId);
-                  _Driver.Connected = true;
+                  if (IsConnected) {
+                  }
+                  else {
+                     _Driver = new ASCOM.DriverAccess.Telescope(Properties.Settings.Default.DriverId);
+                     _Driver.Connected = true;
+                  }
                   RaiseCanExecuteChanged();
                }, () => { return !string.IsNullOrEmpty(Properties.Settings.Default.DriverId); }));
          }

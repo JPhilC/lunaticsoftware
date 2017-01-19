@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Lunatic.Core.Classes
+namespace Lunatic.Core
 {
    public static class BasicMath
    {

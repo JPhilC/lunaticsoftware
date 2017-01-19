@@ -1,4 +1,4 @@
-﻿using Lunatic.Core.Classes;
+﻿using Lunatic.Core;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -45,12 +45,12 @@ namespace ASCOM.Lunatic.TelescopeDriver
    /// MCGetAxisStatus
    /// </summary>
    /// Checked 2/7/2011
-   public abstract class SyntaMountBase : LunaticDriverBase
+   public abstract class SyntaMountBase 
    {
       /// The abstract Serial connection instance 
       /// it is static because all connection shared the same serial connection
       /// and connection should be lock between differnct thread
-      protected static SerialConnection mConnection = null;
+      protected SerialConnection Connection = null;
       protected long MCVersion = 0;   // Motor controller version number
 
       public MountId MountID = 0;     // Mount Id
@@ -71,7 +71,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
       public SyntaMountBase()
       {
-         mConnection = null;
+         Connection = null;
          MCVersion = 0;
          IsEQMount = false;
 
@@ -86,8 +86,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       }
       ~SyntaMountBase()
       {
-         if (mConnection != null)
-            mConnection.Close();
+         if (Connection != null)
+            Connection.Close();
       }
 
       /// <summary>
@@ -97,7 +97,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       /// Raise IOException
       public virtual void Connect_COM(string telescopePort)
       {
-         if (mConnection != null) {
+         if (Connection != null) {
             return;  // Already connected.
          }
          // May raise IOException 
@@ -157,14 +157,14 @@ namespace ASCOM.Lunatic.TelescopeDriver
          hCom.WriteTimeout = 60;
 
          hCom.Open();
-         mConnection = new SerialConnect_COM(hCom);
+         Connection = new SerialConnect_COM(hCom);
       }
 
       public virtual void Disconnect_COM()
       {
-         if (mConnection != null) {
-            mConnection.Close();
-            mConnection = null;
+         if (Connection != null) {
+            Connection.Close();
+            Connection = null;
          }
       }
       /// <summary>
@@ -180,7 +180,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          /// It grantee there is only one thread entering this function in one time
          /// ref: http://msdn.microsoft.com/en-us/library/ms173179.aspx
          /// TODO: handle exception
-         lock (mConnection) {
+         lock (Connection) {
             for (int i = 0; i < 2; i++) {
                /// The General Process for SerialPort COM
                /// 1. Prepare Command Str by protocol
@@ -192,15 +192,15 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
                // prepare to communicate
                try {
-                  mConnection.ClearBuffer();
-                  mConnection.WaitIdle();
-                  mConnection.Lock();
+                  Connection.ClearBuffer();
+                  Connection.WaitIdle();
+                  Connection.Lock();
 
                   // send the request
                   SendRequest(Axis, Command, cmdDataStr);
 
                   // Release the line, so the mount can send response
-                  mConnection.Release();
+                  Connection.Release();
 
                   //Trace.TraceInformation("Send command successful");
                   // receive the response

@@ -38,7 +38,9 @@ using ASCOM.DeviceInterface;
 using System.Globalization;
 using System.Collections;
 using Microsoft.Practices.ServiceLocation;
-using Lunatic.Core.Classes;
+using Lunatic.Core;
+using ASCOM.Lunatic.Classes;
+using System.Reflection;
 
 namespace ASCOM.Lunatic.TelescopeDriver
 {
@@ -58,7 +60,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
    /// </summary>
    [Guid("C21225C0-EF9A-43C7-A7FA-F172501F0357")]
    [ClassInterface(ClassInterfaceType.None)]
-   public partial class SyntaTelescope :SyntaMountBase, ITelescopeV3
+   public partial class SyntaTelescope : SyntaMountBase, ITelescopeV3
    {
       /// <summary>
       /// ASCOM DeviceID (COM ProgID) for this driver.
@@ -68,8 +70,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       /// <summary>
       /// Driver description that displays in the ASCOM Chooser.
       /// </summary>
-      private static string DRIVER_DESCRIPTION = "Lunatic ASCOM Synta Telescope Driver";
-
+      private static string DRIVER_DESCRIPTION = "Lunatic ASCOM Driver for Synta Telescopes";
+      private static string DRIVER_NAME = "Lunatic HEQ5/6";
       internal static string comPortProfileName = "COM Port"; // Constants used for Profile persistence
       internal static string comPortDefault = "COM1";
       internal static string traceStateProfileName = "Trace Level";
@@ -77,6 +79,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
       internal static string COM_PORT; // Variables to hold the currrent device configuration
       internal static bool TRACE_STATE;
+
+      private object _LOCK = new object();
 
       /// <summary>
       /// Private variable to hold an ASCOM Utilities object
@@ -97,7 +101,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       /// Initializes a new instance of the <see cref="Winforms"/> class.
       /// Must be public for COM registration.
       /// </summary>
-      public SyntaTelescope():base()
+      public SyntaTelescope() : base()
       {
          ReadProfile(); // Read device configuration from the ASCOM Profile store
 
@@ -108,6 +112,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
          utilities = new Util(); //Initialise util object
          astroUtilities = new AstroUtils(); // Initialise astro utilities object
                                             //TODO: Implement your additional construction here
+
+         _AlignmentMode = AlignmentModes.algGermanPolar;
 
          tl.LogMessage("Telescope", "Completed initialisation");
       }
@@ -208,28 +214,29 @@ namespace ASCOM.Lunatic.TelescopeDriver
          }
          set
          {
-            tl.LogMessage("Connected Set", value.ToString());
-            if (value == IsConnected)
-               return;
+            lock (_LOCK) {
+               tl.LogMessage("Connected","Set - "+ value.ToString());
+               if (value == IsConnected)
+                  return;
 
-            if (value) {
-               tl.LogMessage("Connected Set", "Connecting to port " + COM_PORT);
-               Connect_COM(SyntaTelescope.COM_PORT);      //TODO: Sort out the comPort
+               if (value) {
+                  tl.LogMessage("Connected", "Set - Connecting to port " + COM_PORT);
+                  Connect_COM(SyntaTelescope.COM_PORT);
+                  MCInit();
+               }
+               else {
+                  Disconnect_COM();
+                  tl.LogMessage("Connected", "Set - Disconnecting from port " + COM_PORT);
+               }
             }
-            else {
-               Disconnect_COM();
-               tl.LogMessage("Connected Set", "Disconnecting from port " + COM_PORT);
-            }
-            RaisePropertyChanged();
          }
       }
 
       public string Description
       {
-         // TODO customise this device description
          get
          {
-            tl.LogMessage("Description Get", DRIVER_DESCRIPTION);
+            tl.LogMessage("Description", "Get - "+ DRIVER_DESCRIPTION);
             return DRIVER_DESCRIPTION;
          }
       }
@@ -238,10 +245,22 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            // TODO customise this driver description
-            string driverInfo = "Information about the driver itself. Version: " + String.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
-            tl.LogMessage("DriverInfo Get", driverInfo);
+            FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
+            Version version = Assembly.GetExecutingAssembly().GetName().Version;
+            //TODO: See if the same version information exists in versionInfo as version.
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("{0}, Version {1}.{2}\n", DRIVER_DESCRIPTION, version.Major, version.Minor);
+            if (!string.IsNullOrWhiteSpace(versionInfo.CompanyName)) {
+               sb.AppendLine(versionInfo.CompanyName);
+            }
+            if (!string.IsNullOrWhiteSpace(versionInfo.LegalCopyright)) {
+               sb.AppendLine(versionInfo.LegalCopyright);
+            }
+            if (!string.IsNullOrWhiteSpace(versionInfo.Comments)) {
+               sb.AppendLine(versionInfo.LegalCopyright);
+            }
+            string driverInfo = sb.ToString();
+            tl.LogMessage("DriverInfo","Get - "+ driverInfo);
             return driverInfo;
          }
       }
@@ -252,7 +271,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          {
             Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             string driverVersion = String.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
-            tl.LogMessage("DriverVersion Get", driverVersion);
+            tl.LogMessage("DriverVersion", "Get - "+ driverVersion);
             return driverVersion;
          }
       }
@@ -262,7 +281,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          // set by the driver wizard
          get
          {
-            tl.LogMessage("InterfaceVersion Get", "3");
+            tl.LogMessage("InterfaceVersion", "Get - 3");
             return Convert.ToInt16("3");
          }
       }
@@ -271,9 +290,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            string name = "Short driver name - please customise";
-            tl.LogMessage("Name Get", name);
-            return name;
+            tl.LogMessage("Name","Get - "+ DRIVER_NAME);
+            return DRIVER_NAME;
          }
       }
 
@@ -286,21 +304,23 @@ namespace ASCOM.Lunatic.TelescopeDriver
          throw new ASCOM.MethodNotImplementedException("AbortSlew");
       }
 
+      private AlignmentModes _AlignmentMode;
       public AlignmentModes AlignmentMode
       {
          get
          {
-            tl.LogMessage("AlignmentMode Get", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("AlignmentMode", false);
+            tl.LogMessage("AlignmentMode", "Get - "+_AlignmentMode.ToString());
+            return _AlignmentMode;
          }
       }
 
+      private double _Altitude;
       public double Altitude
       {
          get
          {
-            tl.LogMessage("Altitude", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("Altitude", false);
+            tl.LogMessage("Altitude", "Get - "+ _Altitude.ToString());
+            return _Altitude;
          }
       }
 
@@ -331,12 +351,17 @@ namespace ASCOM.Lunatic.TelescopeDriver
          }
       }
 
+      private ParkStatus _ParkStatus;
       public bool AtPark
       {
          get
          {
-            tl.LogMessage("AtPark", "Get - " + false.ToString());
-            return false;
+            //  ASCOM has no means of detecting a parking state
+            // However some folks will be closing their roofs based upon the stare of AtPark
+            // So we must respond with a false!
+            bool atPark = (_ParkStatus == ParkStatus.Parked);
+            tl.LogMessage("AtPark", "Get - " + atPark.ToString());
+            return atPark;
          }
       }
 
@@ -346,12 +371,13 @@ namespace ASCOM.Lunatic.TelescopeDriver
          return new AxisRates(Axis);
       }
 
+      private double _Azimuth;
       public double Azimuth
       {
          get
          {
-            tl.LogMessage("Azimuth Get", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("Azimuth", false);
+            tl.LogMessage("Azimuth", "Get - " + _Azimuth.ToString());
+            return _Azimuth;
          }
       }
 
@@ -379,17 +405,19 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("CanPark", "Get - " + false.ToString());
-            return false;
+            tl.LogMessage("CanPark", "Get - " + true.ToString());
+            return true;
          }
       }
+
 
       public bool CanPulseGuide
       {
          get
          {
-            tl.LogMessage("CanPulseGuide", "Get - " + false.ToString());
-            return false;
+            bool canPulseGuide = (AscomCompliance.Telescope.AllowPulseGuide);
+            tl.LogMessage("CanPulseGuide", "Get - " + canPulseGuide.ToString());
+            return canPulseGuide;
          }
       }
 
@@ -397,8 +425,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("CanSetDeclinationRate", "Get - " + false.ToString());
-            return false;
+            tl.LogMessage("CanSetDeclinationRate", "Get - " + true.ToString());
+            return true;
          }
       }
 
@@ -406,8 +434,9 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("CanSetGuideRates", "Get - " + false.ToString());
-            return false;
+            bool canSetGuideRates = (AscomCompliance.Telescope.AllowPulseGuide);
+            tl.LogMessage("CanSetGuideRates", "Get - " + canSetGuideRates.ToString());
+            return canSetGuideRates;
          }
       }
 
@@ -415,8 +444,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("CanSetPark", "Get - " + false.ToString());
-            return false;
+            tl.LogMessage("CanSetPark", "Get - " + true.ToString());
+            return true;
          }
       }
 
@@ -433,8 +462,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("CanSetRightAscensionRate", "Get - " + false.ToString());
-            return false;
+            tl.LogMessage("CanSetRightAscensionRate", "Get - " + true.ToString());
+            return true;
          }
       }
 
@@ -442,8 +471,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("CanSetTracking", "Get - " + false.ToString());
-            return false;
+            tl.LogMessage("CanSetTracking", "Get - " + true.ToString());
+            return true;
          }
       }
 
@@ -451,8 +480,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("CanSlew", "Get - " + false.ToString());
-            return false;
+            tl.LogMessage("CanSlew", "Get - " + true.ToString());
+            return true;
          }
       }
 
@@ -478,8 +507,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("CanSlewAsync", "Get - " + false.ToString());
-            return false;
+            tl.LogMessage("CanSlewAsync", "Get - " + true.ToString());
+            return true;
          }
       }
 
@@ -487,8 +516,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("CanSync", "Get - " + false.ToString());
-            return false;
+            tl.LogMessage("CanSync", "Get - " + true.ToString());
+            return true;
          }
       }
 
@@ -505,32 +534,32 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("CanUnpark", "Get - " + false.ToString());
-            return false;
+            tl.LogMessage("CanUnpark", "Get - " + true.ToString());
+            return true;
          }
       }
 
+      private double _Declination = 0.0;
       public double Declination
       {
          get
          {
-            double declination = 0.0;
-            tl.LogMessage("Declination", "Get - " + utilities.DegreesToDMS(declination, ":", ":"));
-            return declination;
+            tl.LogMessage("Declination", "Get - " + utilities.DegreesToDMS(_Declination, ":", ":"));
+            return _Declination;
          }
       }
 
+      private double _DeclinationRate = 0.0;
       public double DeclinationRate
       {
          get
          {
-            double declination = 0.0;
-            tl.LogMessage("DeclinationRate", "Get - " + declination.ToString());
-            return declination;
+            tl.LogMessage("DeclinationRate", "Get - " + utilities.DegreesToDMS(_DeclinationRate, ":", ":"));
+            return _DeclinationRate;
          }
          set
          {
-            tl.LogMessage("DeclinationRate Set", "Not implemented");
+            tl.LogMessage("DeclinationRate", "Set" + utilities.DegreesToDMS(_DeclinationRate, ":", ":"));
             throw new ASCOM.PropertyNotImplementedException("DeclinationRate", true);
          }
       }
@@ -608,12 +637,24 @@ namespace ASCOM.Lunatic.TelescopeDriver
          }
       }
 
+      private long _RAPulseDuration;
+      private long _DecPulseDuration;
       public bool IsPulseGuiding
       {
          get
          {
-            tl.LogMessage("IsPulseGuiding Get", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("IsPulseGuiding", false);
+            if (AscomCompliance.Telescope.AllowPulseGuide) {
+               bool isPulseGuiding = false;
+               if (_RAPulseDuration + _DecPulseDuration != 0) {
+                  isPulseGuiding = true;
+               }
+               tl.LogMessage("IsPulseGuiding", "Get - " + isPulseGuiding.ToString());
+               return isPulseGuiding;
+            }
+            else {
+               tl.LogMessage("IsPulseGuiding Get", "Not implemented");
+               throw new ASCOM.PropertyNotImplementedException("IsPulseGuiding", false);
+            }
          }
       }
 
@@ -999,7 +1040,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            return (mConnection != null);
+            return (Connection != null);
          }
       }
 
@@ -1019,10 +1060,12 @@ namespace ASCOM.Lunatic.TelescopeDriver
       /// </summary>
       internal void ReadProfile()
       {
-         using (Profile driverProfile = new Profile()) {
-            driverProfile.DeviceType = "Telescope";
-            TRACE_STATE = Convert.ToBoolean(driverProfile.GetValue(DRIVER_ID, traceStateProfileName, string.Empty, traceStateDefault));
-            COM_PORT = driverProfile.GetValue(DRIVER_ID, comPortProfileName, string.Empty, comPortDefault);
+         lock (_LOCK) {
+            using (Profile driverProfile = new Profile()) {
+               driverProfile.DeviceType = "Telescope";
+               TRACE_STATE = Convert.ToBoolean(driverProfile.GetValue(DRIVER_ID, traceStateProfileName, string.Empty, traceStateDefault));
+               COM_PORT = driverProfile.GetValue(DRIVER_ID, comPortProfileName, string.Empty, comPortDefault);
+            }
          }
       }
 
@@ -1031,10 +1074,12 @@ namespace ASCOM.Lunatic.TelescopeDriver
       /// </summary>
       internal void WriteProfile()
       {
-         using (Profile driverProfile = new Profile()) {
-            driverProfile.DeviceType = "Telescope";
-            driverProfile.WriteValue(DRIVER_ID, traceStateProfileName, TRACE_STATE.ToString());
-            driverProfile.WriteValue(DRIVER_ID, comPortProfileName, COM_PORT.ToString());
+         lock (_LOCK) {
+            using (Profile driverProfile = new Profile()) {
+               driverProfile.DeviceType = "Telescope";
+               driverProfile.WriteValue(DRIVER_ID, traceStateProfileName, TRACE_STATE.ToString());
+               driverProfile.WriteValue(DRIVER_ID, comPortProfileName, COM_PORT.ToString());
+            }
          }
       }
 

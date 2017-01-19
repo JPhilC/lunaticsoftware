@@ -50,4 +50,12 @@ namespace ASCOM.Lunatic.TelescopeDriver
       ID_STARSEEKER80 = 10,         // NexStarGT-80 mount
       ID_STARSEEKER114 = 11,        // NexStarGT-114 mount
    }
+
+   public enum ParkStatus
+   {
+      Unparked,
+      Parked,
+      Parking,
+      Unparking
+   }
 }

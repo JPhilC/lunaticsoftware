@@ -30,7 +30,7 @@ using System.Text;
 /// Right now, the bluetooth connection is built by windows SPP to com support
 
 
-namespace Lunatic.Core.Classes
+namespace Lunatic.Core
 {
     /// <summary>
     /// The abstract class of serial connection.

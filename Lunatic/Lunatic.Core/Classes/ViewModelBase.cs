@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 
-namespace Lunatic.Core.Classes
+namespace Lunatic.Core
 {
    public abstract class LunaticViewModelBase : ViewModelBase
    {

@@ -1,6 +1,6 @@
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
-using Lunatic.Core.Classes;
+using Lunatic.Core;
 using Lunatic.Core.Services;
 using System.Collections.Generic;
 using System.Linq;

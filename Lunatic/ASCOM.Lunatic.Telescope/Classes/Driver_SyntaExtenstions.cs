@@ -1,4 +1,4 @@
-﻿using Lunatic.Core.Classes;
+﻿using Lunatic.Core;
 using System;
 using System.Text;
 using System.Threading;
@@ -7,13 +7,14 @@ namespace ASCOM.Lunatic.TelescopeDriver
 {
    public partial class SyntaTelescope
    {
+
       // special charactor for communication.
       const char cStartChar_Out = ':';    // Leading charactor of a command 
       const char cStartChar_In = '=';        // Leading charactor of a NORMAL response.
       const char cErrChar = '!';              // Leading charactor of an ABNORMAL response.
       const char cEndChar = (char)13;         // Tailing charactor of command and response.
       const double MAX_SPEED = 500;           //?
-      const double LOW_SPEED_MARGIN = (128.0 * Constant.SIDEREALRATE);
+      const double LOW_SPEED_MARGIN = (128.0 * Constants.SIDEREALRATE);
 
       private char dir = '0'; // direction
                               // Mount code: 0x00=EQ6, 0x01=HEQ5, 0x02=EQ5, 0x03=EQ3
@@ -35,8 +36,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       public override void Connect_COM(string telescopePort)
       {
          base.Connect_COM(telescopePort);
-         ((SerialConnect_COM)mConnection).hCom.BaudRate = SerialConnect_COM.CBR.CBR_9600;
-         ((SerialConnect_COM)mConnection).hCom.Encoding = Encoding.ASCII;
+         ((SerialConnect_COM)Connection).hCom.BaudRate = SerialConnect_COM.CBR.CBR_9600;
+         ((SerialConnect_COM)Connection).hCom.Encoding = Encoding.ASCII;
       }
 
       protected override void SendRequest(AxisId Axis, char Command, string cmdDataStr)
@@ -56,7 +57,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
          CommandStr.Append(cEndChar);    // CR Character            
 
-         mConnection.Write(CommandStr.ToString());
+         Connection.Write(CommandStr.ToString());
       }
       protected override string ReceiveResponse()
       {
@@ -79,7 +80,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
                throw new TimeoutException();
             }
 
-            string r = mConnection.Read();
+            string r = Connection.Read();
 
             for (int i = 0; i < r.Length; i++) {
                // this code order is important
@@ -146,8 +147,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
          InitializeMC();
 
          // These two LowSpeedGotoMargin are calculate from slewing for 5 seconds in 128x sidereal rate
-         LowSpeedGotoMargin[(int)AxisId.Axis1] = (long)(640 * Constant.SIDEREALRATE * FactorRadToStep[(int)AxisId.Axis1]);
-         LowSpeedGotoMargin[(int)AxisId.Axis2] = (long)(640 * Constant.SIDEREALRATE * FactorRadToStep[(int)AxisId.Axis2]);
+         LowSpeedGotoMargin[(int)AxisId.Axis1] = (long)(640 * Constants.SIDEREALRATE * FactorRadToStep[(int)AxisId.Axis1]);
+         LowSpeedGotoMargin[(int)AxisId.Axis2] = (long)(640 * Constants.SIDEREALRATE * FactorRadToStep[(int)AxisId.Axis2]);
 
          // Default break steps
          BreakSteps[(int)AxisId.Axis1] = 3500;
@@ -166,7 +167,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          bool forward = false, highspeed = false;
 
          // InternalSpeed lower than 1/1000 of sidereal rate?
-         if (Math.Abs(InternalSpeed) <= Constant.SIDEREALRATE / 1000.0) {
+         if (Math.Abs(InternalSpeed) <= Constants.SIDEREALRATE / 1000.0) {
             MCAxisStop(Axis);
             return;
          }
@@ -380,16 +381,16 @@ namespace ASCOM.Lunatic.TelescopeDriver
       // Test if connect to DC motor board.
       private bool CheckIfDCMotor()
       {
-         lock (mConnection) {
-            mConnection.Lock();
+         lock (Connection) {
+            Connection.Lock();
             System.Threading.Thread.Sleep(20);
 
-            mConnection.ClearBuffer();
-            mConnection.Write(":");
+            Connection.ClearBuffer();
+            Connection.Write(":");
 
-            mConnection.Release();
+            Connection.Release();
 
-            var r = mConnection.Read();
+            var r = Connection.Read();
 
             if (r.Length == 1 && r[0] == ':')
                return true;

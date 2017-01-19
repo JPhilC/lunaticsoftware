@@ -61,8 +61,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\AscomCompliance.cs" />
     <Compile Include="Classes\BasicMath.cs" />
-    <Compile Include="Classes\LunaticDriverBase.cs" />
+    <Compile Include="Classes\Constant.cs" />
     <Compile Include="Classes\SerialConnection.cs" />
     <Compile Include="Classes\ViewModelBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
