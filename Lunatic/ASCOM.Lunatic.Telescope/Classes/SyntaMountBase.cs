@@ -1,4 +1,5 @@
-﻿using Lunatic.Core;
+﻿using GalaSoft.MvvmLight;
+using Lunatic.Core;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -45,7 +46,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
    /// MCGetAxisStatus
    /// </summary>
    /// Checked 2/7/2011
-   public abstract class SyntaMountBase 
+   public abstract class SyntaMountBase :ObservableObject
    {
       /// The abstract Serial connection instance 
       /// it is static because all connection shared the same serial connection

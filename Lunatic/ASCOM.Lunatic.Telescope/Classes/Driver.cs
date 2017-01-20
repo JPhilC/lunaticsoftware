@@ -114,6 +114,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
                                             //TODO: Implement your additional construction here
 
          _AlignmentMode = AlignmentModes.algGermanPolar;
+         _TrackingRates = new TrackingRates();
 
          tl.LogMessage("Telescope", "Completed initialisation");
       }
@@ -165,9 +166,9 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
       public void CommandBlind(string command, bool raw)
       {
-         CheckConnected("CommandBlind");
-         // Call CommandString and return as soon as it finishes
-         this.CommandString(command, raw);
+         //CheckConnected("CommandBlind");
+         //// Call CommandString and return as soon as it finishes
+         //this.CommandString(command, raw);
          // or
          throw new ASCOM.MethodNotImplementedException("CommandBlind");
          // DO NOT have both these sections!  One or the other
@@ -175,9 +176,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
       public bool CommandBool(string command, bool raw)
       {
-         CheckConnected("CommandBool");
-         string ret = CommandString(command, raw);
-         // TODO decode the return string and return true or false
+         //CheckConnected("CommandBool");
+         //string ret = CommandString(command, raw);
          // or
          throw new ASCOM.MethodNotImplementedException("CommandBool");
          // DO NOT have both these sections!  One or the other
@@ -215,7 +215,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          set
          {
             lock (_LOCK) {
-               tl.LogMessage("Connected","Set - "+ value.ToString());
+               tl.LogMessage("Connected", "Set - " + value.ToString());
                if (value == IsConnected)
                   return;
 
@@ -236,7 +236,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("Description", "Get - "+ DRIVER_DESCRIPTION);
+            tl.LogMessage("Description", "Get - " + DRIVER_DESCRIPTION);
             return DRIVER_DESCRIPTION;
          }
       }
@@ -260,7 +260,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
                sb.AppendLine(versionInfo.LegalCopyright);
             }
             string driverInfo = sb.ToString();
-            tl.LogMessage("DriverInfo","Get - "+ driverInfo);
+            tl.LogMessage("DriverInfo", "Get - " + driverInfo);
             return driverInfo;
          }
       }
@@ -271,7 +271,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          {
             Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             string driverVersion = String.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
-            tl.LogMessage("DriverVersion", "Get - "+ driverVersion);
+            tl.LogMessage("DriverVersion", "Get - " + driverVersion);
             return driverVersion;
          }
       }
@@ -290,7 +290,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("Name","Get - "+ DRIVER_NAME);
+            tl.LogMessage("Name", "Get - " + DRIVER_NAME);
             return DRIVER_NAME;
          }
       }
@@ -309,7 +309,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("AlignmentMode", "Get - "+_AlignmentMode.ToString());
+            tl.LogMessage("AlignmentMode", "Get - " + _AlignmentMode.ToString());
             return _AlignmentMode;
          }
       }
@@ -319,7 +319,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("Altitude", "Get - "+ _Altitude.ToString());
+            tl.LogMessage("Altitude", "Get - " + _Altitude.ToString());
             return _Altitude;
          }
       }
@@ -746,59 +746,114 @@ namespace ASCOM.Lunatic.TelescopeDriver
          }
       }
 
+      private double _SiteElevation;
       public double SiteElevation
       {
          get
          {
-            tl.LogMessage("SiteElevation Get", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("SiteElevation", false);
+            tl.LogMessage("SiteElevation", "Get - " + _SiteElevation.ToString());
+            return _SiteElevation;
          }
          set
          {
-            tl.LogMessage("SiteElevation Set", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("SiteElevation", true);
+            if (AscomCompliance.Telescope.AllowSiteWrites) {
+               tl.LogMessage("SiteElevation", "Set - " + value.ToString());
+               if (value == _SiteElevation) {
+                  return;
+               }
+               if (value < -300 || value > 10000) {
+                  throw new ASCOM.InvalidValueException("SiteElevation Get", value.ToString(), "-300 to 10000");
+               }
+               else {
+                  _SiteElevation = value;
+                  RaisePropertyChanged();
+               }
+            }
+            else {
+               tl.LogMessage("SiteElevation Set", "Not implemented");
+               throw new ASCOM.PropertyNotImplementedException("SiteElevation", true);
+            }
          }
       }
 
+      private double _SiteLatitude;
       public double SiteLatitude
       {
          get
          {
-            tl.LogMessage("SiteLatitude Get", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("SiteLatitude", false);
+            tl.LogMessage("SiteLatitude", "Get - " + _SiteLatitude.ToString());
+            return _SiteLatitude;
          }
          set
          {
-            tl.LogMessage("SiteLatitude Set", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("SiteLatitude", true);
+            if (AscomCompliance.Telescope.AllowSiteWrites) {
+               tl.LogMessage("SiteLatitude", "Set - " + value.ToString());
+               if (value == _SiteLatitude) {
+                  return;
+               }
+               if (value < -90 || value > 90) {
+                  throw new ASCOM.InvalidValueException("SiteLatitude Get", value.ToString(), "-90  to 90");
+               }
+               else {
+                  _SiteLatitude = value;
+                  RaisePropertyChanged();
+               }
+            }
+            else {
+               tl.LogMessage("SiteLatitude Set", "Not implemented");
+               throw new ASCOM.PropertyNotImplementedException("SiteLatitude", true);
+            }
          }
       }
 
+      private double _SiteLongitude;
       public double SiteLongitude
       {
          get
          {
-            tl.LogMessage("SiteLongitude Get", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("SiteLongitude", false);
+            tl.LogMessage("SiteLongitude", "Get - " + _SiteLongitude.ToString());
+            return _SiteLongitude;
          }
          set
          {
-            tl.LogMessage("SiteLongitude Set", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("SiteLongitude", true);
+            if (AscomCompliance.Telescope.AllowSiteWrites) {
+               tl.LogMessage("SiteLongitude", "Set - " + value.ToString());
+               if (value == _SiteLongitude) {
+                  return;
+               }
+               if (value < -180 || value > 180) {
+                  throw new ASCOM.InvalidValueException("SiteLongitude Get", value.ToString(), "-180 to 180");
+               }
+               else {
+                  _SiteLongitude = value;
+                  RaisePropertyChanged();
+               }
+            }
+            else {
+               tl.LogMessage("SiteLongitude Set", "Not implemented");
+               throw new ASCOM.PropertyNotImplementedException("SiteLongitude", true);
+            }
          }
       }
 
+      private short _SlewSettleTime = 0;
       public short SlewSettleTime
       {
          get
          {
-            tl.LogMessage("SlewSettleTime Get", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("SlewSettleTime", false);
+            tl.LogMessage("SlewSettleTime", "Get - " + _SlewSettleTime.ToString());
+            return _SlewSettleTime;
          }
          set
          {
-            tl.LogMessage("SlewSettleTime Set", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("SlewSettleTime", true);
+            tl.LogMessage("SlewSettleTime", "Set - " + value.ToString());
+            if (_SlewSettleTime == value) {
+               return;
+            }
+            if (value < 0 || value > 100) {
+               throw new ASCOM.InvalidValueException("SiteLongitude Get", value.ToString(), "-180 to 180");
+            }
+            _SlewSettleTime = value;
          }
       }
 
@@ -838,12 +893,30 @@ namespace ASCOM.Lunatic.TelescopeDriver
          throw new ASCOM.MethodNotImplementedException("SlewToTargetAsync");
       }
 
+      bool _IsSlewing;
+      bool _IsMoveAxisSlewing;
       public bool Slewing
       {
          get
          {
-            tl.LogMessage("Slewing Get", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("Slewing", false);
+            bool isSlewing = false;
+            switch (_ParkStatus) {
+               case ParkStatus.Unparked:
+                  isSlewing = _IsSlewing;
+                  if (!isSlewing) {
+                     isSlewing = _IsMoveAxisSlewing;
+                  }
+                  break;
+               case ParkStatus.Parked:
+               case ParkStatus.Unparking:
+                  isSlewing = false;
+                  break;
+               case ParkStatus.Parking:
+                  isSlewing = true;
+                  break;
+            }
+            tl.LogMessage("Slewing", "Get - " + isSlewing.ToString());
+            return isSlewing;
          }
       }
 
@@ -865,31 +938,57 @@ namespace ASCOM.Lunatic.TelescopeDriver
          throw new ASCOM.MethodNotImplementedException("SyncToTarget");
       }
 
+      private double? _TargetDeclination;
       public double TargetDeclination
       {
          get
          {
-            tl.LogMessage("TargetDeclination Get", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("TargetDeclination", false);
+            tl.LogMessage("TargetDeclination", "Get - " + _TargetDeclination.ToString());
+            if (_TargetDeclination.HasValue) {
+               return _TargetDeclination.Value;
+            }
+            else {
+               throw new ASCOM.InvalidOperationException("TargetDeclination value has not be set");
+            }
          }
          set
          {
-            tl.LogMessage("TargetDeclination Set", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("TargetDeclination", true);
+            tl.LogMessage("TargetDeclination", "Set - " + value.ToString());
+            if (_TargetDeclination.HasValue && _TargetDeclination.Value == value) {
+               return;
+            }
+            if (value < -90 || value > 90) {
+               throw new ASCOM.InvalidValueException("TargetDeclination", value.ToString(), "-90 to 90");
+            }
+            _TargetDeclination = value;
+            RaisePropertyChanged();
          }
       }
 
+      private double? _TargetRightAscension;
       public double TargetRightAscension
       {
          get
          {
-            tl.LogMessage("TargetRightAscension Get", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("TargetRightAscension", false);
+            tl.LogMessage("TargetRightAscension", "Get - " + _TargetRightAscension.ToString());
+            if (_TargetRightAscension.HasValue) {
+               return _TargetRightAscension.Value;
+            }
+            else {
+               throw new ASCOM.InvalidOperationException("TargetRightAscension value has not be set");
+            }
          }
          set
          {
-            tl.LogMessage("TargetRightAscension Set", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("TargetRightAscension", true);
+            tl.LogMessage("TargetRightAscension", "Set - " + value.ToString());
+            if (_TargetRightAscension.HasValue && _TargetRightAscension.Value == value) {
+               return;
+            }
+            if (value < 0 || value > 24) {
+               throw new ASCOM.InvalidValueException("TargetRightAscension", value.ToString(), "0 to 24");
+            }
+            _TargetRightAscension = value;
+            RaisePropertyChanged();
          }
       }
 
@@ -908,30 +1007,35 @@ namespace ASCOM.Lunatic.TelescopeDriver
          }
       }
 
+      private DriveRates _TrackingRate;
       public DriveRates TrackingRate
       {
          get
          {
-            tl.LogMessage("TrackingRate Get", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("TrackingRate", false);
+            tl.LogMessage("TrackingRate", "Get - "+ _TrackingRate.ToString());
+            return _TrackingRate;
          }
          set
          {
-            tl.LogMessage("TrackingRate Set", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("TrackingRate", true);
+            tl.LogMessage("TrackingRate", "Set - " + value.ToString());
+            if (value == _TrackingRate) {
+               return;
+            }
+            _TrackingRate = value;
+            RaisePropertyChanged();
          }
       }
 
+      private ITrackingRates _TrackingRates;
       public ITrackingRates TrackingRates
       {
          get
          {
-            ITrackingRates trackingRates = new TrackingRates();
             tl.LogMessage("TrackingRates", "Get - ");
-            foreach (DriveRates driveRate in trackingRates) {
+            foreach (DriveRates driveRate in _TrackingRates) {
                tl.LogMessage("TrackingRates", "Get - " + driveRate.ToString());
             }
-            return trackingRates;
+            return _TrackingRates;
          }
       }
 
