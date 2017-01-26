@@ -46,8 +46,9 @@ namespace ASCOM.Lunatic.TelescopeDriver
    /// MCGetAxisStatus
    /// </summary>
    /// Checked 2/7/2011
-   public abstract class SyntaMountBase :ObservableObject
+   public abstract class SyntaMountBase :DriverBase
    {
+
       /// The abstract Serial connection instance 
       /// it is static because all connection shared the same serial connection
       /// and connection should be lock between differnct thread
@@ -69,6 +70,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       public double[] TargetPositions = new double[2] { 0, 0 };   // The target position, in radians
       public double[] SlewingSpeed = new double[2] { 0, 0 };      // The speed in radians per second                
       public AxisStatus[] AxesStatus = new AxisStatus[2];             // The two-axis status of the carriage should pass AxesStatus[AXIS1] and AxesStatus[AXIS2] by Reference
+
 
       public SyntaMountBase()
       {

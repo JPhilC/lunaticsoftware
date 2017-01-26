@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyTitle("ASCOM.Lunatic.TelescopeDriver")]
 [assembly: AssemblyDescription("Lunatic ASCOM Synta Telescope Driver")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("LunaticSoftware.org")]
+[assembly: AssemblyCompany("LunaticSoftware")]
 [assembly: AssemblyProduct("Lunatic ASCOM Synta Telescope Driver")]
 [assembly: AssemblyCopyright("Copyright ©  2017 LunaticSoftware.org")]
 [assembly: AssemblyTrademark("")]

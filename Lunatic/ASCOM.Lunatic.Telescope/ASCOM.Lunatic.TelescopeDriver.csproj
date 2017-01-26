@@ -116,11 +116,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\AxisStatus.cs" />
-    <Compile Include="Classes\ConfigurationManager.cs" />
+    <Compile Include="Classes\ConfigurationSettings.cs" />
+    <Compile Include="Classes\Driver_ConfigurationExtensions.cs">
+      <DependentUpon>Driver.cs</DependentUpon>
+    </Compile>
     <Compile Include="Classes\Enums.cs" />
     <Compile Include="Classes\SyntaMountBase.cs" />
     <Compile Include="Classes\MountControlException.cs" />
-    <Compile Include="Classes\Driver_SyntaExtenstions.cs" />
+    <Compile Include="Classes\Driver_SyntaExtenstions.cs">
+    <DependentUpon>Driver.cs</DependentUpon>
+    </Compile>
     <Compile Include="ViewModel\SetupViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Page Include="SetupWindow.xaml">
