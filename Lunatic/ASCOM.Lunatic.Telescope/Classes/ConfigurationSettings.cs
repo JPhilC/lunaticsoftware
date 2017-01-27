@@ -72,6 +72,27 @@ namespace ASCOM.Lunatic.TelescopeDriver
       public int RAStepsPer360 { get; set; }
    }
 
+   public class Site
+   {
+      public Guid Id { get; private set; }
+      //SiteName=Lime Grove
+      public string SiteName { get; set; }
+      //Elevation=173
+      public double Elevation { get; set; }
+      //HemisphereNS=0
+      public HemisphereOption Hemisphere { get; set; }
+      //LongitudeEW=1
+      //LongitudeSec=21.0
+      //LongitudeMin=20
+      //LongitudeDeg=1
+      public double Longitude { get; set; }
+      //LatitudeNS=0
+      //LatitudeDeg=52
+      //LatitudeMin=40
+      //LatitudeSec=6.0
+      public double Latitude { get; set; }
+   }
+
    public class Settings : ObservableObject
    {
       public bool ASCOMCompatibilityStrict { get; set; }
@@ -147,7 +168,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
       //CUSTOM_MOUNT=0
       public CustomMount CustomMount { get; set; }
-      public bool IsCustomMount { get; set; }
+      public MountOptionEnum MountOption { get; set; }
       //PULSEGUIDE_TIMER_INTERVAL=20
       public int PulseGuidingTimeInterval { get; set; }
       //AUTOSYNCRA=1 RAAutoSync
@@ -156,33 +177,28 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
       //BAR01_6=1 DecOverrideRate
       public int DecOverrideRate { get; set; }
-      //BAR01_5=1    RAOverrideRate
+      //BAR01_5=1  RAOverrideRate
       public int RAOverrideRate { get; set; }
-      //BAR01_4=1    DecRate
+      //BAR01_4=1  DecRate
       public int DecRate { get; set; }
-      //BAR01_3=1    RARate
+      //BAR01_3=1  RARate
       public int RARate { get; set; }
-      //BAR01_2=17   DecSlewRate
+      //BAR01_2=17 DecSlewRate
       public int DecSlewRate { get; set; }
-      //BAR01_1=17   RASlewRate
+      //BAR01_1=17 RASlewRate
       public int RASlewRate { get; set; }
 
       //FriendlyName=
       //ProcessPrioirty=0
-      //SiteName=Lime Grove
-      //Elevation=173
-      //HemisphereNS=0
-      //LongitudeEW=1
-      //LongitudeSec=21.0
-      //LongitudeMin=20
-      //LongitudeDeg=1
-      //LatitudeNS=0
-      //LatitudeDeg=52
-      //LatitudeMin=40
-      //LatitudeSec=6.0
+
+      public ObservableCollection<Site> Sites { get; private set; }
+      public Site CurrentSite { get; set; }
       //Retry=1
+      public RetryOption Retry { get; set; }
       //Timeout=1000
+      public TimeOutOption Timeout { get; set; }
       //Baud=9600
+      public BaudRate BaudRate { get; set; }
 
       //Port=COM4
       private string _COMPort = string.Empty;
@@ -204,7 +220,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
       // TRACE_STATE
       private bool _IsTracing = false;
-      public bool IsTracing {
+      public bool IsTracing
+      {
          get
          {
             return _IsTracing;
@@ -282,37 +299,37 @@ namespace ASCOM.Lunatic.TelescopeDriver
       //SND_WAV_RATE6=EQMOD_click.wav
       //SND_WAV_RATE5 = C:\Program Files\Common Files\ASCOM\Telescope\rate5.wav
       //  SND_WAV_RATE4 = C:\Program Files\Common Files\ASCOM\Telescope\rate4.wav
-      //    SND_WAV_RATE3 = C:\Program Files\Common Files\ASCOM\Telescope\rate3.wav
-      //      SND_WAV_RATE2 = C:\Program Files\Common Files\ASCOM\Telescope\rate2.wav
-      //        SND_WAV_RATE1 = C:\Program Files\Common Files\ASCOM\Telescope\rate1.wav
-      //          SND_WAV_DECREVERSEON = C:\Program Files\Common Files\ASCOM\Telescope\decreverseon.wav
-      //            SND_WAV_DECREVERSEOFF = C:\Program Files\Common Files\ASCOM\Telescope\decreverseoff.wav
-      //              SND_WAV_RAREVERSEON = C:\Program Files\Common Files\ASCOM\Telescope\rareverseon.wav
-      //                SND_WAV_RAREVERSEOFF = C:\Program Files\Common Files\ASCOM\Telescope\rareverseoff.wav
-      //                  SND_WAV_MONITOROFF = C:\Program Files\Common Files\ASCOM\Telescope\monitoroff.wav
-      //                    SND_WAV_MONITORON = C:\Program Files\Common Files\ASCOM\Telescope\monitoron.wav
-      //                      SND_WAV_GPLOFF = C:\Program Files\Common Files\ASCOM\Telescope\GamepadUnlocked.wav
-      //                        SND_WAV_GPLON = C:\Program Files\Common Files\ASCOM\Telescope\GamepadLocked.wav
-      //                          SND_WAV_DMS2 = C:\Program Files\Common Files\ASCOM\Telescope\DMSDisarmed.wav
-      //                            SND_WAV_DMS = C:\Program Files\Common Files\ASCOM\Telescope\DMSArmed.wav
-      //                              SND_WAV_PALIGNED = C:\Program Files\Common Files\ASCOM\Telescope\polarscopealigned.wav
-      //                                SND_WAV_PALIGN = C:\Program Files\Common Files\ASCOM\Telescope\aligningpolarscope.wav
-      //                                  SND_WAV_PHOME = C:\Program Files\Common Files\ASCOM\Telescope\polarhome.wav
-      //                                    SND_WAV_END = C:\Program Files\Common Files\ASCOM\Telescope\end.wav
-      //                                      SND_WAV_CANCEL = C:\Program Files\Common Files\ASCOM\Telescope\cancel.wav
-      //                                        SND_WAV_ACCEPT = C:\Program Files\Common Files\ASCOM\Telescope\accept.wav
-      //                                          SND_WAV_CUSTOM = C:\Program Files\Common Files\ASCOM\Telescope\custom.wav
-      //                                            SND_WAV_SOLAR = C:\Program Files\Common Files\ASCOM\Telescope\solar.wav
-      //                                              SND_WAV_LUNAR = C:\Program Files\Common Files\ASCOM\Telescope\lunar.wav
-      //                                                SND_WAV_SIDEREAL = C:\Program Files\Common Files\ASCOM\Telescope\sidereal.wav
-      //                                                  SND_WAV_STOP = C:\Program Files\Common Files\ASCOM\Telescope\stop.wav
-      //                                                    SND_WAV_GOTOSTART = C:\Program Files\Common Files\ASCOM\Telescope\slewstart.wav
-      //                                                      SND_WAV_GOTO = C:\Program Files\Common Files\ASCOM\Telescope\slewcomplete.wav
-      //                                                        SND_WAV_PARKED = C:\Program Files\Common Files\ASCOM\Telescope\parked.wav
-      //                                                          SND_WAV_UNPARK = C:\Program Files\Common Files\ASCOM\Telescope\unparked.wav
-      //                                                            SND_WAV_PARK = C:\Program Files\Common Files\ASCOM\Telescope\parking.wav
-      //                                                              SND_WAV_SYNC = C:\Program Files\Common Files\ASCOM\Telescope\sync.wav
-      //                                                                SND_WAV_BEEP = EQMOD_beep.wav
+      //  SND_WAV_RATE3 = C:\Program Files\Common Files\ASCOM\Telescope\rate3.wav
+      //  SND_WAV_RATE2 = C:\Program Files\Common Files\ASCOM\Telescope\rate2.wav
+      //  SND_WAV_RATE1 = C:\Program Files\Common Files\ASCOM\Telescope\rate1.wav
+      //  SND_WAV_DECREVERSEON = C:\Program Files\Common Files\ASCOM\Telescope\decreverseon.wav
+      //  SND_WAV_DECREVERSEOFF = C:\Program Files\Common Files\ASCOM\Telescope\decreverseoff.wav
+      //  SND_WAV_RAREVERSEON = C:\Program Files\Common Files\ASCOM\Telescope\rareverseon.wav
+      //  SND_WAV_RAREVERSEOFF = C:\Program Files\Common Files\ASCOM\Telescope\rareverseoff.wav
+      //  SND_WAV_MONITOROFF = C:\Program Files\Common Files\ASCOM\Telescope\monitoroff.wav
+      //  SND_WAV_MONITORON = C:\Program Files\Common Files\ASCOM\Telescope\monitoron.wav
+      //  SND_WAV_GPLOFF = C:\Program Files\Common Files\ASCOM\Telescope\GamepadUnlocked.wav
+      //  SND_WAV_GPLON = C:\Program Files\Common Files\ASCOM\Telescope\GamepadLocked.wav
+      //  SND_WAV_DMS2 = C:\Program Files\Common Files\ASCOM\Telescope\DMSDisarmed.wav
+      //  SND_WAV_DMS = C:\Program Files\Common Files\ASCOM\Telescope\DMSArmed.wav
+      //  SND_WAV_PALIGNED = C:\Program Files\Common Files\ASCOM\Telescope\polarscopealigned.wav
+      //  SND_WAV_PALIGN = C:\Program Files\Common Files\ASCOM\Telescope\aligningpolarscope.wav
+      //  SND_WAV_PHOME = C:\Program Files\Common Files\ASCOM\Telescope\polarhome.wav
+      //  SND_WAV_END = C:\Program Files\Common Files\ASCOM\Telescope\end.wav
+      //  SND_WAV_CANCEL = C:\Program Files\Common Files\ASCOM\Telescope\cancel.wav
+      //  SND_WAV_ACCEPT = C:\Program Files\Common Files\ASCOM\Telescope\accept.wav
+      //  SND_WAV_CUSTOM = C:\Program Files\Common Files\ASCOM\Telescope\custom.wav
+      //  SND_WAV_SOLAR = C:\Program Files\Common Files\ASCOM\Telescope\solar.wav
+      //  SND_WAV_LUNAR = C:\Program Files\Common Files\ASCOM\Telescope\lunar.wav
+      //  SND_WAV_SIDEREAL = C:\Program Files\Common Files\ASCOM\Telescope\sidereal.wav
+      //  SND_WAV_STOP = C:\Program Files\Common Files\ASCOM\Telescope\stop.wav
+      //  SND_WAV_GOTOSTART = C:\Program Files\Common Files\ASCOM\Telescope\slewstart.wav
+      //  SND_WAV_GOTO = C:\Program Files\Common Files\ASCOM\Telescope\slewcomplete.wav
+      //  SND_WAV_PARKED = C:\Program Files\Common Files\ASCOM\Telescope\parked.wav
+      //  SND_WAV_UNPARK = C:\Program Files\Common Files\ASCOM\Telescope\unparked.wav
+      //  SND_WAV_PARK = C:\Program Files\Common Files\ASCOM\Telescope\parking.wav
+      //  SND_WAV_SYNC = C:\Program Files\Common Files\ASCOM\Telescope\sync.wav
+      //  SND_WAV_BEEP = EQMOD_beep.wav
       //SND_WAV_CLICK=EQMOD_click.wav
       //SND_WAV_ALARM = EQMOD_klaxton.wav
       //LST_DISPLAY_MODE=0
@@ -341,6 +358,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          this.CustomMount = new CustomMount();
          this.ParkPositions = new ObservableCollection<ParkPosition>();
          this.UNParkPositions = new ObservableCollection<ParkPosition>();
+         this.Sites = new ObservableCollection<Site>();
          SetDefaults();
       }
 
