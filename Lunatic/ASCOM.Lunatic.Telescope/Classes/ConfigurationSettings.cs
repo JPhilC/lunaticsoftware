@@ -1,9 +1,11 @@
 ﻿using ASCOM.DeviceInterface;
+using ASCOM.Lunatic.Interfaces;
 using GalaSoft.MvvmLight;
 using Lunatic.Core;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -136,8 +138,12 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
       //DEFAULT_UNPARK_MODE = 0
       public ParkPosition DefaultUnpark { get; set; }
+      private ObservableCollection<ParkPosition> _UNParkPositions;
+      public ObservableCollection<ParkPosition> UNParkPositions { get; private set; }
       //DEFAULT_PARK_MODE=2
       public ParkPosition DefaultPark { get; set; }
+      private ObservableCollection<ParkPosition> _ParkPositions;
+      public ObservableCollection<ParkPosition> ParkPositions { get; private set; }
 
       //CUSTOM_MOUNT=0
       public CustomMount CustomMount { get; set; }
@@ -177,7 +183,42 @@ namespace ASCOM.Lunatic.TelescopeDriver
       //Retry=1
       //Timeout=1000
       //Baud=9600
+
       //Port=COM4
+      private string _COMPort = string.Empty;
+      public string COMPort
+      {
+         get
+         {
+            return _COMPort;
+         }
+         set
+         {
+            if (value == _COMPort) {
+               return;
+            }
+            _COMPort = value;
+            RaisePropertyChanged();
+         }
+      }
+
+      // TRACE_STATE
+      private bool _IsTracing = false;
+      public bool IsTracing {
+         get
+         {
+            return _IsTracing;
+         }
+         set
+         {
+            if (value == _IsTracing) {
+               return;
+            }
+            _IsTracing = value;
+            RaisePropertyChanged();
+         }
+      }
+
       //FLIP_AUTO_ENABLED = False
       //FLIP_AUTO_ALLOWED=False
       //LIMIT_SLEWS = 1
@@ -289,7 +330,6 @@ namespace ASCOM.Lunatic.TelescopeDriver
       //ASCOM_COMPAT_PULSEGUIDE=True
       //ASCOM_COMPAT_SLEWTRACKOFF = True
 
-      public bool PolarAlignment { get; set; }
       public bool ThreePointAlignment { get; set; }
 
       public AscomCompliance AscomCompliance { get; set; }
@@ -297,7 +337,15 @@ namespace ASCOM.Lunatic.TelescopeDriver
       public Settings()
       {
          this.AscomCompliance = new AscomCompliance();
+         this.PolarAlignment = new PolarAlignment();
+         this.CustomMount = new CustomMount();
+         this.ParkPositions = new ObservableCollection<ParkPosition>();
+         this.UNParkPositions = new ObservableCollection<ParkPosition>();
+         SetDefaults();
       }
 
+      private void SetDefaults()
+      {
+      }
    }
 }

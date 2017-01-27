@@ -73,12 +73,12 @@
 
     <!-- Window -->
     <Style TargetType="{x:Type Window}">
-        <Setter Property="Icon" Value="../ASCOM.ico" />
+        <Setter Property="Icon" Value="pack://application:,,,/ASCOM.Lunatic.TelescopeDriver;component/Skins/Images/ASCOM.ico" />
     </Style>
 
     <!-- Dialog box (Window) -->
     <Style TargetType="{x:Type Window}" x:Key="DialogStyle">
-        <Setter Property="Icon" Value="../ASCOM.ico" />
+        <Setter Property="Icon" Value="pack://application:,,,/ASCOM.Lunatic.TelescopeDriver;component/Skins/Images/ASCOM.ico" />
         <Setter Property="ResizeMode" Value="NoResize" />
         <Setter Property="WindowStyle" Value="SingleBorderWindow" />
         <Setter Property="ShowInTaskbar" Value="False" />
@@ -86,7 +86,7 @@
 
     <!-- Dialog box (Window) -->
     <Style TargetType="{x:Type Window}" x:Key="PropertyDialogStyle">
-        <Setter Property="Icon" Value="../ASCOM.ico" />
+        <Setter Property="Icon" Value="pack://application:,,,/ASCOM.Lunatic.TelescopeDriver;component/Skins/Images/ASCOM.ico" />
         <Setter Property="ResizeMode" Value="CanResizeWithGrip" />
         <Setter Property="WindowStyle" Value="SingleBorderWindow" />
         <Setter Property="ShowInTaskbar" Value="False" />

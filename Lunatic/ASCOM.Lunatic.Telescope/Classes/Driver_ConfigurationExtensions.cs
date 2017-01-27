@@ -1,6 +1,9 @@
-﻿using System;
+﻿using ASCOM.Lunatic.Interfaces;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,35 +11,25 @@ namespace ASCOM.Lunatic.TelescopeDriver
 {
    public partial class SyntaTelescope
    {
-      private Settings _Settings = null;
-      public Settings Settings
+      private ISettingsProvider _SettingsManager = null;
+
+      public ISettingsProvider SettingsManager
       {
          get
          {
-            return _Settings;
+            if (_SettingsManager == null) {
+               _SettingsManager = new SettingsProvider();
+            }
+            return _SettingsManager;
          }
       }
 
-
-      protected override string ConfigurationSettingsFilename
+      private Settings Settings
       {
          get
          {
-            return "SyntaMount.config";
+            return SettingsManager.CurrentSettings;
          }
       }
-
-      protected override void LoadSettings()
-      {
-         _Settings = (Settings)LoadSettings<Settings>();
-      }
-
-      protected override void SaveSettings()
-      {
-         if (Settings != null) {
-            SaveSettings<Settings>(Settings);
-         }
-      }
-
    }
 }

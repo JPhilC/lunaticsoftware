@@ -39,7 +39,7 @@
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>ASCOM.ico</ApplicationIcon>
+    <ApplicationIcon>Skins\Images\ASCOM.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ASCOM.Astrometry, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
@@ -121,20 +121,22 @@
       <DependentUpon>Driver.cs</DependentUpon>
     </Compile>
     <Compile Include="Classes\Enums.cs" />
+    <Compile Include="Classes\SettingsProvider.cs" />
     <Compile Include="Classes\SyntaMountBase.cs" />
     <Compile Include="Classes\MountControlException.cs" />
     <Compile Include="Classes\Driver_SyntaExtenstions.cs">
-    <DependentUpon>Driver.cs</DependentUpon>
+      <DependentUpon>Driver.cs</DependentUpon>
     </Compile>
+    <Compile Include="Interfaces\ISettingsProvider.cs" />
     <Compile Include="ViewModel\SetupViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
-    <Page Include="SetupWindow.xaml">
+    <Page Include="Controls\SetupWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
     <Compile Include="Classes\Driver.cs" />
-    <Compile Include="Rates.cs" />
-    <Compile Include="SetupWindow.xaml.cs">
+    <Compile Include="Classes\Rates.cs" />
+    <Compile Include="Controls\SetupWindow.xaml.cs">
       <DependentUpon>SetupWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
@@ -173,10 +175,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="ASCOM.ico" />
+    <Resource Include="Skins\Images\ASCOM.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="ASCOM.png" />
+    <Resource Include="Skins\Images\ASCOM.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lunatic.Core\Lunatic.Core.csproj">

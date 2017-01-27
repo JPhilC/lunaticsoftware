@@ -1,3 +1,4 @@
+using ASCOM.Lunatic.Interfaces;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using Lunatic.Core;
@@ -23,7 +24,17 @@ namespace ASCOM.Lunatic.TelescopeDriver
    public class SetupViewModel : LunaticViewModelBase
    {
 
+
       #region Properties ....
+      private Settings _Settings;
+      public Settings Settings
+      {
+         get
+         {
+            return _Settings;
+         }
+      }
+
       private COMPortInfo _SelectedCOMPort;
 
       public COMPortInfo SelectedCOMPort
@@ -36,18 +47,18 @@ namespace ASCOM.Lunatic.TelescopeDriver
          set
          {
             _SelectedCOMPort = value;
+            if (_SelectedCOMPort != null) {
+               Settings.COMPort = _SelectedCOMPort.Name;
+            }
+            else {
+               Settings.COMPort = string.Empty;
+            }
+
             RaisePropertyChanged();
             RaisePropertyChanged("COMPortName");
          }
       }
 
-      public string COMPortName
-      {
-         get
-         {
-            return (SelectedCOMPort != null ? SelectedCOMPort.Name : string.Empty);
-         }
-      }
 
       private List<COMPortInfo> _AvailableCOMPorts = new List<COMPortInfo>();
       public List<COMPortInfo> AvailableCOMPorts
@@ -59,31 +70,14 @@ namespace ASCOM.Lunatic.TelescopeDriver
       }
 
 
-      private bool _TraceState;
-
-      public bool TraceState
-      {
-         get
-         {
-            return _TraceState;
-         }
-         set
-         {
-            if (value == _TraceState) {
-               return;
-            }
-            _TraceState = value;
-            RaisePropertyChanged();
-         }
-      }
       #endregion
 
       /// <summary>
       /// Initializes a new instance of the MainViewModel class.
       /// </summary>
-      public SetupViewModel()
+      public SetupViewModel(ISettingsProvider settingsProvider)
       {
-         Initialise();
+         _Settings = settingsProvider.CurrentSettings;
       }
 
       public void RefreshCOMPorts()
@@ -92,20 +86,9 @@ namespace ASCOM.Lunatic.TelescopeDriver
          foreach (COMPortInfo comPort in COMPortService.GetCOMPortsInfo()) {
             _AvailableCOMPorts.Add(comPort);
          }
-         SelectedCOMPort = AvailableCOMPorts.Where(port => port.Name == SyntaTelescope.COM_PORT).FirstOrDefault();
+         _SelectedCOMPort = AvailableCOMPorts.Where(port => port.Name == Settings.COMPort).FirstOrDefault();
       }
 
-      private void Initialise()
-      {
-         TraceState = SyntaTelescope.TRACE_STATE;
-      }
-
-      protected override bool OnSaveCommand()
-      {
-         SyntaTelescope.COM_PORT = this.COMPortName;
-         SyntaTelescope.TRACE_STATE = this.TraceState;
-         return base.OnSaveCommand();
-      }
 
    }
 }

@@ -12,9 +12,11 @@
   See http://www.galasoft.ch/mvvm
 */
 
+using ASCOM.Lunatic.Interfaces;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
 using Microsoft.Practices.ServiceLocation;
+
 
 namespace ASCOM.Lunatic.TelescopeDriver
 {
@@ -46,16 +48,14 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
 
-         ////if (ViewModelBase.IsInDesignModeStatic)
-         ////{
-         ////    // Create design time view services and models
-         ////    SimpleIoc.Default.Register<IDataService, DesignDataService>();
-         ////}
-         ////else
-         ////{
-         ////    // Create run time view services and models
-         ////    SimpleIoc.Default.Register<IDataService, DataService>();
-         ////}
+         if (ViewModelBase.IsInDesignModeStatic) {
+            // Create design time view services and models
+            SimpleIoc.Default.Register<ISettingsProvider, SettingsProvider>();
+         }
+         else {
+            // Create run time view services and models
+            SimpleIoc.Default.Register<ISettingsProvider, SettingsProvider>();
+         }
 
          SimpleIoc.Default.Register<SetupViewModel>();
       }

@@ -72,10 +72,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       internal static string traceStateProfileName = "Trace Level";
       internal static string traceStateDefault = "true";
 
-      internal static string COM_PORT; // Variables to hold the currrent device configuration
-      internal static bool TRACE_STATE;
 
-      
+
 
 
       /// <summary>
@@ -99,10 +97,13 @@ namespace ASCOM.Lunatic.TelescopeDriver
       /// </summary>
       public SyntaTelescope() : base()
       {
-         ReadProfile(); // Read device configuration from the ASCOM Profile store
+         // Check the current settings are loaded
+         if (Settings == null) {
+            throw new ASCOM.DriverException("Unable to load configuration settings");
+         }
 
          tl = new TraceLogger("", "Winforms");
-         tl.Enabled = TRACE_STATE;
+         tl.Enabled = Settings.IsTracing;       /// NOTE: This line triggers a load of the current settings
          tl.LogMessage("Telescope", "Starting initialisation");
 
          utilities = new Util(); //Initialise util object
@@ -141,7 +142,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
          SetupWindow setupWindow = new SetupWindow(setupVm);
          var result = setupWindow.ShowDialog();
          if (result.HasValue && result.Value) {
-            WriteProfile(); // Persist device configuration values to the ASCOM Profile store
+            tl.Enabled = Settings.IsTracing;
+            SettingsManager.SaveSettings(); // Persist device configuration values to the ASCOM Profile store
          }
 
       }
@@ -216,13 +218,13 @@ namespace ASCOM.Lunatic.TelescopeDriver
                   return;
 
                if (value) {
-                  tl.LogMessage("Connected", "Set - Connecting to port " + COM_PORT);
-                  Connect_COM(SyntaTelescope.COM_PORT);
+                  tl.LogMessage("Connected", "Set - Connecting to port " + Settings.COMPort);
+                  Connect_COM(Settings.COMPort);
                   MCInit();
                }
                else {
                   Disconnect_COM();
-                  tl.LogMessage("Connected", "Set - Disconnecting from port " + COM_PORT);
+                  tl.LogMessage("Connected", "Set - Disconnecting from port " + Settings.COMPort);
                }
             }
          }
@@ -243,16 +245,12 @@ namespace ASCOM.Lunatic.TelescopeDriver
          {
             //TODO: See if the same version information exists in versionInfo as version.
             StringBuilder sb = new StringBuilder();
-            sb.AppendFormat("{0}, Version {1}.{2}\n", DRIVER_DESCRIPTION, MajorVersion, MinorVersion);
-            if (!string.IsNullOrWhiteSpace(CompanyName)) {
-               sb.AppendLine(CompanyName);
-            }
-            if (!string.IsNullOrWhiteSpace(Copyright)) {
-               sb.AppendLine(Copyright);
-            }
-            if (!string.IsNullOrWhiteSpace(Comments)) {
-               sb.AppendLine(Comments);
-            }
+            sb.AppendFormat("{0}, Version {1}.{2}\n", DRIVER_DESCRIPTION,
+               SettingsProvider.MajorVersion,
+               SettingsProvider.MinorVersion);
+            sb.AppendLine(SettingsProvider.CompanyName);
+            sb.AppendLine(SettingsProvider.Copyright);
+            sb.AppendLine(SettingsProvider.Comments);
             string driverInfo = sb.ToString();
             tl.LogMessage("DriverInfo", "Get - " + driverInfo);
             return driverInfo;
@@ -1006,7 +1004,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("TrackingRate", "Get - "+ _TrackingRate.ToString());
+            tl.LogMessage("TrackingRate", "Get - " + _TrackingRate.ToString());
             return _TrackingRate;
          }
          set
@@ -1153,33 +1151,35 @@ namespace ASCOM.Lunatic.TelescopeDriver
          }
       }
 
-      /// <summary>
-      /// Read the device configuration from the ASCOM Profile store
-      /// </summary>
-      internal void ReadProfile()
-      {
-         lock (_Lock) {
-            using (Profile driverProfile = new Profile()) {
-               driverProfile.DeviceType = "Telescope";
-               TRACE_STATE = Convert.ToBoolean(driverProfile.GetValue(DRIVER_ID, traceStateProfileName, string.Empty, traceStateDefault));
-               COM_PORT = driverProfile.GetValue(DRIVER_ID, comPortProfileName, string.Empty, comPortDefault);
-            }
-         }
-      }
+      ///// <summary>
+      ///// Read the device configuration from the ASCOM Profile store
+      ///// </summary>
+      //internal void ReadProfile()
+      //{
+      //   lock (_Lock) {
+      //      LoadSettings();
+      //      //using (Profile driverProfile = new Profile()) {
+      //      //   driverProfile.DeviceType = "Telescope";
+      //      //   TRACE_STATE = Convert.ToBoolean(driverProfile.GetValue(DRIVER_ID, traceStateProfileName, string.Empty, traceStateDefault));
+      //      //   COM_PORT = driverProfile.GetValue(DRIVER_ID, comPortProfileName, string.Empty, comPortDefault);
+      //      //}
+      //   }
+      //}
 
-      /// <summary>
-      /// Write the device configuration to the  ASCOM  Profile store
-      /// </summary>
-      internal void WriteProfile()
-      {
-         lock (_Lock) {
-            using (Profile driverProfile = new Profile()) {
-               driverProfile.DeviceType = "Telescope";
-               driverProfile.WriteValue(DRIVER_ID, traceStateProfileName, TRACE_STATE.ToString());
-               driverProfile.WriteValue(DRIVER_ID, comPortProfileName, COM_PORT.ToString());
-            }
-         }
-      }
+      ///// <summary>
+      ///// Write the device configuration to the  ASCOM  Profile store
+      ///// </summary>
+      //internal void WriteProfile()
+      //{
+      //   lock (_Lock) {
+      //      SaveSettings(Settings);
+      //      //using (Profile driverProfile = new Profile()) {
+      //      //   driverProfile.DeviceType = "Telescope";
+      //      //   driverProfile.WriteValue(DRIVER_ID, traceStateProfileName, TRACE_STATE.ToString());
+      //      //   driverProfile.WriteValue(DRIVER_ID, comPortProfileName, COM_PORT.ToString());
+      //      //}
+      //   }
+      //}
 
       #endregion
 

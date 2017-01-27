@@ -15,7 +15,7 @@
         <ResourceDictionary>
             <local:ViewModelLocator x:Key="Locator" />
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Skins/MainSkin.xaml" />
+                <ResourceDictionary Source="../Skins/MainSkin.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
@@ -54,7 +54,7 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
             <TextBlock Grid.Row="2"  Text="Trace on"/>
-            <CheckBox Grid.Row="2" Grid.Column="2" IsChecked="{Binding TraceState}" />
+            <CheckBox Grid.Row="2" Grid.Column="2" IsChecked="{Binding Settings.IsTracing}" />
         </Grid>
         <DockPanel Grid.Column="2">
             <StackPanel DockPanel.Dock="Bottom">
@@ -62,7 +62,7 @@
                 <Button Content="Cancel" Command="{Binding CancelChangesAndCloseCommand}"/>
             </StackPanel>
             <Image  
-               HorizontalAlignment="Center" VerticalAlignment="Top" Source="ASCOM.png" Stretch="None" Margin="0,0,0,10" />
+               HorizontalAlignment="Center" VerticalAlignment="Top" Source="../Skins/Images/ASCOM.png" Stretch="None" Margin="0,0,0,10" />
 
 
         </DockPanel>
