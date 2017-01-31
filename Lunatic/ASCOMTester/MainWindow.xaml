@@ -11,7 +11,12 @@
     <Grid>
         <StackPanel>
             <Button Command="{Binding ChooseCommand}" Content="Choose" Width="80" Margin="10"/>
-            <Button Command="{Binding ConnectCommand}" Content="Connect" Width="80"/>
+            <Button Command="{Binding ConnectCommand}" Width="80">
+                <Grid>
+                    <TextBlock Text="Connect" Visibility="{Binding IsConnected, Converter={StaticResource ReversedBooleanToVisiblityConverter}}"/>
+                    <TextBlock Text="Disconnect" Visibility="{Binding IsConnected, Converter={StaticResource BooleanToVisiblityConverter}}"/>
+                </Grid>
+            </Button>
 
         </StackPanel>
     </Grid>

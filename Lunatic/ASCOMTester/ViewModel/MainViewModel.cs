@@ -20,11 +20,28 @@ namespace ASCOMTester.ViewModel
       private ASCOM.DriverAccess.Telescope _Driver;
 
       #region Properties ....
-      private bool IsConnected
+      public bool IsConnected
       {
          get
          {
             return ((_Driver != null) && (_Driver.Connected == true));
+         }
+      }
+
+      private string _DriverId;
+      public string DriverId
+      {
+         get
+         {
+            return _DriverId;
+         }
+         set
+         {
+            if (value == _DriverId) {
+               return;
+            }
+            _DriverId = value;
+            RaisePropertyChanged();
          }
       }
       #endregion
@@ -53,7 +70,7 @@ namespace ASCOMTester.ViewModel
          {
             return _ChooseCommand
                ?? (_ChooseCommand = new RelayCommand(() => {
-                  Properties.Settings.Default.DriverId = ASCOM.DriverAccess.Telescope.Choose(Properties.Settings.Default.DriverId);
+                  DriverId = ASCOM.DriverAccess.Telescope.Choose(Properties.Settings.Default.DriverId);
                   RaiseCanExecuteChanged();
                }, () => { return !IsConnected; }));
          }
@@ -68,13 +85,17 @@ namespace ASCOMTester.ViewModel
             return _ConnectCommand
                ?? (_ConnectCommand = new RelayCommand(() => {
                   if (IsConnected) {
+                     if (_Driver != null) {
+                        _Driver.Connected = false;
+                     }
                   }
                   else {
                      _Driver = new ASCOM.DriverAccess.Telescope(Properties.Settings.Default.DriverId);
                      _Driver.Connected = true;
                   }
+                  RaisePropertyChanged("IsConnected");
                   RaiseCanExecuteChanged();
-               }, () => { return !string.IsNullOrEmpty(Properties.Settings.Default.DriverId); }));
+               }, () => { return !string.IsNullOrEmpty(DriverId); }));
          }
       }
       #endregion
