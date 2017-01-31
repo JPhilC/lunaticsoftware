@@ -3,12 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:ASCOM.Lunatic.TelescopeDriver"
         mc:Ignorable="d"
         Title="Lunatic Telescope Setup" 
-        WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="CenterOwner" Topmost="True"
         d:DesignHeight="214" d:DesignWidth="400"
-        SizeToContent="WidthAndHeight"  MinWidth="400"
+        SizeToContent="WidthAndHeight"  MinWidth="600"
         d:DataContext="{Binding SetupViewMode, Source={StaticResource Locator}}"
         Style="{DynamicResource PropertyDialogStyle}">
     <Window.Resources>
@@ -16,6 +17,7 @@
             <local:ViewModelLocator x:Key="Locator" />
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="../Skins/MainSkin.xaml" />
+                <ResourceDictionary Source="../Skins/PropertyGridTemplates.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
@@ -25,8 +27,26 @@
             <ColumnDefinition Width="5" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
+        <ScrollViewer Margin="0,0,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <xctk:PropertyGrid x:Name="propertyGrid" 
+                               SelectedObject="{Binding}"
+                               EditorDefinitions="{StaticResource PropertyGridPropertyEditors}"
+                               AutoGenerateProperties="False"
+                               IsMiscCategoryLabelHidden="True"
+                               ShowSearchBox="False"
+                               ShowSortOptions="False"
+                               ShowTitle="False">
+                <xctk:PropertyGrid.PropertyDefinitions>
+                    <xctk:PropertyDefinition TargetProperties="TimeOut,
+                    Retry,
+                    BaudRate,
+                    SelectedCOMPort,
+                                             IsTraceOn"/>
+                </xctk:PropertyGrid.PropertyDefinitions>
 
-        <Grid>
+            </xctk:PropertyGrid>
+        </ScrollViewer>
+        <!--<Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="5" />
@@ -55,7 +75,7 @@
             </ComboBox>
             <TextBlock Grid.Row="2"  Text="Trace on"/>
             <CheckBox Grid.Row="2" Grid.Column="2" IsChecked="{Binding Settings.IsTracing}" />
-        </Grid>
+        </Grid>-->
         <DockPanel Grid.Column="2">
             <StackPanel DockPanel.Dock="Bottom">
                 <Button Content="OK" Margin="0,0,0,10" Command="{Binding SaveChangesAndCloseCommand}"/>

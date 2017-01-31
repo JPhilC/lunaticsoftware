@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Management;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 /* Thanks to:
  * Dario Santarelli
@@ -34,20 +32,61 @@ namespace Lunatic.Core.Services
       }
    }
 
-   public class COMPortService
+   public class COMPortInfo : IEquatable<COMPortInfo>
    {
-      public class COMPortInfo 
+      public string Name { get; private set; }
+      public string Description { get; private set; }
+
+      public COMPortInfo() { }
+
+      public COMPortInfo(string name, string description)
       {
-         public string Name { get; private set; }
-         public string Description { get; private set; }
-
-         public COMPortInfo(string name, string description)
-         {
-            this.Name = name;
-            this.Description = description;
-         }
-
+         this.Name = name;
+         this.Description = description;
       }
+
+
+      public bool Equals(COMPortInfo other)
+      {
+         return !ReferenceEquals(other, null) &&
+           Name == other.Name &&
+           Description == other.Description;
+      }
+
+      public override bool Equals(object obj)
+      {
+         return Equals(obj as COMPortInfo);
+      }
+      public static bool operator !=(COMPortInfo comPort1, COMPortInfo comPort2)
+      {
+         return !(comPort1 == comPort2);
+      }
+      public static bool operator ==(COMPortInfo comPort1, COMPortInfo comPort2)
+      {
+         return ReferenceEquals(comPort1, comPort2)
+           || (!ReferenceEquals(comPort1, null) && comPort1.Equals(comPort2));
+      }
+
+      public override int GetHashCode()
+      {
+         int hash = 13;
+         hash = (hash * 7) + Name.GetHashCode();
+         hash = (hash * 7) + Description.GetHashCode();
+         return hash;
+      }
+   }
+
+   public class COMPortService : IItemsSource
+   {
+      public ItemCollection GetValues()
+      {
+         ItemCollection ports = new ItemCollection();
+         foreach (COMPortInfo comPort in COMPortService.GetCOMPortsInfo()) {
+            ports.Add(comPort, comPort.Name);
+         }
+         return ports;
+      }
+
 
       public static List<COMPortInfo> GetCOMPortsInfo()
       {

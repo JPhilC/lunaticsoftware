@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="DriverId" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">ASCOM.Lunatic.TelescopeDriver.SyntaTelescope</Value>
     </Setting>
   </Settings>
 </SettingsFile>

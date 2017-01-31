@@ -1,4 +1,4 @@
-﻿using Lunatic.Core.ComponentModel;
+﻿using Lunatic.Core;
 using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -54,129 +54,102 @@ namespace ASCOM.Lunatic.TelescopeDriver
       ID_STARSEEKER114 = 11,        // NexStarGT-114 mount
    }
 
-   [TypeConverter(typeof(EnumTypeConverter))]
+   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
    public enum MountOptionEnum
    {
-      [EnumMember]
       [Description("Auto detect")]
       AutoDetect,
-      [EnumMember]
       [Description("Custom")]
       Custom
    }
 
 
-   [TypeConverter(typeof(EnumTypeConverter))]
+   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
    public enum ParkStatus
    {
-      [EnumMember]
       [Description("Unparked")]
       Unparked,
-      [EnumMember]
       [Description("Parked")]
       Parked,
-      [EnumMember]
       [Description("Parking")]
       Parking,
-      [EnumMember]
       [Description("Unparking")]
       Unparking
    }
 
-   [TypeConverter(typeof(EnumTypeConverter))]
+   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
    public enum BaudRate
    {
-      [EnumMember]
       [Description("4800")]
       Baud4800 = 4800,
-      [EnumMember]
       [Description("9600")]
       Baud9600 = 9600,
-      [EnumMember]
       [Description("11520")]
       Baud115200 = 115200,
-      [EnumMember]
       [Description("128000")]
       Baud128000 = 128000,
    }
 
-   [TypeConverter(typeof(EnumTypeConverter))]
+   //[TypeConverter(typeof(EnumTypeConverter))]
    public enum PulseGuidingOption
    {
-      [EnumMember]
       [Description("ASCOM Pulse Guiding")]
       ASCOM,
-      [EnumMember]
       [Description("ST-4 Pulse Guiding")]
       ST4
    }
 
-   [TypeConverter(typeof(EnumTypeConverter))]
+   //[TypeConverter(typeof(EnumTypeConverter))]
    public enum SideOfPierOption
    {
-      [EnumMember]
       [Description("Pointing (ASCOM)")]
       Pointing,
-      [EnumMember]
       [Description("Physical")]
       Physical,
-      [EnumMember]
       [Description("None (ASCOM)")]
       None,
-      [EnumMember]
       [Description("V1.24g")]
       V124g
    }
 
-   [TypeConverter(typeof(EnumTypeConverter))]
+   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
    public enum EpochEnum
    {
-      [EnumMember]
       [Description("EPOCH Unknown")]
       Unknown,
-      [EnumMember]
       [Description("JNOW")]
       JNow,
-      [EnumMember]
       [Description("J2000")]
       J2000,
-      [EnumMember]
       [Description("J2050")]
       J2050,
-      [EnumMember]
       [Description("B1950")]
       B1950
    }
 
-   [TypeConverter(typeof(EnumTypeConverter))]
+   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
    public enum TimeOutOption
    {
-      [EnumMember]
       [Description("1000")]
       TO1000 = 1000,
-      [EnumMember]
       [Description("2000")]
       TO2000 = 2000
    }
 
-   [TypeConverter(typeof(EnumTypeConverter))]
+   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
    public enum RetryOption
    {
-      [EnumMember]
       [Description("Once")]
       Once = 1,
-      [EnumMember]
       [Description("Twice")]
       Twice = 2
    }
 
-   [TypeConverter(typeof(EnumTypeConverter))]
+   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
    public enum HemisphereOption
    {
-      [EnumMember]
       [Description("North")]
       Northern,
-      [EnumMember]
       [Description("South")]
       Southern
 

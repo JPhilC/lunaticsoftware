@@ -136,9 +136,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          //if (IsConnected)
          //   System.Windows.Forms.MessageBox.Show("Already connected, just press OK");
          SetupViewModel setupVm = ViewModelLocator.Current.Setup;
-         // Refresh the com ports
-         setupVm.RefreshCOMPorts();
-
+         setupVm.PopProperties();
          SetupWindow setupWindow = new SetupWindow(setupVm);
          var result = setupWindow.ShowDialog();
          if (result.HasValue && result.Value) {

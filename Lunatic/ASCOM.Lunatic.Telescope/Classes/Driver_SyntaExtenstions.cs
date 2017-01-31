@@ -36,7 +36,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       public override void Connect_COM(string telescopePort)
       {
          base.Connect_COM(telescopePort);
-         ((SerialConnect_COM)Connection).hCom.BaudRate = SerialConnect_COM.CBR.CBR_9600;
+         ((SerialConnect_COM)Connection).hCom.BaudRate = (int)Settings.BaudRate;
+         ((SerialConnect_COM)Connection).hCom.ReadTimeout = (int)Settings.Timeout;
          ((SerialConnect_COM)Connection).hCom.Encoding = Encoding.ASCII;
       }
 

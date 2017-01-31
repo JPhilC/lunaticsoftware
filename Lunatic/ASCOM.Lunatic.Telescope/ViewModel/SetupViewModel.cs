@@ -1,11 +1,9 @@
 using ASCOM.Lunatic.Interfaces;
-using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Command;
 using Lunatic.Core;
 using Lunatic.Core.Services;
-using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
-using static Lunatic.Core.Services.COMPortService;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace ASCOM.Lunatic.TelescopeDriver
 {
@@ -35,40 +33,112 @@ namespace ASCOM.Lunatic.TelescopeDriver
          }
       }
 
+      #region Port details ...
       private COMPortInfo _SelectedCOMPort;
 
+      [Category("Port details")]
+      [DisplayName("Port")]
+      [Description("The COM port that is connected to the telescope")]
       public COMPortInfo SelectedCOMPort
       {
-
          get
          {
             return _SelectedCOMPort;
          }
          set
          {
+            if (value == _SelectedCOMPort) {
+               return;
+            }
             _SelectedCOMPort = value;
-            if (_SelectedCOMPort != null) {
-               Settings.COMPort = _SelectedCOMPort.Name;
-            }
-            else {
-               Settings.COMPort = string.Empty;
-            }
-
             RaisePropertyChanged();
-            RaisePropertyChanged("COMPortName");
          }
       }
 
-
-      private List<COMPortInfo> _AvailableCOMPorts = new List<COMPortInfo>();
-      public List<COMPortInfo> AvailableCOMPorts
+      private TimeOutOption _TimeOut;
+      [Category("Port details")]
+      [DisplayName("Timeout")]
+      [Description("The length of time to wait for a response from the telescope (milliseconds)")]
+      public TimeOutOption TimeOut
       {
          get
          {
-            return _AvailableCOMPorts;
+            return _TimeOut;
+         }
+         set
+         {
+            if (value == _TimeOut) {
+               return;
+            }
+            _TimeOut = value;
+            RaisePropertyChanged();
          }
       }
 
+      private RetryOption _Retry;
+      [Category("Port details")]
+      [DisplayName("Retry")]
+      [Description("How many times to try connecting to the COM port.")]
+      public RetryOption Retry
+      {
+         get
+         {
+            return _Retry;
+         }
+         set
+         {
+            if (value == _Retry) {
+               return;
+            }
+            _Retry = value;
+            RaisePropertyChanged();
+         }
+      }
+
+      private BaudRate _BaudRate;
+      [Category("Port details")]
+      [DisplayName("Baud rate")]
+      [Description("The data transfer rate used with the COM port.")]
+      public BaudRate BaudRate
+      {
+         get
+         {
+            return _BaudRate;
+         }
+         set
+         {
+            if (value == _BaudRate) {
+               return;
+            }
+            _BaudRate = value;
+            RaisePropertyChanged();
+         }
+      }
+
+      #endregion
+
+      #region General ...
+      private bool _IsTraceOn;
+      [Category("General")]
+      [DisplayName("Trace On")]
+      [Description("Put a tick in here to switch on ASCOM tracing")]
+      public bool IsTraceOn
+      {
+         get
+         {
+            return _IsTraceOn;
+         }
+         set
+         {
+            if (value == _IsTraceOn) {
+               return;
+            }
+            _IsTraceOn = value;
+            RaisePropertyChanged();
+         }
+      }
+
+      #endregion
 
       #endregion
 
@@ -78,17 +148,34 @@ namespace ASCOM.Lunatic.TelescopeDriver
       public SetupViewModel(ISettingsProvider settingsProvider)
       {
          _Settings = settingsProvider.CurrentSettings;
+         PopProperties();
       }
 
-      public void RefreshCOMPorts()
+      protected override bool OnSaveCommand()
       {
-         _AvailableCOMPorts.Clear();
-         foreach (COMPortInfo comPort in COMPortService.GetCOMPortsInfo()) {
-            _AvailableCOMPorts.Add(comPort);
-         }
-         _SelectedCOMPort = AvailableCOMPorts.Where(port => port.Name == Settings.COMPort).FirstOrDefault();
+         PushProperties();
+         return base.OnSaveCommand();
       }
 
+      public void PopProperties()
+      {
+         SelectedCOMPort = COMPortService.GetCOMPortsInfo().Where(port => port.Name == Settings.COMPort).FirstOrDefault();
+         TimeOut = _Settings.Timeout;
+         Retry = _Settings.Retry;
+         BaudRate = _Settings.BaudRate;
+
+         IsTraceOn = _Settings.IsTracing;
+      }
+
+      public void PushProperties()
+      {
+         _Settings.COMPort = SelectedCOMPort.Name;
+         _Settings.Timeout = TimeOut;
+         _Settings.Retry = Retry;
+         _Settings.BaudRate = BaudRate;
+
+         _Settings.IsTracing = IsTraceOn;
+      }
 
    }
 }

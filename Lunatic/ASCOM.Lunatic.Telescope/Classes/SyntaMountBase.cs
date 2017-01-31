@@ -72,8 +72,9 @@ namespace ASCOM.Lunatic.TelescopeDriver
       public AxisStatus[] AxesStatus = new AxisStatus[2];             // The two-axis status of the carriage should pass AxesStatus[AXIS1] and AxesStatus[AXIS2] by Reference
 
 
-      public SyntaMountBase()
+      public SyntaMountBase():base()
       {
+
          Connection = null;
          MCVersion = 0;
          IsEQMount = false;
@@ -92,6 +93,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          if (Connection != null)
             Connection.Close();
       }
+
 
       /// <summary>
       /// Build a connection to mount via COM
@@ -140,7 +142,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          //EscapeCommFunction(hCom, CLRRTS);
 
          // Set communication parameter
-         hCom.BaudRate = SerialConnect_COM.CBR.CBR_9600;
+         hCom.BaudRate = (int)BaudRate.Baud9600;
          // fOutxCTSFlow
          // fOutxDsrFlow
          hCom.DtrEnable = false;
@@ -156,7 +158,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          hCom.DataBits = 8;
          hCom.StopBits = StopBits.One;
 
-         hCom.ReadTimeout = 1000;
+         hCom.ReadTimeout = (int)TimeOutOption.TO1000;
          hCom.WriteTimeout = 60;
 
          hCom.Open();
