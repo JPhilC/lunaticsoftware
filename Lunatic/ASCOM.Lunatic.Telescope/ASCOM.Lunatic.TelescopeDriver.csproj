@@ -39,7 +39,7 @@
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Skins\Images\ASCOM.ico</ApplicationIcon>
+    <ApplicationIcon>LunaticMoon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ASCOM.Astrometry, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
@@ -146,8 +146,6 @@
       <DependentUpon>Driver.cs</DependentUpon>
     </Compile>
     <Compile Include="Classes\COMPortBindingSourceExtension.cs" />
-    <Compile Include="Classes\EnumBindingSourceExtension.cs" />
-    <Compile Include="Classes\EnumDescriptionTypeConverter.cs" />
     <Compile Include="Classes\Enums.cs" />
     <Compile Include="Classes\SettingsProvider.cs" />
     <Compile Include="Classes\SyntaMountBase.cs" />
@@ -218,6 +216,14 @@
       <Project>{2e23d13a-8cb0-434b-9259-7789157e8677}</Project>
       <Name>Lunatic.Core</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Skins\Images\LunaticMoon.ico" />
+    <Resource Include="Skins\Images\LunaticMoon.jpg" />
+    <Resource Include="Skins\Images\LunaticMoon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="LunaticMoon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

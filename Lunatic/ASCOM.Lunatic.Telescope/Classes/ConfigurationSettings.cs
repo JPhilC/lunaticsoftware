@@ -168,7 +168,11 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
       //CUSTOM_MOUNT=0
       public CustomMount CustomMount { get; set; }
-      public MountOptionEnum MountOption { get; set; }
+      public MountOptions MountOption { get; set; }
+
+      // gAscomCompatibility.AllowPulseGuide
+      public PulseGuidingOption PulseGuidingMode { get; set; }
+
       //PULSEGUIDE_TIMER_INTERVAL=20
       public int PulseGuidingTimeInterval { get; set; }
       //AUTOSYNCRA=1 RAAutoSync

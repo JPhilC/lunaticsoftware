@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Xceed.Wpf.Toolkit.PropertyGrid;
 
 namespace ASCOM.Lunatic.TelescopeDriver
 {
@@ -49,6 +52,17 @@ namespace ASCOM.Lunatic.TelescopeDriver
          base.OnClosed(e);
          _ViewModel.SaveAndCloseAction = null;
          _ViewModel.CancelAndCloseAction = null;
+      }
+
+      private void propertyGrid_PreparePropertyItem(object sender, Xceed.Wpf.Toolkit.PropertyGrid.PropertyItemEventArgs e)
+      {
+         PropertyDescriptor theDescriptor = ((PropertyItem)e.PropertyItem).PropertyDescriptor;
+         if (theDescriptor.IsBrowsable) {
+            e.PropertyItem.Visibility = Visibility.Visible;
+         }
+         else {
+            e.PropertyItem.Visibility = Visibility.Collapsed;
+         }
       }
    }
 }

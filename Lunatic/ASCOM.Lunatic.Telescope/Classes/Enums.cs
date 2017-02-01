@@ -54,8 +54,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       ID_STARSEEKER114 = 11,        // NexStarGT-114 mount
    }
 
-   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
-   public enum MountOptionEnum
+   [TypeConverter(typeof(EnumTypeConverter))]
+   public enum MountOptions
    {
       [Description("Auto detect")]
       AutoDetect,
@@ -64,7 +64,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
    }
 
 
-   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
+   [TypeConverter(typeof(EnumTypeConverter))]
    public enum ParkStatus
    {
       [Description("Unparked")]
@@ -77,7 +77,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       Unparking
    }
 
-   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
+   [TypeConverter(typeof(EnumTypeConverter))]
    public enum BaudRate
    {
       [Description("4800")]
@@ -90,7 +90,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       Baud128000 = 128000,
    }
 
-   //[TypeConverter(typeof(EnumTypeConverter))]
+   [TypeConverter(typeof(EnumTypeConverter))]
    public enum PulseGuidingOption
    {
       [Description("ASCOM Pulse Guiding")]
@@ -99,35 +99,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       ST4
    }
 
-   //[TypeConverter(typeof(EnumTypeConverter))]
-   public enum SideOfPierOption
-   {
-      [Description("Pointing (ASCOM)")]
-      Pointing,
-      [Description("Physical")]
-      Physical,
-      [Description("None (ASCOM)")]
-      None,
-      [Description("V1.24g")]
-      V124g
-   }
 
-   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
-   public enum EpochEnum
-   {
-      [Description("EPOCH Unknown")]
-      Unknown,
-      [Description("JNOW")]
-      JNow,
-      [Description("J2000")]
-      J2000,
-      [Description("J2050")]
-      J2050,
-      [Description("B1950")]
-      B1950
-   }
-
-   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
+   [TypeConverter(typeof(EnumTypeConverter))]
    public enum TimeOutOption
    {
       [Description("1000")]
@@ -136,7 +109,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       TO2000 = 2000
    }
 
-   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
+   [TypeConverter(typeof(EnumTypeConverter))]
    public enum RetryOption
    {
       [Description("Once")]
@@ -145,7 +118,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       Twice = 2
    }
 
-   [TypeConverter(typeof(EnumDescriptionTypeConverter))]
+   [TypeConverter(typeof(EnumTypeConverter))]
    public enum HemisphereOption
    {
       [Description("North")]

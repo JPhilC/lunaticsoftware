@@ -300,7 +300,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          get
          {
             tl.LogMessage("AlignmentMode", "Get - " + _AlignmentMode.ToString());
-            return _AlignmentMode;
+            return _AlignmentMode;     // Set in Constructor
          }
       }
 
@@ -405,7 +405,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            bool canPulseGuide = (Settings.AscomCompliance.AllowPulseGuide);
+            bool canPulseGuide = (Settings.PulseGuidingMode == PulseGuidingOption.ASCOM);
             tl.LogMessage("CanPulseGuide", "Get - " + canPulseGuide.ToString());
             return canPulseGuide;
          }
@@ -424,7 +424,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            bool canSetGuideRates = (Settings.AscomCompliance.AllowPulseGuide);
+            bool canSetGuideRates = (Settings.PulseGuidingMode == PulseGuidingOption.ASCOM);
             tl.LogMessage("CanSetGuideRates", "Get - " + canSetGuideRates.ToString());
             return canSetGuideRates;
          }
@@ -633,7 +633,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            if (Settings.AscomCompliance.AllowPulseGuide) {
+            if (Settings.PulseGuidingMode == PulseGuidingOption.ASCOM) {
                bool isPulseGuiding = false;
                if (_RAPulseDuration + _DecPulseDuration != 0) {
                   isPulseGuiding = true;

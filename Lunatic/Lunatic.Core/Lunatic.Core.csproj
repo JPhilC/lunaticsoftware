@@ -95,7 +95,9 @@
   <ItemGroup>
     <Compile Include="Classes\AscomCompliance.cs" />
     <Compile Include="Classes\BasicMath.cs" />
+    <Compile Include="Classes\BrowsableHelper.cs" />
     <Compile Include="Classes\Constant.cs" />
+    <Compile Include="Classes\Converters\EnumTypeConverter.cs" />
     <Compile Include="Classes\DriverBase.cs" />
     <Compile Include="Classes\SerialConnection.cs" />
     <Compile Include="Classes\ViewModelBase.cs" />

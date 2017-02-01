@@ -7,33 +7,16 @@
                     xmlns:lc="clr-namespace:Lunatic.Core;assembly=Lunatic.Core"
                     xmlns:lcs="clr-namespace:Lunatic.Core.Services;assembly=Lunatic.Core"
                     xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase">
-
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter">
+        
+    </BooleanToVisibilityConverter>
     <!-- Implicit style for PropertyItem type (to make vertical content top alighed) -->
     <Style TargetType="{x:Type xctk:PropertyItem}">
         <Setter Property="VerticalContentAlignment"
               Value="Top" />
     </Style>
 
-    <!-- BaudRate -->
-    <DataTemplate x:Key="BaudRateDataTemplate">
-        <xctk:PropertyGridEditorComboBox SelectedValue="{Binding Value}"
-                                             ItemsSource="{Binding Source={ld:EnumBindingSourceExtension {x:Type ld:BaudRate}}}"/>
-    </DataTemplate>
-
-    <!-- TimeOut -->
-    <DataTemplate x:Key="TimeOutDataTemplate">
-        <xctk:PropertyGridEditorComboBox SelectedItem="{Binding Value}"
-                                             ItemsSource="{Binding Source={ld:EnumBindingSourceExtension {x:Type ld:TimeOutOption}}}"/>
-    </DataTemplate>
-
-
-    <!-- Retry -->
-    <DataTemplate x:Key="RetryDataTemplate">
-        <xctk:PropertyGridEditorComboBox SelectedValue="{Binding Value}"
-                                             ItemsSource="{Binding Source={ld:EnumBindingSourceExtension {x:Type ld:RetryOption}}}"/>
-    </DataTemplate>
-
-    <!-- Retry -->
+    <!-- COMPOrtDataTemplate -->
     <DataTemplate x:Key="COMPortDataTemplate">
         <xctk:PropertyGridEditorComboBox SelectedItem="{Binding Value}"
                                          ItemsSource="{Binding Source={ld:COMPortBindingSourceExtension}}"
@@ -41,21 +24,6 @@
     </DataTemplate>
 
     <xctk:EditorDefinitionCollection x:Key="PropertyGridPropertyEditors">
-        <xctk:EditorTemplateDefinition EditingTemplate="{StaticResource BaudRateDataTemplate}">
-            <xctk:EditorTemplateDefinition.TargetProperties>
-                <xctk:TargetPropertyType Type="{x:Type ld:BaudRate}"/>
-            </xctk:EditorTemplateDefinition.TargetProperties>
-        </xctk:EditorTemplateDefinition>
-        <xctk:EditorTemplateDefinition EditingTemplate="{StaticResource TimeOutDataTemplate}">
-            <xctk:EditorTemplateDefinition.TargetProperties>
-                <xctk:TargetPropertyType Type="{x:Type ld:TimeOutOption}"/>
-            </xctk:EditorTemplateDefinition.TargetProperties>
-        </xctk:EditorTemplateDefinition>
-        <xctk:EditorTemplateDefinition EditingTemplate="{StaticResource RetryDataTemplate}">
-            <xctk:EditorTemplateDefinition.TargetProperties>
-                <xctk:TargetPropertyType Type="{x:Type ld:RetryOption}"/>
-            </xctk:EditorTemplateDefinition.TargetProperties>
-        </xctk:EditorTemplateDefinition>
         <xctk:EditorTemplateDefinition EditingTemplate="{StaticResource COMPortDataTemplate}">
             <xctk:EditorTemplateDefinition.TargetProperties>
                 <xctk:TargetPropertyType Type="{x:Type lcs:COMPortInfo}"/>

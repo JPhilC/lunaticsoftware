@@ -17,8 +17,8 @@ namespace TestConsole
          //   Console.WriteLine("Press a key to exit.");
          //   Console.ReadKey();
          //}
-         Console.WriteLine("Press any key");
-         Console.ReadKey();
+         //Console.WriteLine("Press any key");
+         //Console.ReadKey();
          ASCOM.Lunatic.TelescopeDriver.SyntaTelescope driver = new ASCOM.Lunatic.TelescopeDriver.SyntaTelescope();
          driver.SetupDialog();
 

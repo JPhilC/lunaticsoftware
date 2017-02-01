@@ -31,17 +31,31 @@
             <xctk:PropertyGrid x:Name="propertyGrid" 
                                SelectedObject="{Binding}"
                                EditorDefinitions="{StaticResource PropertyGridPropertyEditors}"
+                               PreparePropertyItem="propertyGrid_PreparePropertyItem"
                                AutoGenerateProperties="False"
                                IsMiscCategoryLabelHidden="True"
                                ShowSearchBox="False"
                                ShowSortOptions="False"
                                ShowTitle="False">
                 <xctk:PropertyGrid.PropertyDefinitions>
-                    <xctk:PropertyDefinition TargetProperties="TimeOut,
+                    <xctk:PropertyDefinition TargetProperties="
+                                             MountOption,
+                                             PulseGuidingMode,
+                                             TimeOut,
                     Retry,
                     BaudRate,
                     SelectedCOMPort,
-                                             IsTraceOn"/>
+                    IsTraceOn,
+                    SlewWithTrackingOff,
+                     AllowExceptions,
+                     AllowPulseGuidingExceptions,
+                     UseSynchronousParking,
+                     AllowSiteWrites,
+                     Epoch,
+                     SideOfPier,
+                     SwapPointingSideOfPier,
+                     SwapPhysicalSideOfPier,
+                     StrictAscom"/>
                 </xctk:PropertyGrid.PropertyDefinitions>
 
             </xctk:PropertyGrid>
@@ -82,7 +96,7 @@
                 <Button Content="Cancel" Command="{Binding CancelChangesAndCloseCommand}"/>
             </StackPanel>
             <Image  
-               HorizontalAlignment="Center" VerticalAlignment="Top" Source="../Skins/Images/ASCOM.png" Stretch="None" Margin="0,0,0,10" />
+               HorizontalAlignment="Center" VerticalAlignment="Top" Source="../Skins/Images/LunaticMoon.png" Stretch="None" Margin="0,0,0,10" />
 
 
         </DockPanel>
