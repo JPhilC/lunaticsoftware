@@ -1,15 +1,10 @@
-﻿using ASCOM.DeviceInterface;
-using ASCOM.Lunatic.Interfaces;
-using GalaSoft.MvvmLight;
+﻿using GalaSoft.MvvmLight;
 using Lunatic.Core;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
+using System.Collections;
 
 namespace ASCOM.Lunatic.TelescopeDriver
 {
@@ -30,7 +25,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       Generic,
       SyntaJ2000
    }
-   public class PolarAlignment : ObservableObject
+   public class PolarAlignment : DataObjectBase
    {
 
 
@@ -47,7 +42,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
    }
 
-   public class ParkPosition : ObservableObject
+   public class ParkPosition : DataObjectBase
    {
       public Guid Id { get; set; }
       public string Name { get; set; }
@@ -56,7 +51,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
    }
 
-   public class CustomMount : ObservableObject
+   public class CustomMount : DataObjectBase
    {
       //CUSTOM_TRACKING_OFFSET_DEC=0
       public int TrackingDecOffset { get; set; }
@@ -72,28 +67,154 @@ namespace ASCOM.Lunatic.TelescopeDriver
       public int RAStepsPer360 { get; set; }
    }
 
-   public class Site
+   public class Site : DataObjectBase
    {
+      public Site() { }
+      public Site(Guid id)
+      {
+         this.Id = id;
+      }
+
       public Guid Id { get; private set; }
       //SiteName=Lime Grove
-      public string SiteName { get; set; }
+
+      private string _SiteName;
+      [DisplayName("Site name")]
+      [Description("Enter a name for this site.")]
+      [PropertyOrder(0)]
+      public string SiteName
+      {
+         get
+         {
+            return _SiteName;
+         }
+         set
+         {
+            if (_SiteName == value) {
+               return;
+            }
+            _SiteName = value;
+            RaisePropertyChanged();
+         }
+      }
+
       //Elevation=173
-      public double Elevation { get; set; }
+
+      private double _Elevation;
+      [DisplayName("Elevation (m)")]
+      [Description("Enter the elevation of the site in metres.")]
+      [PropertyOrder(3)]
+      public double Elevation
+      {
+         get
+         {
+            return _Elevation;
+         }
+         set
+         {
+            if (_Elevation == value) {
+               return;
+            }
+            _Elevation = value;
+            RaisePropertyChanged();
+         }
+      }
       //HemisphereNS=0
-      public HemisphereOption Hemisphere { get; set; }
-      //LongitudeEW=1
-      //LongitudeSec=21.0
-      //LongitudeMin=20
-      //LongitudeDeg=1
-      public double Longitude { get; set; }
+      private HemisphereOption _Hemisphere;
+      [DisplayName("Hemisphere")]
+      [Description("Choose the hemispher")]
+      [PropertyOrder(4)]
+      public HemisphereOption Hemisphere
+      {
+         get
+         {
+            return _Hemisphere;
+         }
+         set
+         {
+            if (_Hemisphere == value) {
+               return;
+            }
+            _Hemisphere = value;
+            RaisePropertyChanged();
+         }
+      }
+
       //LatitudeNS=0
       //LatitudeDeg=52
       //LatitudeMin=40
       //LatitudeSec=6.0
-      public double Latitude { get; set; }
+      private const string LatitudePropertyName = "Latitude";
+      private double _Latitude;
+      [DisplayName("Latitude")]
+      [Description("Enter the site latitude in the format DD MM SS(W/E) (e.g. 52 40 7N)")]
+      [PropertyOrder(1)]
+      public double Latitude
+      {
+         get
+         {
+            return _Latitude;
+         }
+         set
+         {
+            if (value != 0.0 && _Latitude == value) {
+               return;
+            }
+            _Latitude = value;
+            if (_Latitude == 0.0) {
+               AddError(LatitudePropertyName, "Please enter a valid latitude.");
+            }
+            else {
+               RemoveError(LatitudePropertyName);
+            }
+            RaisePropertyChanged();
+         }
+      }
+
+      //LongitudeEW=1
+      //LongitudeSec=21.0
+      //LongitudeMin=20
+      //LongitudeDeg=1
+
+      private const string LongitudePropertyName = "Longitude";
+      private double _Longitude;
+
+
+      [DisplayName("Longitude")]
+      [Description("Enter the site longitude in the format DD MM SS(N/S) (e.g. 1 20 21W)")]
+      [PropertyOrder(2)]
+      public double Longitude
+      {
+         get
+         {
+            return _Longitude;
+         }
+         set
+         {
+            if (value != 0.0 && _Longitude == value) {
+               return;
+            }
+            _Longitude = value;
+            if (_Longitude == 0.0) {
+               AddError(LongitudePropertyName, "Please enter a valid longitude.");
+            }
+            else {
+               RemoveError(LongitudePropertyName);
+            }
+            RaisePropertyChanged();
+         }
+      }
+
    }
 
-   public class Settings : ObservableObject
+   public class SiteCollection : ObservableCollection<Site>
+   {
+
+      public SiteCollection() : base() { }
+
+   }
+
+   public class Settings : DataObjectBase
    {
       public bool ASCOMCompatibilityStrict { get; set; }
       public bool OnTop { get; set; }
@@ -195,7 +316,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       //FriendlyName=
       //ProcessPrioirty=0
 
-      public ObservableCollection<Site> Sites { get; private set; }
+      public SiteCollection Sites { get; private set; }
       public Site CurrentSite { get; set; }
       //Retry=1
       public RetryOption Retry { get; set; }
@@ -362,7 +483,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          this.CustomMount = new CustomMount();
          this.ParkPositions = new ObservableCollection<ParkPosition>();
          this.UNParkPositions = new ObservableCollection<ParkPosition>();
-         this.Sites = new ObservableCollection<Site>();
+         this.Sites = new SiteCollection();
          SetDefaults();
       }
 

@@ -12,6 +12,15 @@
     </Style>
 
     <!-- Textboxes -->
+    <Style TargetType="{x:Type TextBox}">
+        <Style.Triggers>
+            <Trigger Property="Validation.HasError" Value="true">
+                <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self},
+                        Path=(Validation.Errors)[0].ErrorContent}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <Style TargetType="{x:Type TextBox}" x:Key="ValueEntryTextBox">
         <Setter Property="Height" Value="22" />
         <Setter Property="MinWidth" Value="80" />
@@ -71,6 +80,36 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
+    <!-- Hyperlink like button -->
+    <Style x:Key="HyperlinkLikeButton" TargetType="Button">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <ContentPresenter />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HotTrackBrushKey}}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="true">
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <ControlTemplate.Resources>
+                                <Style TargetType="{x:Type TextBlock}">
+                                    <Setter Property="TextDecorations" Value="Underline" />
+                                </Style>
+                            </ControlTemplate.Resources>
+                            <ContentPresenter />
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- Window -->
     <Style TargetType="{x:Type Window}">
         <Setter Property="Icon" Value="pack://application:,,,/ASCOM.Lunatic.TelescopeDriver;component/Skins/Images/LunaticMoon.ico" />
@@ -87,7 +126,7 @@
     <!-- Dialog box (Window) -->
     <Style TargetType="{x:Type Window}" x:Key="PropertyDialogStyle">
         <Setter Property="Background" Value="Black" />
-        <Setter Property="Icon" Value="pack://application:,,,/ASCOM.Lunatic.TelescopeDriver;component/Skins/Images/ASCOM.ico" />
+        <Setter Property="Icon" Value="pack://application:,,,/ASCOM.Lunatic.TelescopeDriver;component/Skins/Images/LunaticMoon.ico" />
         <Setter Property="ResizeMode" Value="CanResizeWithGrip" />
         <Setter Property="WindowStyle" Value="SingleBorderWindow" />
         <Setter Property="ShowInTaskbar" Value="False" />

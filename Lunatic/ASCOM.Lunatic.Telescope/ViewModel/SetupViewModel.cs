@@ -1,6 +1,8 @@
 using ASCOM.Lunatic.Interfaces;
+using GalaSoft.MvvmLight.Command;
 using Lunatic.Core;
 using Lunatic.Core.Services;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -93,6 +95,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       [Category("Port Details")]
       [DisplayName("Port")]
       [Description("The COM port that is connected to the telescope")]
+      [PropertyOrder(0)]
       public COMPortInfo SelectedCOMPort
       {
          get
@@ -109,10 +112,32 @@ namespace ASCOM.Lunatic.TelescopeDriver
          }
       }
 
+      private BaudRate _BaudRate;
+      [Category("Port Details")]
+      [DisplayName("Baud rate")]
+      [Description("The data transfer rate used with the COM port.")]
+      [PropertyOrder(1)]
+      public BaudRate BaudRate
+      {
+         get
+         {
+            return _BaudRate;
+         }
+         set
+         {
+            if (value == _BaudRate) {
+               return;
+            }
+            _BaudRate = value;
+            RaisePropertyChanged();
+         }
+      }
+
       private TimeOutOption _TimeOut;
       [Category("Port Details")]
       [DisplayName("Timeout")]
       [Description("The length of time to wait for a response from the telescope (milliseconds)")]
+      [PropertyOrder(2)]
       public TimeOutOption TimeOut
       {
          get
@@ -133,6 +158,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       [Category("Port Details")]
       [DisplayName("Retry")]
       [Description("How many times to try connecting to the COM port.")]
+      [PropertyOrder(3)]
       public RetryOption Retry
       {
          get
@@ -149,25 +175,6 @@ namespace ASCOM.Lunatic.TelescopeDriver
          }
       }
 
-      private BaudRate _BaudRate;
-      [Category("Port Details")]
-      [DisplayName("Baud rate")]
-      [Description("The data transfer rate used with the COM port.")]
-      public BaudRate BaudRate
-      {
-         get
-         {
-            return _BaudRate;
-         }
-         set
-         {
-            if (value == _BaudRate) {
-               return;
-            }
-            _BaudRate = value;
-            RaisePropertyChanged();
-         }
-      }
 
       #endregion
 
@@ -176,6 +183,17 @@ namespace ASCOM.Lunatic.TelescopeDriver
       #endregion
 
       #region Site information ...
+      private SiteCollection _Sites;
+      [Category("Site Information")]
+      [DisplayName("Available sites")]
+      [Description("Manage the available sites.")]
+      public SiteCollection Sites
+      {
+         get
+         {
+            return _Sites;
+         }
+      }
       #endregion
 
       #region ASCOM Options ...
@@ -423,6 +441,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       public SetupViewModel(ISettingsProvider settingsProvider)
       {
          _Settings = settingsProvider.CurrentSettings;
+         _Sites = new SiteCollection();
          PopProperties();
       }
 
@@ -441,6 +460,17 @@ namespace ASCOM.Lunatic.TelescopeDriver
          TimeOut = _Settings.Timeout;
          Retry = _Settings.Retry;
          BaudRate = _Settings.BaudRate;
+
+         Sites.Clear();
+         foreach (Site site in _Settings.Sites) {
+            Sites.Add(new Site(site.Id) {
+               SiteName = site.SiteName,
+               Elevation = site.Elevation,
+               Longitude = site.Longitude,
+               Latitude = site.Latitude
+            });
+         }
+
 
          IsTraceOn = _Settings.IsTracing;
 
@@ -461,6 +491,17 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          _Settings.MountOption = MountOption;
          _Settings.PulseGuidingMode = PulseGuidingMode;
+
+
+         _Settings.Sites.Clear();
+         foreach (Site site in Sites) {
+            _Settings.Sites.Add(new Site(site.Id) {
+               SiteName = site.SiteName,
+               Elevation = site.Elevation,
+               Longitude = site.Longitude,
+               Latitude = site.Latitude
+            });
+         }
 
          if (SelectedCOMPort != null) {
             _Settings.COMPort = SelectedCOMPort.Name;
@@ -507,5 +548,66 @@ namespace ASCOM.Lunatic.TelescopeDriver
          this.SetBrowsableProperty("SwapPhysicalSideOfPier", !strictAscom);
       }
 
+      #region Relay commands ...
+      private RelayCommand<SiteCollection> _AddSiteCommand;
+
+      /// <summary>
+      /// Adds a new chart to the active model
+      /// </summary>
+      public RelayCommand<SiteCollection> AddSiteCommand
+      {
+         get
+         {
+            return _AddSiteCommand
+                ?? (_AddSiteCommand = new RelayCommand<SiteCollection>(
+                                      (collection) => {
+                                         collection.Add(new Site(Guid.NewGuid()) { SiteName = "<Site name>" });
+                                      }
+
+                                      ));
+         }
+      }
+
+
+      private RelayCommand<Site> _RemoveSiteCommand;
+
+      /// <summary>
+      /// Adds a new chart to the active model
+      /// </summary>
+      public RelayCommand<Site> RemoveSiteCommand
+      {
+         get
+         {
+            return _RemoveSiteCommand
+                ?? (_RemoveSiteCommand = new RelayCommand<Site>(
+                                      (site) => {
+                                         Sites.Remove(site);
+                                      }
+
+                                      ));
+         }
+      }
+
+      private RelayCommand<Site> _GetSiteCoordinateCommand;
+
+      /// <summary>
+      /// Adds a new chart to the active model
+      /// </summary>
+      public RelayCommand<Site> GetSiteCoordinateCommand
+      {
+         get
+         {
+            return _GetSiteCoordinateCommand
+                ?? (_GetSiteCoordinateCommand = new RelayCommand<Site>(
+                                      (site) => {
+                                         MapViewModel vm = new MapViewModel(site);
+                                         MapWindow map = new MapWindow(vm);
+                                         var result = map.ShowDialog();
+                                      }
+
+                                      ));
+         }
+      }
+      #endregion
    }
 }
