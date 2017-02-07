@@ -14,7 +14,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       const char cErrChar = '!';              // Leading charactor of an ABNORMAL response.
       const char cEndChar = (char)13;         // Tailing charactor of command and response.
       const double MAX_SPEED = 500;           //?
-      const double LOW_SPEED_MARGIN = (128.0 * Constants.SIDEREALRATE);
+      const double LOW_SPEED_MARGIN = (128.0 * Constants.SIDEREAL_RATE);
 
       private char dir = '0'; // direction
                               // Mount code: 0x00=EQ6, 0x01=HEQ5, 0x02=EQ5, 0x03=EQ3
@@ -148,8 +148,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
          InitializeMC();
 
          // These two LowSpeedGotoMargin are calculate from slewing for 5 seconds in 128x sidereal rate
-         LowSpeedGotoMargin[(int)AxisId.Axis1] = (long)(640 * Constants.SIDEREALRATE * FactorRadToStep[(int)AxisId.Axis1]);
-         LowSpeedGotoMargin[(int)AxisId.Axis2] = (long)(640 * Constants.SIDEREALRATE * FactorRadToStep[(int)AxisId.Axis2]);
+         LowSpeedGotoMargin[(int)AxisId.Axis1] = (long)(640 * Constants.SIDEREAL_RATE * FactorRadToStep[(int)AxisId.Axis1]);
+         LowSpeedGotoMargin[(int)AxisId.Axis2] = (long)(640 * Constants.SIDEREAL_RATE * FactorRadToStep[(int)AxisId.Axis2]);
 
          // Default break steps
          BreakSteps[(int)AxisId.Axis1] = 3500;
@@ -168,7 +168,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          bool forward = false, highspeed = false;
 
          // InternalSpeed lower than 1/1000 of sidereal rate?
-         if (Math.Abs(InternalSpeed) <= Constants.SIDEREALRATE / 1000.0) {
+         if (Math.Abs(InternalSpeed) <= Constants.SIDEREAL_RATE / 1000.0) {
             MCAxisStop(Axis);
             return;
          }

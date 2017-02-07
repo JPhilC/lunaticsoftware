@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
 using Lunatic.Core;
+using Lunatic.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,6 +8,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Ports;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -46,13 +48,35 @@ namespace ASCOM.Lunatic.TelescopeDriver
    /// MCGetAxisStatus
    /// </summary>
    /// Checked 2/7/2011
-   public abstract class SyntaMountBase :DriverBase
+   public abstract class SyntaMountBase : DriverBase
    {
 
+      private SerialConnect_COM _Connection = null;
       /// The abstract Serial connection instance 
       /// it is static because all connection shared the same serial connection
       /// and connection should be lock between differnct thread
-      protected SerialConnection Connection = null;
+      protected SerialConnect_COM Connection
+      {
+         get
+         {
+            return _Connection;
+         }
+         set
+         {
+            if (value == _Connection) {
+               return;
+            }
+            if (_Connection != null) {
+               WatchCOMPorts(false);
+            }
+            _Connection = value;
+            if (_Connection != null) {
+               WatchCOMPorts(true);
+            }
+            RaisePropertyChanged();
+         }
+      }
+
       protected long MCVersion = 0;   // Motor controller version number
 
       public MountId MountID = 0;     // Mount Id
@@ -72,7 +96,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       public AxisStatus[] AxesStatus = new AxisStatus[2];             // The two-axis status of the carriage should pass AxesStatus[AXIS1] and AxesStatus[AXIS2] by Reference
 
 
-      public SyntaMountBase():base()
+      public SyntaMountBase() : base()
       {
 
          Connection = null;
@@ -90,8 +114,9 @@ namespace ASCOM.Lunatic.TelescopeDriver
       }
       ~SyntaMountBase()
       {
-         if (Connection != null)
+         if (Connection != null) {
             Connection.Close();
+         }
       }
 
 
@@ -108,38 +133,6 @@ namespace ASCOM.Lunatic.TelescopeDriver
          // May raise IOException 
          //var hCom = new SerialPort(string.Format("\\$device\\COM{0}", TelescopePort));
          var hCom = new SerialPort(telescopePort);
-
-         // Origional Code in C++
-         //// Set communication parameter.
-         //GetCommState(hCom, &dcb);
-         //dcb.BaudRate = CBR_9600;
-         //dcb.fOutxCtsFlow = FALSE;
-         //dcb.fOutxDsrFlow = FALSE;
-         //dcb.fDtrControl = DTR_CONTROL_DISABLE;
-         //dcb.fDsrSensitivity = FALSE;
-         //dcb.fTXContinueOnXoff = TRUE;
-         //dcb.fOutX = FALSE;
-         //dcb.fInX = FALSE;
-         //dcb.fErrorChar = FALSE;
-         //dcb.fNull = FALSE;
-         //dcb.fRtsControl = RTS_CONTROL_DISABLE;
-         //dcb.fAbortOnError = FALSE;
-         //dcb.ByteSize = 8;
-         //dcb.fParity = NOPARITY;
-         //dcb.StopBits = ONESTOPBIT;
-         //SetCommState(hCom, &dcb);
-
-         //// Communication overtime parameter
-         //GetCommTimeouts(hCom, &TimeOuts);
-         //TimeOuts.ReadIntervalTimeout = 30;			// Maxim interval between two charactors, set according to Celestron's hand control.
-         //TimeOuts.ReadTotalTimeoutAstroMisc = 500;	// Timeout for reading operation.
-         //TimeOuts.ReadTotalTimeoutMultiplier = 2;	// DOUBLE the reading timeout
-         //TimeOuts.WriteTotalTimeoutAstroMisc = 30;	// Write timeout
-         //TimeOuts.WriteTotalTimeoutMultiplier = 2;	// DOUBLE the writing timeout
-         //SetCommTimeouts(hCom, &TimeOuts);
-
-         //// Set RTS to high level, this will disable TX driver in iSky.
-         //EscapeCommFunction(hCom, CLRRTS);
 
          // Set communication parameter
          hCom.BaudRate = (int)BaudRate.Baud9600;
@@ -163,6 +156,28 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
          hCom.Open();
          Connection = new SerialConnect_COM(hCom);
+      }
+
+      private void WatchCOMPorts(bool AddWatch)
+      {
+         if (AddWatch) {
+            COMPortService.AddListener();
+            COMPortService.PortRemoved += COMPortService_PortRemoved;
+         }
+         else {
+            COMPortService.PortRemoved -= COMPortService_PortRemoved;
+            COMPortService.RemoveListener();
+         }
+      }
+
+      private void COMPortService_PortRemoved(object sender, EventArgs e)
+      {
+         // Check that the current com port is still in the list of available ports
+         if (Connection != null) {
+            if (!((SerialConnect_COM)Connection).hCom.IsOpen) {
+               Connection = null;
+            }
+         }
       }
 
       public virtual void Disconnect_COM()

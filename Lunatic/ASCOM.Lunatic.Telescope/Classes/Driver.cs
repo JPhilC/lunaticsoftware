@@ -36,6 +36,7 @@ using ASCOM.DeviceInterface;
 using System.Globalization;
 using System.Collections;
 using Lunatic.Core;
+using System.Runtime.CompilerServices;
 
 namespace ASCOM.Lunatic.TelescopeDriver
 {

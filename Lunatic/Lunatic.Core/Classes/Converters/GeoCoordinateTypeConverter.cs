@@ -32,13 +32,6 @@ namespace Lunatic.Controls
       private const string DegreesSuffixedNs = @"(?<LatDeg>0?[0-8]?[0-9](?:\.\d+)?|0?90(?:\.0+)?)\u00B0?\s*(?<NS>[NS])";
       private const string DegreesSignedNs = @"(?<LatDeg>\-?0?[0-8]?\d(?:\.\d+)?|\-?\s* 0?90(?:\.0+)?)\u00B0?";
 
-      private const string DegMinPrefixedEw = @"(?<EW>[EW])\s*(?:(?<LongDeg>0?\d?\d|1[0-7]\d)[\u00B0\s]\s*(?<LongMin>[0-5]?\d(?:\.\d+)?)\'?|(?<LongDeg>180)[\u00B0\s]\s*(?<LongMin>0?0(?:\.0+)?)\'?)";
-      private const string DegMinSuffixedEw = @"(?:(?<LongDeg>0?\d?\d|1[0-7]\d)[\u00B0\s]\s*(?<LongMin>[0-5]?\d(?:\.\d+)?)\'?|(?<LongDeg>180)[\u00B0\s]\s*(?<LongMin>0?0(?:\.0+)?)\'?)\s*(?<EW>[EW])";
-      private const string DegMinSignedEw = @"(?:(?<LongDeg>\-?(?:0?\d?\d|1[0-7]\d))[\u00B0\s]\s*(?<LongMin>\-?\s*[0-5]?\d(?:\.\d+)?)\'?|(?<LongDeg>\-?\s*180)[\u00B0\s]\s*(?<LongMin>\-?\s*0?0(?:\.0+)?)\'?)";
-      private const string DegMinPrefixedNs = @"(?<NS>[NS])\s*(?:(?<LatDeg>[0-8]?[0-9])[\u00B0\s]\s*(?<LatMin>[0-5]?\d(?:\.\d+)?)\'?|(?<LatDeg>90)[\u00B0\s]\s*(?<LatMin>0?0(?:\.0+)?)\'?)";
-      private const string DegMinSuffixedNs = @"(?:(?<LatDeg>[0-8]?[0-9])[\u00B0\s]\s*(?<LatMin>[0-5]?\d(?:\.\d+)?)\'?|(?<LatDeg>90)[\u00B0\s]\s*(?<LatMin>0?0(?:\.0+)?)\'?)\s*(?<NS>[NS])";
-      private const string DegMinSignedNs = @"(?:(?<LatDeg>\-?0?[0-8]?\d)[\u00B0\s]\s*(?<LatMin>\-?\s*[0-5]?\d(?:\.\d+)?)\'?|(?<LatDeg>\-?\s*0?90)[\u00B0\s]\s*(?<LatMin>\-?\s*0?0(?:\.0+)?)\'?)";
-
       private const string DegMinSecPrefixedEw = @"(?<EW>[EW])\s*(?:(?<LongDeg>0?\d?\d|1[0-7]\d)[\u00B0\s]\s*(?<LongMin>[0-5]?\d)[\'\s]\s*(?<LongSec>[0-5]?\d(?:\.\d+)?)\""?|(?<LongDeg>180)[\u00B0\s]\s*(?<LongMin>0?0)[\'\s]\s*(?<LongSec>0?0(?:\.0+)?)\""?)";
       private const string DegMinSecSuffixedEw = @"(?:(?<LongDeg>0?\d?\d|1[0-7]\d)[\u00B0\s]\s*(?<LongMin>[0-5]?\d)[\'\s]\s*(?<LongSec>[0-5]?\d(?:\.\d+)?)\""?|(?<LongDeg>180)[\u00B0\s]\s*(?<LongMin>0?0)[\'\s]\s*(?<LongSec>0?0(?:\.0+)?)\""?)\s*(?<EW>[EW])";
       private const string DegMinSecSignedEw = @"(?:(?<LongDeg>\-?(?:0?\d?\d|1[0-7]\d))[\u00B0\s]\s*(?<LongMin>\-?\s*[0-5]?\d)[\'\s]\s*(?<LongSec>\-?\s*[0-5]?\d(?:\.\d+)?)\""?|(?<LongDeg>\-?\s*180)[\u00B0\s]\s*(?<LongMin>\-?\s*0?0)[\'\s]\s*(?<LongSec>\-?\s*0?0(?:\.0+)?)\""?)";
@@ -48,17 +41,8 @@ namespace Lunatic.Controls
       private const string DegMinSecSignedNs = @"(?:(?<LatDeg>\-?0?[0-8]?\d)[\u00B0\s]\s*(?<LatMin>\-?\s*[0-5]?\d)[\'\s]\s*(?<LatSec>\-?\s*[0-5]?\d(?:\.\d+)?)\""?|(?<LatDeg>\-?\s*0?90)[\u00B0\s]\s*(?<LatMin>\-?\s*0?0)[\'\s]\s*(?<LatSec>\-?\s*0?0(?:\.0+)?)\""?)";
       private const string DegMinSecCompactNs = @"(?:(?<LatDeg>[0-8][0-9])(?<LatMin>[0-5]\d)(?<LatSec>[0-5]\d(?:\.\d+)?)|(?<LatDeg>90)(?<LatMin>00)(?<LatSec>00(?:\.0+)?))(?<NS>[NS])";
 
-      private const string CadDegMinSecPrefixedEw = @"(?<EW>[EW])\s*(?:(?<LongDeg>0?\d?\d|1[0-7]\d)\s*\:\s*(?<LongMin>[0-5]?\d)\s*\:\s*(?<LongSec>[0-5]?\d(?:\.\d+)?)|(?<LongDeg>180)\s*\:\s*(?<LongMin>0?0)\s*\:\s*(?<LongSec>0?0(?:\.0+)?))";
-      private const string CadDegMinSecSuffixedEw = @"(?:(?<LongDeg>0?\d?\d|1[0-7]\d)\s*\:\s*(?<LongMin>[0-5]?\d)\s*\:\s*(?<LongSec>[0-5]?\d(?:\.\d+)?)|(?<LongDeg>180)\s*\:\s*(?<LongMin>0?0)\s*\:\s*(?<LongSec>0?0(?:\.0+)?))\s*(?<EW>[EW])";
-      private const string CadDegMinSecSignedEw = @"(?:(?<LongDeg>\-?(?:0?\d?\d|1[0-7]\d))\s*\:\s*(?<LongMin>\-?\s*[0-5]?\d)\s*\:\s*(?<LongSec>\-?\s*[0-5]?\d(?:\.\d+)?)|(?<LongDeg>\-?\s*180)\s*\:\s*(?<LongMin>\-?\s*0?0)\s*\:\s*(?<LongSec>\-?\s*0?0(?:\.0+)?))";
-      private const string CadDegMinSecPrefixedNs = @"(?<NS>[NS])\s*(?:(?<LatDeg>[0-8]?[0-9])\s*\:\s*(?<LatMin>[0-5]?\d)\s*\:\s*(?<LatSec>[0-5]?\d(?:\.\d+)?)|(?<LatDeg>90)\s*\:\s*(?<LatMin>0?0)\s*\:\s*(?<LatSec>0?0(?:\.0+)?))";
-      private const string CadDegMinSecSuffixedNs = @"(?:(?<LatDeg>[0-8]?[0-9])\s*\:\s*(?<LatMin>[0-5]?\d)\s*\:\s*(?<LatSec>[0-5]?\d(?:\.\d+)?)|(?<LatDeg>90)\s*\:\s*(?<LatMin>0?0)\s*\:\s*(?<LatSec>0?0(?:\.0+)?))\s*(?<NS>[NS])";
-      private const string CadDegMinSecSignedNs = @"(?:(?<LatDeg>\-?0?[0-8]?\d)\s*\:\s*(?<LatMin>\-?\s*[0-5]?\d)\s*\:\s*(?<LatSec>\-?\s*[0-5]?\d(?:\.\d+)?)|(?<LatDeg>\-?\s*0?90)\s*\:\s*(?<LatMin>\-?\s*0?0)\s*\:\s*(?<LatSec>\-?\s*0?0(?:\.0+)?))";
-
       private static Regex[] _DegRegexes;
-      private static Regex[] _DdmRegexes;
       private static Regex[] _DmsRegexes;
-      private static Regex[] _CadRegexes;
       private static int _NumberDecimalDigitsForSeconds = 2;
 
 
@@ -83,14 +67,6 @@ namespace Lunatic.Controls
                                                  DegreesSignedNs
                                                 };
 
-         string[] degMinFormats = new string[] {DegMinPrefixedEw,
-                                                DegMinSuffixedEw,
-                                                DegMinSignedEw,
-                                                DegMinPrefixedNs,
-                                                DegMinSuffixedNs,
-                                                DegMinSignedNs
-                                               };
-
          string[] degMinSecFormats = new string[] {DegMinSecPrefixedEw,
                                                    DegMinSecSuffixedEw,
                                                    DegMinSecSignedEw,
@@ -101,18 +77,8 @@ namespace Lunatic.Controls
                                                    DegMinSecCompactNs
                                                   };
 
-         string[] cadDegMinSecFormats = new string[] {CadDegMinSecPrefixedEw,
-                                                      CadDegMinSecSuffixedEw,
-                                                      CadDegMinSecSignedEw,
-                                                      CadDegMinSecPrefixedNs,
-                                                      CadDegMinSecSuffixedNs,
-                                                      CadDegMinSecSignedNs
-                                                     };
-
          _DegRegexes = BuildRegexArray(degreesFormats);
-         _DdmRegexes = BuildRegexArray(degMinFormats);
          _DmsRegexes = BuildRegexArray(degMinSecFormats);
-         _CadRegexes = BuildRegexArray(cadDegMinSecFormats);
 
       }
 
@@ -165,41 +131,6 @@ namespace Lunatic.Controls
          _Seconds = 0.0;
 
          angle = StandardizeDegreesSymbol(angle);
-
-         /* The 'CAD' format is checked first against the InvariantCulture; it uses a comma as
-            the lat/long delimiter, so a period must be used as the double point.
-         */
-         foreach (Regex regex in _CadRegexes) {
-            Match match = regex.Match(angle);
-            if (match.Success) {
-               Direction direction = CheckMatchForDirection(match);
-               if (direction == Direction.North
-                   || direction == Direction.South) {
-                  _Degrees = System.Convert.ToInt32(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
-                  _Minutes = System.Convert.ToInt32(match.Groups["LatMin"].Value, CultureInfo.InvariantCulture);
-                  _Seconds = System.Convert.ToDouble(match.Groups["LatSec"].Value, CultureInfo.InvariantCulture);
-               }
-               else {
-                  _Degrees = System.Convert.ToInt32(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
-                  _Minutes = System.Convert.ToInt32(match.Groups["LongMin"].Value, CultureInfo.InvariantCulture);
-                  _Seconds = System.Convert.ToDouble(match.Groups["LongSec"].Value, CultureInfo.InvariantCulture);
-               }
-
-               if (direction == Direction.South
-                   || direction == Direction.West) {
-                  SetDmsToNegative();
-               }
-
-               value = SetDegreesFromDms();
-               hasBeenSet = true;
-               break;
-            }
-         }
-         /* The remaining formats can be locale-specific, but the regex patterns have to be
-   hardcoded with a period as the double point.  So to keep things simple, we'll
-   just replace the locale-specific separator with the invariant one.  (Don't need
-   to worry about grouping characters, etc, since the numbers shouldn't be that big.)
-*/
          angle = angle.Replace(CultureInfo.CurrentCulture.NumberFormat.CurrencyDecimalSeparator, ".");
 
          if (!hasBeenSet) {
@@ -221,38 +152,6 @@ namespace Lunatic.Controls
                   }
 
                   SetDmsFromDegrees(value);
-                  hasBeenSet = true;
-                  break;
-               }
-            }
-         }
-
-         if (!hasBeenSet) {
-            foreach (Regex regex in _DdmRegexes) {
-               Match match = regex.Match(angle);
-               if (match.Success) {
-                  double minutes = 0.0;
-                  Direction direction = CheckMatchForDirection(match);
-
-                  if (direction == Direction.North
-                      || direction == Direction.South) {
-                     _Degrees = System.Convert.ToInt32(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
-                     minutes = System.Convert.ToDouble(match.Groups["LatMin"].Value, CultureInfo.InvariantCulture);
-                  }
-                  else {
-                     _Degrees = System.Convert.ToInt32(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
-                     minutes = System.Convert.ToDouble(match.Groups["LongMin"].Value, CultureInfo.InvariantCulture);
-                  }
-
-                  _Minutes = (int)Math.Truncate(minutes);
-                  _Seconds = (_Minutes - (double)_Minutes) * 60.0;
-
-                  if (direction == Direction.South
-                      || direction == Direction.West) {
-                     SetDmsToNegative();
-                  }
-
-                  value = SetDegreesFromDms();
                   hasBeenSet = true;
                   break;
                }

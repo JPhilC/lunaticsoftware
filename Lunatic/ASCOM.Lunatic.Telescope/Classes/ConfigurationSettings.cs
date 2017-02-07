@@ -104,6 +104,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       [DisplayName("Elevation (m)")]
       [Description("Enter the elevation of the site in metres.")]
       [PropertyOrder(3)]
+
       public double Elevation
       {
          get
@@ -122,7 +123,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
       //HemisphereNS=0
       private HemisphereOption _Hemisphere;
       [DisplayName("Hemisphere")]
-      [Description("Choose the hemispher")]
+      [Description("The hemisphere in which the site is located.")]
       [PropertyOrder(4)]
       public HemisphereOption Hemisphere
       {
@@ -130,7 +131,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          {
             return _Hemisphere;
          }
-         set
+         private set
          {
             if (_Hemisphere == value) {
                return;
@@ -168,6 +169,12 @@ namespace ASCOM.Lunatic.TelescopeDriver
                RemoveError(LatitudePropertyName);
             }
             RaisePropertyChanged();
+            if (_Latitude < 0) {
+               Hemisphere = HemisphereOption.Southern;
+            }
+            else {
+               Hemisphere = HemisphereOption.Northern;
+            }
          }
       }
 

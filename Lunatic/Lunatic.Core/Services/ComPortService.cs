@@ -2,6 +2,8 @@
 using System.Management;
 using System.Collections.Generic;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
+using System.IO.Ports;
+using System.Linq;
 
 /* Thanks to:
  * Dario Santarelli
@@ -63,8 +65,14 @@ namespace Lunatic.Core.Services
       }
       public static bool operator ==(COMPortInfo comPort1, COMPortInfo comPort2)
       {
-         return ReferenceEquals(comPort1, comPort2)
-           || (!ReferenceEquals(comPort1, null) && comPort1.Equals(comPort2));
+         if (object.ReferenceEquals(comPort1, comPort2)) {
+            return true;
+         }
+         if (((object)comPort1 == null) || ((object)comPort2 == null)) {
+            return false;
+         }
+         return (comPort1.Name == comPort2.Name &&
+            comPort1.Description == comPort2.Description);
       }
 
       public override int GetHashCode()
@@ -78,6 +86,21 @@ namespace Lunatic.Core.Services
 
    public class COMPortService : IItemsSource
    {
+      private static readonly Destructor Finalise = new Destructor();
+
+      private sealed class Destructor
+      {
+         ~Destructor()
+         {
+            COMPortService.CleanUp();
+         }
+      }
+
+
+      private static ManagementEventWatcher _Watcher;
+
+      private static int _ListenerCount = 0;
+
       public ItemCollection GetValues()
       {
          ItemCollection ports = new ItemCollection();
@@ -85,6 +108,32 @@ namespace Lunatic.Core.Services
             ports.Add(comPort, comPort.Name);
          }
          return ports;
+      }
+
+      static COMPortService()
+      {
+         MonitorDeviceChanges();
+      }
+
+      public static void AddListener()
+      {
+         _ListenerCount++;
+         if (_ListenerCount >=1) {
+            _Watcher.Start();
+         }
+      }
+
+      public static void RemoveListener()
+      {
+         _ListenerCount--;
+         if (_ListenerCount <= 0) {
+            _Watcher.Stop();
+         }
+      }
+
+      public static void CleanUp()
+      {
+         _Watcher.Stop();
       }
 
 
@@ -118,5 +167,29 @@ namespace Lunatic.Core.Services
          }
          return comPortInfoList;
       }
+
+      public static event EventHandler PortRemoved;
+
+      private static void MonitorDeviceChanges()
+      {
+         try {
+            var deviceRemovalQuery = new WqlEventQuery("SELECT * FROM Win32_DeviceChangeEvent WHERE EventType = 3");
+            _Watcher = new ManagementEventWatcher(deviceRemovalQuery);
+            _Watcher.EventArrived += (sender, eventArgs) => RaisePortRemoved();
+         }
+         catch (ManagementException err) {
+
+         }
+      }
+
+      private static void RaisePortRemoved()
+      {
+         var handler = PortRemoved;
+         if (handler != null) {
+            handler(null, new EventArgs());
+         }
+      }
+
    }
+
 }
