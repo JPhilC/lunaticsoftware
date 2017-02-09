@@ -27,7 +27,7 @@ using System.Runtime.CompilerServices;
 /// http://blog.csdn.net/solond/archive/2008/03/04/2146446.aspx
 /// 6. It looks like Skywatcher mounts response time is 1.5x longer than Celestron's mount
 
-namespace ASCOM.Lunatic.TelescopeDriver
+namespace ASCOM.Lunatic
 {
    /// <summary>
    /// Define the abstract interface of a Mount, includes:

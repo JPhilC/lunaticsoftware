@@ -17,7 +17,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Xceed.Wpf.Toolkit.PropertyGrid;
 
-namespace ASCOM.Lunatic.TelescopeDriver
+namespace ASCOM.Lunatic
 {
    [ComVisible(false)]
    /// <summary>

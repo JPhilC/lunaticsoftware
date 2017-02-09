@@ -3,7 +3,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
-namespace ASCOM.Lunatic.TelescopeDriver
+namespace ASCOM.Lunatic
 {
    [Flags]
    public enum AxisState

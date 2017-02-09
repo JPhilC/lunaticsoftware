@@ -3,7 +3,7 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
                     xmlns:generics="clr-namespace:System.Collections.Generic;assembly=mscorlib"
                     xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-                    xmlns:ld="clr-namespace:ASCOM.Lunatic.TelescopeDriver"
+                    xmlns:ld="clr-namespace:ASCOM.Lunatic"
                     xmlns:lc="clr-namespace:Lunatic.Core;assembly=Lunatic.Core"
                     xmlns:lcc="clr-namespace:Lunatic.Controls;assembly=Lunatic.Core"
                     xmlns:lcs="clr-namespace:Lunatic.Core.Services;assembly=Lunatic.Core"
@@ -11,7 +11,7 @@
     <ResourceDictionary.MergedDictionaries>
         <!-- Load XCEED generic resource dictionary for some styles -->
         <ResourceDictionary Source="pack://application:,,,/Xceed.Wpf.Toolkit;component/PropertyGrid/Themes/Generic.xaml"/>
-        <ResourceDictionary Source="pack://application:,,,/ASCOM.Lunatic.TelescopeDriver;component/Skins/MainSkin.xaml"/>
+        <ResourceDictionary Source="pack://application:,,,/ASCOM.Lunatic;component/Skins/MainSkin.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <lcc:GeoCoordinateToStringConverter x:Key="CoordinateConverter" />

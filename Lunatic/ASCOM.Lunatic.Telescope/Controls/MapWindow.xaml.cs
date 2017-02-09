@@ -13,7 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace ASCOM.Lunatic.TelescopeDriver
+namespace ASCOM.Lunatic
 {
    /// <summary>
    /// Interaction logic for Map.xaml

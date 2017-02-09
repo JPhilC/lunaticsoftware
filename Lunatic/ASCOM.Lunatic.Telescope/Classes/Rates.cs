@@ -7,7 +7,7 @@ using ASCOM.DeviceInterface;
 using System.Collections;
 using System.Threading;
 
-namespace ASCOM.Lunatic.TelescopeDriver
+namespace ASCOM.Lunatic
 {
    #region Rate class
    //

@@ -6,7 +6,7 @@ using System.ComponentModel;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 using System.Collections;
 
-namespace ASCOM.Lunatic.TelescopeDriver
+namespace ASCOM.Lunatic
 {
 
    //POLARHOME_RETICULE_START=1

@@ -19,7 +19,7 @@ namespace TestConsole
          //}
          //Console.WriteLine("Press any key");
          //Console.ReadKey();
-         ASCOM.Lunatic.TelescopeDriver.SyntaTelescope driver = new ASCOM.Lunatic.TelescopeDriver.SyntaTelescope();
+         ASCOM.Lunatic.SyntaTelescope driver = new ASCOM.Lunatic.SyntaTelescope();
          driver.SetupDialog();
 
       }

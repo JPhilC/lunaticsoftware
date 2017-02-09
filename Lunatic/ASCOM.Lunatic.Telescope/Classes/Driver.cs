@@ -38,12 +38,12 @@ using System.Collections;
 using Lunatic.Core;
 using System.Runtime.CompilerServices;
 
-namespace ASCOM.Lunatic.TelescopeDriver
+namespace ASCOM.Lunatic
 {
    //
-   // Your driver's DeviceID is ASCOM.Lunatic.TelescopeDriver.SyntaTelescope
+   // Your driver's DeviceID is ASCOM.Lunatic.SyntaTelescope
    //
-   // The Guid attribute sets the CLSID for ASCOM.Lunatic.TelescopeDriver.SyntaTelescope
+   // The Guid attribute sets the CLSID for ASCOM.Lunatic.SyntaTelescope
    // The ClassInterface/None addribute prevents an empty interface called
    // _Winforms from being created and used as the [default] interface
    //
@@ -55,6 +55,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
    /// ASCOM Telescope Driver for Winforms.
    /// </summary>
    [Guid("C21225C0-EF9A-43C7-A7FA-F172501F0357")]
+   [ProgId("ASCOM.Lunatic.SyntaTelescope")]
+   [ServedClassName("Lunatic ASCOM Driver for Synta Telescopes")]
    [ClassInterface(ClassInterfaceType.None)]
    public partial class SyntaTelescope : SyntaMountBase, ITelescopeV3
    {
@@ -62,12 +64,12 @@ namespace ASCOM.Lunatic.TelescopeDriver
       /// ASCOM DeviceID (COM ProgID) for this driver.
       /// The DeviceID is used by ASCOM applications to load the driver at runtime.
       /// </summary>
-      internal static string DRIVER_ID = "ASCOM.Lunatic.TelescopeDriver.SyntaTelescope";
+      internal static string DRIVER_ID = "ASCOM.Lunatic.SyntaTelescope";
       /// <summary>
       /// Driver description that displays in the ASCOM Chooser.
       /// </summary>
-      private static string DRIVER_DESCRIPTION = "Lunatic ASCOM Driver for Synta Telescopes";
-      private static string DRIVER_NAME = "Lunatic HEQ5/6";
+      private static string INSTRUMENT_DESCRIPTION = "Lunatic ASCOM Driver for Synta Telescopes";  // Was Driver description before moving to hub
+      private static string INSTRUMENT_NAME = "Lunatic HEQ5/6";   // Was DRIVER_ID before moving to hub
       internal static string comPortProfileName = "COM Port"; // Constants used for Profile persistence
       internal static string comPortDefault = "COM1";
       internal static string traceStateProfileName = "Trace Level";
@@ -107,6 +109,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
          tl.Enabled = Settings.IsTracing;       /// NOTE: This line triggers a load of the current settings
          tl.LogMessage("Telescope", "Starting initialisation");
 
+         DRIVER_ID = Marshal.GenerateProgIdForType(this.GetType());
+
          utilities = new Util(); //Initialise util object
          astroUtilities = new AstroUtils(); // Initialise astro utilities object
                                             //TODO: Implement your additional construction here
@@ -114,6 +118,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          _AlignmentMode = AlignmentModes.algGermanPolar;
          _TrackingRates = new TrackingRates();
 
+         
          tl.LogMessage("Telescope", "Completed initialisation");
       }
 
@@ -233,8 +238,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("Description", "Get - " + DRIVER_DESCRIPTION);
-            return DRIVER_DESCRIPTION;
+            tl.LogMessage("Description", "Get - " + INSTRUMENT_DESCRIPTION);
+            return INSTRUMENT_DESCRIPTION;
          }
       }
 
@@ -244,7 +249,7 @@ namespace ASCOM.Lunatic.TelescopeDriver
          {
             //TODO: See if the same version information exists in versionInfo as version.
             StringBuilder sb = new StringBuilder();
-            sb.AppendFormat("{0}, Version {1}.{2}\n", DRIVER_DESCRIPTION,
+            sb.AppendFormat("{0}, Version {1}.{2}\n", INSTRUMENT_DESCRIPTION,
                SettingsProvider.MajorVersion,
                SettingsProvider.MinorVersion);
             sb.AppendLine(SettingsProvider.CompanyName);
@@ -281,8 +286,8 @@ namespace ASCOM.Lunatic.TelescopeDriver
       {
          get
          {
-            tl.LogMessage("Name", "Get - " + DRIVER_NAME);
-            return DRIVER_NAME;
+            tl.LogMessage("Name", "Get - " + INSTRUMENT_NAME);
+            return INSTRUMENT_NAME;
          }
       }
 
@@ -1059,72 +1064,72 @@ namespace ASCOM.Lunatic.TelescopeDriver
 
       #region ASCOM Registration
 
-      // Register or unregister driver for ASCOM. This is harmless if already
-      // registered or unregistered. 
-      //
-      /// <summary>
-      /// Register or unregister the driver with the ASCOM Platform.
-      /// This is harmless if the driver is already registered/unregistered.
-      /// </summary>
-      /// <param name="bRegister">If <c>true</c>, registers the driver, otherwise unregisters it.</param>
-      private static void RegUnregASCOM(bool bRegister)
-      {
-         using (var P = new ASCOM.Utilities.Profile()) {
-            P.DeviceType = "Telescope";
-            if (bRegister) {
-               P.Register(DRIVER_ID, DRIVER_DESCRIPTION);
-            }
-            else {
-               P.Unregister(DRIVER_ID);
-            }
-         }
-      }
+      //// Register or unregister driver for ASCOM. This is harmless if already
+      //// registered or unregistered. 
+      ////
+      ///// <summary>
+      ///// Register or unregister the driver with the ASCOM Platform.
+      ///// This is harmless if the driver is already registered/unregistered.
+      ///// </summary>
+      ///// <param name="bRegister">If <c>true</c>, registers the driver, otherwise unregisters it.</param>
+      //private static void RegUnregASCOM(bool bRegister)
+      //{
+      //   using (var P = new ASCOM.Utilities.Profile()) {
+      //      P.DeviceType = "Telescope";
+      //      if (bRegister) {
+      //         P.Register(DRIVER_ID, DRIVER_DESCRIPTION);
+      //      }
+      //      else {
+      //         P.Unregister(DRIVER_ID);
+      //      }
+      //   }
+      //}
 
-      /// <summary>
-      /// This function registers the driver with the ASCOM Chooser and
-      /// is called automatically whenever this class is registered for COM Interop.
-      /// </summary>
-      /// <param name="t">Type of the class being registered, not used.</param>
-      /// <remarks>
-      /// This method typically runs in two distinct situations:
-      /// <list type="numbered">
-      /// <item>
-      /// In Visual Studio, when the project is successfully built.
-      /// For this to work correctly, the option <c>Register for COM Interop</c>
-      /// must be enabled in the project settings.
-      /// </item>
-      /// <item>During setup, when the installer registers the assembly for COM Interop.</item>
-      /// </list>
-      /// This technique should mean that it is never necessary to manually register a driver with ASCOM.
-      /// </remarks>
-      [ComRegisterFunction]
-      public static void RegisterASCOM(Type t)
-      {
-         RegUnregASCOM(true);
-      }
+      ///// <summary>
+      ///// This function registers the driver with the ASCOM Chooser and
+      ///// is called automatically whenever this class is registered for COM Interop.
+      ///// </summary>
+      ///// <param name="t">Type of the class being registered, not used.</param>
+      ///// <remarks>
+      ///// This method typically runs in two distinct situations:
+      ///// <list type="numbered">
+      ///// <item>
+      ///// In Visual Studio, when the project is successfully built.
+      ///// For this to work correctly, the option <c>Register for COM Interop</c>
+      ///// must be enabled in the project settings.
+      ///// </item>
+      ///// <item>During setup, when the installer registers the assembly for COM Interop.</item>
+      ///// </list>
+      ///// This technique should mean that it is never necessary to manually register a driver with ASCOM.
+      ///// </remarks>
+      //[ComRegisterFunction]
+      //public static void RegisterASCOM(Type t)
+      //{
+      //   RegUnregASCOM(true);
+      //}
 
-      /// <summary>
-      /// This function unregisters the driver from the ASCOM Chooser and
-      /// is called automatically whenever this class is unregistered from COM Interop.
-      /// </summary>
-      /// <param name="t">Type of the class being registered, not used.</param>
-      /// <remarks>
-      /// This method typically runs in two distinct situations:
-      /// <list type="numbered">
-      /// <item>
-      /// In Visual Studio, when the project is cleaned or prior to rebuilding.
-      /// For this to work correctly, the option <c>Register for COM Interop</c>
-      /// must be enabled in the project settings.
-      /// </item>
-      /// <item>During uninstall, when the installer unregisters the assembly from COM Interop.</item>
-      /// </list>
-      /// This technique should mean that it is never necessary to manually unregister a driver from ASCOM.
-      /// </remarks>
-      [ComUnregisterFunction]
-      public static void UnregisterASCOM(Type t)
-      {
-         RegUnregASCOM(false);
-      }
+      ///// <summary>
+      ///// This function unregisters the driver from the ASCOM Chooser and
+      ///// is called automatically whenever this class is unregistered from COM Interop.
+      ///// </summary>
+      ///// <param name="t">Type of the class being registered, not used.</param>
+      ///// <remarks>
+      ///// This method typically runs in two distinct situations:
+      ///// <list type="numbered">
+      ///// <item>
+      ///// In Visual Studio, when the project is cleaned or prior to rebuilding.
+      ///// For this to work correctly, the option <c>Register for COM Interop</c>
+      ///// must be enabled in the project settings.
+      ///// </item>
+      ///// <item>During uninstall, when the installer unregisters the assembly from COM Interop.</item>
+      ///// </list>
+      ///// This technique should mean that it is never necessary to manually unregister a driver from ASCOM.
+      ///// </remarks>
+      //[ComUnregisterFunction]
+      //public static void UnregisterASCOM(Type t)
+      //{
+      //   RegUnregASCOM(false);
+      //}
 
       #endregion
 

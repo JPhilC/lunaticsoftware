@@ -3,7 +3,7 @@ using System;
 using System.Text;
 using System.Threading;
 
-namespace ASCOM.Lunatic.TelescopeDriver
+namespace ASCOM.Lunatic
 {
    public partial class SyntaTelescope
    {

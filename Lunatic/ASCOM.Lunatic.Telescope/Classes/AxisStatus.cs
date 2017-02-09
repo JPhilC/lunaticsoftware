@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ASCOM.Lunatic.TelescopeDriver
+namespace ASCOM.Lunatic
 {
    public struct AxisStatus
    {

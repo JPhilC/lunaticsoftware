@@ -1,4 +1,4 @@
-﻿using ASCOM.Lunatic.TelescopeDriver;
+﻿using ASCOM.Lunatic;
 using System.ComponentModel;
 
 namespace ASCOM.Lunatic.Interfaces
