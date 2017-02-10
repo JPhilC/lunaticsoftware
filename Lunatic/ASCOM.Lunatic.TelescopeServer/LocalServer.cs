@@ -570,6 +570,9 @@ namespace ASCOM.Lunatic
          if (!LoadComObjectAssemblies()) return;                  // Load served COM class assemblies, get types
 
          if (!ProcessArguments(args)) return;                  // Register/Unregister
+//#if DEBUG
+//         RegisterObjects();
+//#endif
 
          // Initialize critical member variables.
          _ObjsInUse = 0;
@@ -589,10 +592,10 @@ namespace ASCOM.Lunatic
          RegisterClassFactories();
 
          // Start up the garbage collection thread.
-         //GarbageCollection GarbageCollector = new GarbageCollection(1000);
-         //Thread GCThread = new Thread(new ThreadStart(GarbageCollector.GCWatch));
-         //GCThread.Name = "Garbage Collection Thread";
-         //GCThread.Start();
+         GarbageCollection GarbageCollector = new GarbageCollection(1000);
+         Thread GCThread = new Thread(new ThreadStart(GarbageCollector.GCWatch));
+         GCThread.Name = "Garbage Collection Thread";
+         GCThread.Start();
 
          //
          // Start the message loop. This serializes incoming calls to our
@@ -600,23 +603,21 @@ namespace ASCOM.Lunatic
          //
          try {
             if (StartedByCOM) {
-               app.Run();
+               _MainWindow.WindowState = WindowState.Minimized;
             }
-            else {
-               app.Run(_MainWindow);
-            }
+            app.Run();
          }
          finally {
             // Revoke the class factories immediately.
             // Don't wait until the thread has stopped before
             // we perform revocation!!!
             RevokeClassFactories();
-#if DEBUG
-            UnregisterObjects();
-#endif
+            //#if DEBUG
+            //            UnregisterObjects();
+            //#endif
             // Now stop the Garbage Collector thread.
-            //GarbageCollector.StopThread();
-            //GarbageCollector.WaitForThreadToStop();
+            GarbageCollector.StopThread();
+            GarbageCollector.WaitForThreadToStop();
          }
       }
       #endregion

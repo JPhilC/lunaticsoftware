@@ -11,7 +11,7 @@
     <ResourceDictionary.MergedDictionaries>
         <!-- Load XCEED generic resource dictionary for some styles -->
         <ResourceDictionary Source="pack://application:,,,/Xceed.Wpf.Toolkit;component/PropertyGrid/Themes/Generic.xaml"/>
-        <ResourceDictionary Source="pack://application:,,,/ASCOM.Lunatic;component/Skins/MainSkin.xaml"/>
+        <ResourceDictionary Source="pack://application:,,,/ASCOM.Lunatic.TelescopeDriver;component/Skins/MainSkin.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <lcc:GeoCoordinateToStringConverter x:Key="CoordinateConverter" />

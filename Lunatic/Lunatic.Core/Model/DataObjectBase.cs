@@ -20,8 +20,6 @@ namespace Lunatic.Core
       {
          if (!string.IsNullOrWhiteSpace(propertyName)
                && this._errors.ContainsKey(propertyName)) {
-            System.Diagnostics.Debug.WriteLine(string.Format("GetErrors called on {0}, returning {1}", propertyName, this._errors[propertyName][0]));
-
             return this._errors[propertyName];
          }
          return null;
@@ -50,7 +48,6 @@ namespace Lunatic.Core
 
       public void NotifyErrorsChanged(string propertyName)
       {
-         System.Diagnostics.Debug.WriteLine(string.Format("Raising Errors Changed on {0}", propertyName));
          EventHandler<DataErrorsChangedEventArgs> handler = this.ErrorsChanged;
          // Notify
          if (handler != null)

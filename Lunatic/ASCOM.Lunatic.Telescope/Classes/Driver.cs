@@ -37,6 +37,7 @@ using System.Globalization;
 using System.Collections;
 using Lunatic.Core;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace ASCOM.Lunatic
 {
@@ -137,18 +138,34 @@ namespace ASCOM.Lunatic
       /// </summary>
       public void SetupDialog()
       {
-         // consider only showing the setup dialog if not connected
-         // or call a different dialog if connected
-         //if (IsConnected)
-         //   System.Windows.Forms.MessageBox.Show("Already connected, just press OK");
+         bool? result = null;
          SetupViewModel setupVm = ViewModelLocator.Current.Setup;
          setupVm.PopProperties();
-         SetupWindow setupWindow = new SetupWindow(setupVm);
-         var result = setupWindow.ShowDialog();
-         if (result.HasValue && result.Value) {
-            tl.Enabled = Settings.IsTracing;
-            SettingsManager.SaveSettings(); // Persist device configuration values to the ASCOM Profile store
-         }
+         Thread thread = new Thread(() => {
+            SetupWindow setupWindow = new SetupWindow(setupVm);
+            result = setupWindow.ShowDialog();
+
+            setupWindow.Dispatcher.InvokeShutdown();
+
+            if (result.HasValue && result.Value) {
+               tl.Enabled = Settings.IsTracing;
+               SettingsManager.SaveSettings(); // Persist device configuration values to the ASCOM Profile store
+            }
+
+            //setupWindow.Closed += (sender, e) => {
+            //   setupWindow.Dispatcher.InvokeShutdown();
+            //   if (result.HasValue && result.Value) {
+            //      tl.Enabled = Settings.IsTracing;
+            //      SettingsManager.SaveSettings(); // Persist device configuration values to the ASCOM Profile store
+            //   }
+            //};
+
+//             System.Windows.Threading.Dispatcher.Run();
+
+         });
+         thread.SetApartmentState(ApartmentState.STA);
+         thread.Start();
+
 
       }
 
