@@ -10,7 +10,7 @@
         d:DesignHeight="214" d:DesignWidth="400"
         SizeToContent="WidthAndHeight"  MinWidth="600"
         d:DataContext="{Binding SetupViewMode, Source={StaticResource Locator}}"
-        Style="{DynamicResource PropertyDialogStyle}">
+    Style="{DynamicResource PropertyDialogStyle}">
     <Window.Resources>
         <ResourceDictionary>
             <local:ViewModelLocator x:Key="Locator" />

@@ -93,7 +93,7 @@ namespace ASCOM.Lunatic
       /// <summary>
       /// Private variable to hold the trace logger object (creates a diagnostic log file with information that you specify)
       /// </summary>
-      private TraceLogger tl;
+      protected TraceLogger _Logger;
 
       /// <summary>
       /// Initializes a new instance of the <see cref="Winforms"/> class.
@@ -106,9 +106,9 @@ namespace ASCOM.Lunatic
             throw new ASCOM.DriverException("Unable to load configuration settings");
          }
 
-         tl = new TraceLogger("", "Winforms");
-         tl.Enabled = Settings.IsTracing;       /// NOTE: This line triggers a load of the current settings
-         tl.LogMessage("Telescope", "Starting initialisation");
+         _Logger = new TraceLogger("", "Winforms");
+         _Logger.Enabled = Settings.IsTracing;       /// NOTE: This line triggers a load of the current settings
+         _Logger.LogMessage("Telescope", "Starting initialisation");
 
          DRIVER_ID = Marshal.GenerateProgIdForType(this.GetType());
 
@@ -120,7 +120,7 @@ namespace ASCOM.Lunatic
          _TrackingRates = new TrackingRates();
 
          
-         tl.LogMessage("Telescope", "Completed initialisation");
+         _Logger.LogMessage("Telescope", "Completed initialisation");
       }
 
 
@@ -138,42 +138,26 @@ namespace ASCOM.Lunatic
       /// </summary>
       public void SetupDialog()
       {
-         bool? result = null;
+         
          SetupViewModel setupVm = ViewModelLocator.Current.Setup;
-         setupVm.PopProperties();
-         Thread thread = new Thread(() => {
-            SetupWindow setupWindow = new SetupWindow(setupVm);
-            result = setupWindow.ShowDialog();
-
-            setupWindow.Dispatcher.InvokeShutdown();
-
-            if (result.HasValue && result.Value) {
-               tl.Enabled = Settings.IsTracing;
-               SettingsManager.SaveSettings(); // Persist device configuration values to the ASCOM Profile store
-            }
-
-            //setupWindow.Closed += (sender, e) => {
-            //   setupWindow.Dispatcher.InvokeShutdown();
-            //   if (result.HasValue && result.Value) {
-            //      tl.Enabled = Settings.IsTracing;
-            //      SettingsManager.SaveSettings(); // Persist device configuration values to the ASCOM Profile store
-            //   }
-            //};
-
-//             System.Windows.Threading.Dispatcher.Run();
-
-         });
+         SetupThread setupThread = new SetupThread(setupVm, _Logger, new SetupCallback(ResultCallback));
+         Thread thread = new Thread(new ThreadStart(setupThread.ThreadProc));
          thread.SetApartmentState(ApartmentState.STA);
          thread.Start();
+      }
 
-
+      private void ResultCallback(bool? result)
+      {
+         if (result.HasValue && result.Value) {
+            SettingsManager.SaveSettings(); // Persist device configuration values to the ASCOM Profile store
+         }
       }
 
       public ArrayList SupportedActions
       {
          get
          {
-            tl.LogMessage("SupportedActions Get", "Returning empty arraylist");
+            _Logger.LogMessage("SupportedActions Get", "Returning empty arraylist");
             return new ArrayList();
          }
       }
@@ -215,9 +199,9 @@ namespace ASCOM.Lunatic
       public void Dispose()
       {
          // Clean up the tracelogger and util objects
-         tl.Enabled = false;
-         tl.Dispose();
-         tl = null;
+         _Logger.Enabled = false;
+         _Logger.Dispose();
+         _Logger = null;
          utilities.Dispose();
          utilities = null;
          astroUtilities.Dispose();
@@ -228,24 +212,24 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("Connected Get", IsConnected.ToString());
+            _Logger.LogMessage("Connected Get", IsConnected.ToString());
             return IsConnected;
          }
          set
          {
             lock (_Lock) {
-               tl.LogMessage("Connected", "Set - " + value.ToString());
+               _Logger.LogMessage("Connected", "Set - " + value.ToString());
                if (value == IsConnected)
                   return;
 
                if (value) {
-                  tl.LogMessage("Connected", "Set - Connecting to port " + Settings.COMPort);
+                  _Logger.LogMessage("Connected", "Set - Connecting to port " + Settings.COMPort);
                   Connect_COM(Settings.COMPort);
                   MCInit();
                }
                else {
                   Disconnect_COM();
-                  tl.LogMessage("Connected", "Set - Disconnecting from port " + Settings.COMPort);
+                  _Logger.LogMessage("Connected", "Set - Disconnecting from port " + Settings.COMPort);
                }
             }
          }
@@ -255,7 +239,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("Description", "Get - " + INSTRUMENT_DESCRIPTION);
+            _Logger.LogMessage("Description", "Get - " + INSTRUMENT_DESCRIPTION);
             return INSTRUMENT_DESCRIPTION;
          }
       }
@@ -273,7 +257,7 @@ namespace ASCOM.Lunatic
             sb.AppendLine(SettingsProvider.Copyright);
             sb.AppendLine(SettingsProvider.Comments);
             string driverInfo = sb.ToString();
-            tl.LogMessage("DriverInfo", "Get - " + driverInfo);
+            _Logger.LogMessage("DriverInfo", "Get - " + driverInfo);
             return driverInfo;
          }
       }
@@ -284,7 +268,7 @@ namespace ASCOM.Lunatic
          {
             Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             string driverVersion = String.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
-            tl.LogMessage("DriverVersion", "Get - " + driverVersion);
+            _Logger.LogMessage("DriverVersion", "Get - " + driverVersion);
             return driverVersion;
          }
       }
@@ -294,7 +278,7 @@ namespace ASCOM.Lunatic
          // set by the driver wizard
          get
          {
-            tl.LogMessage("InterfaceVersion", "Get - 3");
+            _Logger.LogMessage("InterfaceVersion", "Get - 3");
             return Convert.ToInt16("3");
          }
       }
@@ -303,7 +287,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("Name", "Get - " + INSTRUMENT_NAME);
+            _Logger.LogMessage("Name", "Get - " + INSTRUMENT_NAME);
             return INSTRUMENT_NAME;
          }
       }
@@ -313,7 +297,7 @@ namespace ASCOM.Lunatic
       #region ITelescope Implementation
       public void AbortSlew()
       {
-         tl.LogMessage("AbortSlew", "Not implemented");
+         _Logger.LogMessage("AbortSlew", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("AbortSlew");
       }
 
@@ -322,7 +306,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("AlignmentMode", "Get - " + _AlignmentMode.ToString());
+            _Logger.LogMessage("AlignmentMode", "Get - " + _AlignmentMode.ToString());
             return _AlignmentMode;     // Set in Constructor
          }
       }
@@ -332,7 +316,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("Altitude", "Get - " + _Altitude.ToString());
+            _Logger.LogMessage("Altitude", "Get - " + _Altitude.ToString());
             return _Altitude;
          }
       }
@@ -341,7 +325,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("ApertureArea Get", "Not implemented");
+            _Logger.LogMessage("ApertureArea Get", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("ApertureArea", false);
          }
       }
@@ -350,7 +334,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("ApertureDiameter Get", "Not implemented");
+            _Logger.LogMessage("ApertureDiameter Get", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("ApertureDiameter", false);
          }
       }
@@ -359,7 +343,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("AtHome", "Get - " + false.ToString());
+            _Logger.LogMessage("AtHome", "Get - " + false.ToString());
             return false;
          }
       }
@@ -373,14 +357,14 @@ namespace ASCOM.Lunatic
             // However some folks will be closing their roofs based upon the stare of AtPark
             // So we must respond with a false!
             bool atPark = (_ParkStatus == ParkStatus.Parked);
-            tl.LogMessage("AtPark", "Get - " + atPark.ToString());
+            _Logger.LogMessage("AtPark", "Get - " + atPark.ToString());
             return atPark;
          }
       }
 
       public IAxisRates AxisRates(TelescopeAxes Axis)
       {
-         tl.LogMessage("AxisRates", "Get - " + Axis.ToString());
+         _Logger.LogMessage("AxisRates", "Get - " + Axis.ToString());
          return new AxisRates(Axis);
       }
 
@@ -389,7 +373,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("Azimuth", "Get - " + _Azimuth.ToString());
+            _Logger.LogMessage("Azimuth", "Get - " + _Azimuth.ToString());
             return _Azimuth;
          }
       }
@@ -398,14 +382,14 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanFindHome", "Get - " + false.ToString());
+            _Logger.LogMessage("CanFindHome", "Get - " + false.ToString());
             return false;
          }
       }
 
       public bool CanMoveAxis(TelescopeAxes Axis)
       {
-         tl.LogMessage("CanMoveAxis", "Get - " + Axis.ToString());
+         _Logger.LogMessage("CanMoveAxis", "Get - " + Axis.ToString());
          switch (Axis) {
             case TelescopeAxes.axisPrimary: return false;
             case TelescopeAxes.axisSecondary: return false;
@@ -418,7 +402,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanPark", "Get - " + true.ToString());
+            _Logger.LogMessage("CanPark", "Get - " + true.ToString());
             return true;
          }
       }
@@ -429,7 +413,7 @@ namespace ASCOM.Lunatic
          get
          {
             bool canPulseGuide = (Settings.PulseGuidingMode == PulseGuidingOption.ASCOM);
-            tl.LogMessage("CanPulseGuide", "Get - " + canPulseGuide.ToString());
+            _Logger.LogMessage("CanPulseGuide", "Get - " + canPulseGuide.ToString());
             return canPulseGuide;
          }
       }
@@ -438,7 +422,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanSetDeclinationRate", "Get - " + true.ToString());
+            _Logger.LogMessage("CanSetDeclinationRate", "Get - " + true.ToString());
             return true;
          }
       }
@@ -448,7 +432,7 @@ namespace ASCOM.Lunatic
          get
          {
             bool canSetGuideRates = (Settings.PulseGuidingMode == PulseGuidingOption.ASCOM);
-            tl.LogMessage("CanSetGuideRates", "Get - " + canSetGuideRates.ToString());
+            _Logger.LogMessage("CanSetGuideRates", "Get - " + canSetGuideRates.ToString());
             return canSetGuideRates;
          }
       }
@@ -457,7 +441,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanSetPark", "Get - " + true.ToString());
+            _Logger.LogMessage("CanSetPark", "Get - " + true.ToString());
             return true;
          }
       }
@@ -466,7 +450,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanSetPierSide", "Get - " + false.ToString());
+            _Logger.LogMessage("CanSetPierSide", "Get - " + false.ToString());
             return false;
          }
       }
@@ -475,7 +459,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanSetRightAscensionRate", "Get - " + true.ToString());
+            _Logger.LogMessage("CanSetRightAscensionRate", "Get - " + true.ToString());
             return true;
          }
       }
@@ -484,7 +468,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanSetTracking", "Get - " + true.ToString());
+            _Logger.LogMessage("CanSetTracking", "Get - " + true.ToString());
             return true;
          }
       }
@@ -493,7 +477,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanSlew", "Get - " + true.ToString());
+            _Logger.LogMessage("CanSlew", "Get - " + true.ToString());
             return true;
          }
       }
@@ -502,7 +486,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanSlewAltAz", "Get - " + false.ToString());
+            _Logger.LogMessage("CanSlewAltAz", "Get - " + false.ToString());
             return false;
          }
       }
@@ -511,7 +495,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanSlewAltAzAsync", "Get - " + false.ToString());
+            _Logger.LogMessage("CanSlewAltAzAsync", "Get - " + false.ToString());
             return false;
          }
       }
@@ -520,7 +504,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanSlewAsync", "Get - " + true.ToString());
+            _Logger.LogMessage("CanSlewAsync", "Get - " + true.ToString());
             return true;
          }
       }
@@ -529,7 +513,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanSync", "Get - " + true.ToString());
+            _Logger.LogMessage("CanSync", "Get - " + true.ToString());
             return true;
          }
       }
@@ -538,7 +522,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanSyncAltAz", "Get - " + false.ToString());
+            _Logger.LogMessage("CanSyncAltAz", "Get - " + false.ToString());
             return false;
          }
       }
@@ -547,7 +531,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("CanUnpark", "Get - " + true.ToString());
+            _Logger.LogMessage("CanUnpark", "Get - " + true.ToString());
             return true;
          }
       }
@@ -557,7 +541,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("Declination", "Get - " + utilities.DegreesToDMS(_Declination, ":", ":"));
+            _Logger.LogMessage("Declination", "Get - " + utilities.DegreesToDMS(_Declination, ":", ":"));
             return _Declination;
          }
       }
@@ -567,19 +551,19 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("DeclinationRate", "Get - " + utilities.DegreesToDMS(_DeclinationRate, ":", ":"));
+            _Logger.LogMessage("DeclinationRate", "Get - " + utilities.DegreesToDMS(_DeclinationRate, ":", ":"));
             return _DeclinationRate;
          }
          set
          {
-            tl.LogMessage("DeclinationRate", "Set" + utilities.DegreesToDMS(_DeclinationRate, ":", ":"));
+            _Logger.LogMessage("DeclinationRate", "Set" + utilities.DegreesToDMS(_DeclinationRate, ":", ":"));
             throw new ASCOM.PropertyNotImplementedException("DeclinationRate", true);
          }
       }
 
       public PierSide DestinationSideOfPier(double RightAscension, double Declination)
       {
-         tl.LogMessage("DestinationSideOfPier Get", "Not implemented");
+         _Logger.LogMessage("DestinationSideOfPier Get", "Not implemented");
          throw new ASCOM.PropertyNotImplementedException("DestinationSideOfPier", false);
       }
 
@@ -587,12 +571,12 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("DoesRefraction Get", "Not implemented");
+            _Logger.LogMessage("DoesRefraction Get", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("DoesRefraction", false);
          }
          set
          {
-            tl.LogMessage("DoesRefraction Set", "Not implemented");
+            _Logger.LogMessage("DoesRefraction Set", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("DoesRefraction", true);
          }
       }
@@ -602,14 +586,14 @@ namespace ASCOM.Lunatic
          get
          {
             EquatorialCoordinateType equatorialSystem = EquatorialCoordinateType.equLocalTopocentric;
-            tl.LogMessage("DeclinationRate", "Get - " + equatorialSystem.ToString());
+            _Logger.LogMessage("DeclinationRate", "Get - " + equatorialSystem.ToString());
             return equatorialSystem;
          }
       }
 
       public void FindHome()
       {
-         tl.LogMessage("FindHome", "Not implemented");
+         _Logger.LogMessage("FindHome", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("FindHome");
       }
 
@@ -617,7 +601,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("FocalLength Get", "Not implemented");
+            _Logger.LogMessage("FocalLength Get", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("FocalLength", false);
          }
       }
@@ -626,12 +610,12 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("GuideRateDeclination Get", "Not implemented");
+            _Logger.LogMessage("GuideRateDeclination Get", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("GuideRateDeclination", false);
          }
          set
          {
-            tl.LogMessage("GuideRateDeclination Set", "Not implemented");
+            _Logger.LogMessage("GuideRateDeclination Set", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("GuideRateDeclination", true);
          }
       }
@@ -640,12 +624,12 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("GuideRateRightAscension Get", "Not implemented");
+            _Logger.LogMessage("GuideRateRightAscension Get", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("GuideRateRightAscension", false);
          }
          set
          {
-            tl.LogMessage("GuideRateRightAscension Set", "Not implemented");
+            _Logger.LogMessage("GuideRateRightAscension Set", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("GuideRateRightAscension", true);
          }
       }
@@ -661,11 +645,11 @@ namespace ASCOM.Lunatic
                if (_RAPulseDuration + _DecPulseDuration != 0) {
                   isPulseGuiding = true;
                }
-               tl.LogMessage("IsPulseGuiding", "Get - " + isPulseGuiding.ToString());
+               _Logger.LogMessage("IsPulseGuiding", "Get - " + isPulseGuiding.ToString());
                return isPulseGuiding;
             }
             else {
-               tl.LogMessage("IsPulseGuiding Get", "Not implemented");
+               _Logger.LogMessage("IsPulseGuiding Get", "Not implemented");
                throw new ASCOM.PropertyNotImplementedException("IsPulseGuiding", false);
             }
          }
@@ -673,19 +657,19 @@ namespace ASCOM.Lunatic
 
       public void MoveAxis(TelescopeAxes Axis, double Rate)
       {
-         tl.LogMessage("MoveAxis", "Not implemented");
+         _Logger.LogMessage("MoveAxis", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("MoveAxis");
       }
 
       public void Park()
       {
-         tl.LogMessage("Park", "Not implemented");
+         _Logger.LogMessage("Park", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("Park");
       }
 
       public void PulseGuide(GuideDirections Direction, int Duration)
       {
-         tl.LogMessage("PulseGuide", "Not implemented");
+         _Logger.LogMessage("PulseGuide", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("PulseGuide");
       }
 
@@ -694,7 +678,7 @@ namespace ASCOM.Lunatic
          get
          {
             double rightAscension = 0.0;
-            tl.LogMessage("RightAscension", "Get - " + utilities.HoursToHMS(rightAscension));
+            _Logger.LogMessage("RightAscension", "Get - " + utilities.HoursToHMS(rightAscension));
             return rightAscension;
          }
       }
@@ -704,19 +688,19 @@ namespace ASCOM.Lunatic
          get
          {
             double rightAscensionRate = 0.0;
-            tl.LogMessage("RightAscensionRate", "Get - " + rightAscensionRate.ToString());
+            _Logger.LogMessage("RightAscensionRate", "Get - " + rightAscensionRate.ToString());
             return rightAscensionRate;
          }
          set
          {
-            tl.LogMessage("RightAscensionRate Set", "Not implemented");
+            _Logger.LogMessage("RightAscensionRate Set", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("RightAscensionRate", true);
          }
       }
 
       public void SetPark()
       {
-         tl.LogMessage("SetPark", "Not implemented");
+         _Logger.LogMessage("SetPark", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("SetPark");
       }
 
@@ -724,12 +708,12 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("SideOfPier Get", "Not implemented");
+            _Logger.LogMessage("SideOfPier Get", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("SideOfPier", false);
          }
          set
          {
-            tl.LogMessage("SideOfPier Set", "Not implemented");
+            _Logger.LogMessage("SideOfPier Set", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("SideOfPier", true);
          }
       }
@@ -754,7 +738,7 @@ namespace ASCOM.Lunatic
             siderealTime += SiteLongitude / 360.0 * 24.0;
             // reduce to the range 0 to 24 hours
             siderealTime = siderealTime % 24.0;
-            tl.LogMessage("SiderealTime", "Get - " + siderealTime.ToString());
+            _Logger.LogMessage("SiderealTime", "Get - " + siderealTime.ToString());
             return siderealTime;
          }
       }
@@ -764,13 +748,13 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("SiteElevation", "Get - " + _SiteElevation.ToString());
+            _Logger.LogMessage("SiteElevation", "Get - " + _SiteElevation.ToString());
             return _SiteElevation;
          }
          set
          {
             if (Settings.AscomCompliance.AllowSiteWrites) {
-               tl.LogMessage("SiteElevation", "Set - " + value.ToString());
+               _Logger.LogMessage("SiteElevation", "Set - " + value.ToString());
                if (value == _SiteElevation) {
                   return;
                }
@@ -783,7 +767,7 @@ namespace ASCOM.Lunatic
                }
             }
             else {
-               tl.LogMessage("SiteElevation Set", "Not implemented");
+               _Logger.LogMessage("SiteElevation Set", "Not implemented");
                throw new ASCOM.PropertyNotImplementedException("SiteElevation", true);
             }
          }
@@ -794,13 +778,13 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("SiteLatitude", "Get - " + _SiteLatitude.ToString());
+            _Logger.LogMessage("SiteLatitude", "Get - " + _SiteLatitude.ToString());
             return _SiteLatitude;
          }
          set
          {
             if (Settings.AscomCompliance.AllowSiteWrites) {
-               tl.LogMessage("SiteLatitude", "Set - " + value.ToString());
+               _Logger.LogMessage("SiteLatitude", "Set - " + value.ToString());
                if (value == _SiteLatitude) {
                   return;
                }
@@ -813,7 +797,7 @@ namespace ASCOM.Lunatic
                }
             }
             else {
-               tl.LogMessage("SiteLatitude Set", "Not implemented");
+               _Logger.LogMessage("SiteLatitude Set", "Not implemented");
                throw new ASCOM.PropertyNotImplementedException("SiteLatitude", true);
             }
          }
@@ -824,13 +808,13 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("SiteLongitude", "Get - " + _SiteLongitude.ToString());
+            _Logger.LogMessage("SiteLongitude", "Get - " + _SiteLongitude.ToString());
             return _SiteLongitude;
          }
          set
          {
             if (Settings.AscomCompliance.AllowSiteWrites) {
-               tl.LogMessage("SiteLongitude", "Set - " + value.ToString());
+               _Logger.LogMessage("SiteLongitude", "Set - " + value.ToString());
                if (value == _SiteLongitude) {
                   return;
                }
@@ -843,7 +827,7 @@ namespace ASCOM.Lunatic
                }
             }
             else {
-               tl.LogMessage("SiteLongitude Set", "Not implemented");
+               _Logger.LogMessage("SiteLongitude Set", "Not implemented");
                throw new ASCOM.PropertyNotImplementedException("SiteLongitude", true);
             }
          }
@@ -854,12 +838,12 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("SlewSettleTime", "Get - " + _SlewSettleTime.ToString());
+            _Logger.LogMessage("SlewSettleTime", "Get - " + _SlewSettleTime.ToString());
             return _SlewSettleTime;
          }
          set
          {
-            tl.LogMessage("SlewSettleTime", "Set - " + value.ToString());
+            _Logger.LogMessage("SlewSettleTime", "Set - " + value.ToString());
             if (_SlewSettleTime == value) {
                return;
             }
@@ -872,37 +856,37 @@ namespace ASCOM.Lunatic
 
       public void SlewToAltAz(double Azimuth, double Altitude)
       {
-         tl.LogMessage("SlewToAltAz", "Not implemented");
+         _Logger.LogMessage("SlewToAltAz", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("SlewToAltAz");
       }
 
       public void SlewToAltAzAsync(double Azimuth, double Altitude)
       {
-         tl.LogMessage("SlewToAltAzAsync", "Not implemented");
+         _Logger.LogMessage("SlewToAltAzAsync", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("SlewToAltAzAsync");
       }
 
       public void SlewToCoordinates(double RightAscension, double Declination)
       {
-         tl.LogMessage("SlewToCoordinates", "Not implemented");
+         _Logger.LogMessage("SlewToCoordinates", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("SlewToCoordinates");
       }
 
       public void SlewToCoordinatesAsync(double RightAscension, double Declination)
       {
-         tl.LogMessage("SlewToCoordinatesAsync", "Not implemented");
+         _Logger.LogMessage("SlewToCoordinatesAsync", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("SlewToCoordinatesAsync");
       }
 
       public void SlewToTarget()
       {
-         tl.LogMessage("SlewToTarget", "Not implemented");
+         _Logger.LogMessage("SlewToTarget", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("SlewToTarget");
       }
 
       public void SlewToTargetAsync()
       {
-         tl.LogMessage("SlewToTargetAsync", "Not implemented");
+         _Logger.LogMessage("SlewToTargetAsync", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("SlewToTargetAsync");
       }
 
@@ -928,26 +912,26 @@ namespace ASCOM.Lunatic
                   isSlewing = true;
                   break;
             }
-            tl.LogMessage("Slewing", "Get - " + isSlewing.ToString());
+            _Logger.LogMessage("Slewing", "Get - " + isSlewing.ToString());
             return isSlewing;
          }
       }
 
       public void SyncToAltAz(double Azimuth, double Altitude)
       {
-         tl.LogMessage("SyncToAltAz", "Not implemented");
+         _Logger.LogMessage("SyncToAltAz", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("SyncToAltAz");
       }
 
       public void SyncToCoordinates(double RightAscension, double Declination)
       {
-         tl.LogMessage("SyncToCoordinates", "Not implemented");
+         _Logger.LogMessage("SyncToCoordinates", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("SyncToCoordinates");
       }
 
       public void SyncToTarget()
       {
-         tl.LogMessage("SyncToTarget", "Not implemented");
+         _Logger.LogMessage("SyncToTarget", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("SyncToTarget");
       }
 
@@ -956,7 +940,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("TargetDeclination", "Get - " + _TargetDeclination.ToString());
+            _Logger.LogMessage("TargetDeclination", "Get - " + _TargetDeclination.ToString());
             if (_TargetDeclination.HasValue) {
                return _TargetDeclination.Value;
             }
@@ -966,7 +950,7 @@ namespace ASCOM.Lunatic
          }
          set
          {
-            tl.LogMessage("TargetDeclination", "Set - " + value.ToString());
+            _Logger.LogMessage("TargetDeclination", "Set - " + value.ToString());
             if (_TargetDeclination.HasValue && _TargetDeclination.Value == value) {
                return;
             }
@@ -983,7 +967,7 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("TargetRightAscension", "Get - " + _TargetRightAscension.ToString());
+            _Logger.LogMessage("TargetRightAscension", "Get - " + _TargetRightAscension.ToString());
             if (_TargetRightAscension.HasValue) {
                return _TargetRightAscension.Value;
             }
@@ -993,7 +977,7 @@ namespace ASCOM.Lunatic
          }
          set
          {
-            tl.LogMessage("TargetRightAscension", "Set - " + value.ToString());
+            _Logger.LogMessage("TargetRightAscension", "Set - " + value.ToString());
             if (_TargetRightAscension.HasValue && _TargetRightAscension.Value == value) {
                return;
             }
@@ -1010,12 +994,12 @@ namespace ASCOM.Lunatic
          get
          {
             bool tracking = true;
-            tl.LogMessage("Tracking", "Get - " + tracking.ToString());
+            _Logger.LogMessage("Tracking", "Get - " + tracking.ToString());
             return tracking;
          }
          set
          {
-            tl.LogMessage("Tracking Set", "Not implemented");
+            _Logger.LogMessage("Tracking Set", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("Tracking", true);
          }
       }
@@ -1025,12 +1009,12 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("TrackingRate", "Get - " + _TrackingRate.ToString());
+            _Logger.LogMessage("TrackingRate", "Get - " + _TrackingRate.ToString());
             return _TrackingRate;
          }
          set
          {
-            tl.LogMessage("TrackingRate", "Set - " + value.ToString());
+            _Logger.LogMessage("TrackingRate", "Set - " + value.ToString());
             if (value == _TrackingRate) {
                return;
             }
@@ -1044,9 +1028,9 @@ namespace ASCOM.Lunatic
       {
          get
          {
-            tl.LogMessage("TrackingRates", "Get - ");
+            _Logger.LogMessage("TrackingRates", "Get - ");
             foreach (DriveRates driveRate in _TrackingRates) {
-               tl.LogMessage("TrackingRates", "Get - " + driveRate.ToString());
+               _Logger.LogMessage("TrackingRates", "Get - " + driveRate.ToString());
             }
             return _TrackingRates;
          }
@@ -1057,19 +1041,19 @@ namespace ASCOM.Lunatic
          get
          {
             DateTime utcDate = DateTime.UtcNow;
-            tl.LogMessage("TrackingRates", "Get - " + String.Format("MM/dd/yy HH:mm:ss", utcDate));
+            _Logger.LogMessage("TrackingRates", "Get - " + String.Format("MM/dd/yy HH:mm:ss", utcDate));
             return utcDate;
          }
          set
          {
-            tl.LogMessage("UTCDate Set", "Not implemented");
+            _Logger.LogMessage("UTCDate Set", "Not implemented");
             throw new ASCOM.PropertyNotImplementedException("UTCDate", true);
          }
       }
 
       public void Unpark()
       {
-         tl.LogMessage("Unpark", "Not implemented");
+         _Logger.LogMessage("Unpark", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("Unpark");
       }
 
@@ -1178,12 +1162,11 @@ namespace ASCOM.Lunatic
       //internal void ReadProfile()
       //{
       //   lock (_Lock) {
-      //      LoadSettings();
-      //      //using (Profile driverProfile = new Profile()) {
-      //      //   driverProfile.DeviceType = "Telescope";
-      //      //   TRACE_STATE = Convert.ToBoolean(driverProfile.GetValue(DRIVER_ID, traceStateProfileName, string.Empty, traceStateDefault));
-      //      //   COM_PORT = driverProfile.GetValue(DRIVER_ID, comPortProfileName, string.Empty, comPortDefault);
-      //      //}
+      //      using (Profile driverProfile = new Profile()) {
+      //         driverProfile.DeviceType = "Telescope";
+      //         TRACE_STATE = Convert.ToBoolean(driverProfile.GetValue(DRIVER_ID, traceStateProfileName, string.Empty, traceStateDefault));
+      //         COM_PORT = driverProfile.GetValue(DRIVER_ID, comPortProfileName, string.Empty, comPortDefault);
+      //      }
       //   }
       //}
 
@@ -1193,15 +1176,43 @@ namespace ASCOM.Lunatic
       //internal void WriteProfile()
       //{
       //   lock (_Lock) {
-      //      SaveSettings(Settings);
-      //      //using (Profile driverProfile = new Profile()) {
-      //      //   driverProfile.DeviceType = "Telescope";
-      //      //   driverProfile.WriteValue(DRIVER_ID, traceStateProfileName, TRACE_STATE.ToString());
-      //      //   driverProfile.WriteValue(DRIVER_ID, comPortProfileName, COM_PORT.ToString());
-      //      //}
+      //      using (Profile driverProfile = new Profile()) {
+      //         driverProfile.DeviceType = "Telescope";
+      //         //driverProfile.WriteValue(DRIVER_ID, traceStateProfileName, TRACE_STATE.ToString());
+      //         //driverProfile.WriteValue(DRIVER_ID, comPortProfileName, COM_PORT.ToString());
+      //      }
       //   }
       //}
 
+      #endregion
+
+      #region Setup dialogue threading classes ...
+      public class SetupThread
+      {
+         private SetupViewModel _SetupViewModel;
+         private TraceLogger _Logger;
+         private SetupCallback _CallBackDelegate;
+
+         public SetupThread(SetupViewModel vm, TraceLogger logger, SetupCallback callBackDelegate)
+         {
+            _SetupViewModel = vm;
+            _Logger = logger;
+            _CallBackDelegate = callBackDelegate;
+         }
+
+         public void ThreadProc()
+         {
+            SetupWindow setupWindow = new SetupWindow(_SetupViewModel);
+            bool? result = setupWindow.ShowDialog();
+            setupWindow.Dispatcher.InvokeShutdown();
+            if (result.HasValue && result.Value) {
+               _Logger.Enabled = _SetupViewModel.Settings.IsTracing;
+            }
+            _CallBackDelegate(result);
+         }
+      }
+
+      public delegate void SetupCallback(bool? saveChanges);
       #endregion
 
    }

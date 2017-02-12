@@ -124,12 +124,14 @@
     </Style>
 
     <!-- Dialog box (Window) -->
+    <!--
+        <Setter Property="ShowInTaskbar" Value="False" />
+    -->
     <Style TargetType="{x:Type Window}" x:Key="PropertyDialogStyle">
-        <Setter Property="Background" Value="Black" />
         <Setter Property="Icon" Value="pack://application:,,,/ASCOM.Lunatic.TelescopeDriver;component/Skins/Images/LunaticMoon.ico" />
+        <Setter Property="Background" Value="Black" />
         <Setter Property="ResizeMode" Value="CanResizeWithGrip" />
         <Setter Property="WindowStyle" Value="SingleBorderWindow" />
-        <Setter Property="ShowInTaskbar" Value="False" />
     </Style>
 
 
