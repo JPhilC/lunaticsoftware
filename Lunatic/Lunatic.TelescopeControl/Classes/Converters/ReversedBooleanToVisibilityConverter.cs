@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace ASCOMTester
+namespace Lunatic.TelescopeControl
 {
     [ValueConversion(typeof(Boolean), typeof(Visibility))]
    public class ReversedBooleanToVisibilityConverter:IValueConverter

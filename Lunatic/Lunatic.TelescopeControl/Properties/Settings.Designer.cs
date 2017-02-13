@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace ASCOMTester.Properties {
+namespace Lunatic.TelescopeControl.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

@@ -235,7 +235,7 @@ namespace ASCOM.Lunatic
 
                   object[] attrbutes = info.GetCustomAttributes(typeof(ServedClassNameAttribute), false);
                   if (attrbutes.Length > 0) {
-                     //MessageBox.Show("Adding Type: " + type.Name + " " + type.FullName);
+                     MessageBox.Show("Adding Type: " + type.Name + " " + type.FullName);
                      _ComObjectTypes.Add(type); //PWGS - much simpler
                      _ComObjectAssys.Add(so);
                   }
@@ -247,9 +247,8 @@ namespace ASCOM.Lunatic
                continue;
             }
             catch (Exception e) {
-               // TODO: Replace WinForms code.
-               //MessageBox.Show("Failed to load served COM class assembly " + fi.Name + " - " + e.Message,
-               //   "UnityAstro.ASCOM.Winforms.TelescopeServer", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+               MessageBox.Show("Failed to load served COM class assembly " + fi.Name + " - " + e.Message,
+                  "ASCOM.Lunatic.TelescopeServer", MessageBoxButton.OK, MessageBoxImage.Stop);
                return false;
             }
 
@@ -284,13 +283,11 @@ namespace ASCOM.Lunatic
          si.Verb = "runas";
          try { Process.Start(si); }
          catch (System.ComponentModel.Win32Exception) {
-            // TODO: Replace WinForms code.
-            //MessageBox.Show("The ASCOM.Lunatic.TelescopeServer was not " + (arg == "/register" ? "registered" : "unregistered") +
-            //    " because you did not allow it.", "UnityAstro.ASCOM.Winforms.TelescopeServer", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("The ASCOM.Lunatic.TelescopeServer was not " + (arg == "/register" ? "registered" : "unregistered") +
+                " because you did not allow it.", "UnityAstro.ASCOM.Winforms.TelescopeServer", MessageBoxButton.OK, MessageBoxImage.Warning);
          }
          catch (Exception ex) {
-            // TODO: Replace WinForms code.
-            //MessageBox.Show(ex.ToString(), "UnityAstro.ASCOM.Winforms.TelescopeServer", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+            MessageBox.Show(ex.ToString(), "ASCOM.Lunatic.TelescopeServer", MessageBoxButton.OK, MessageBoxImage.Stop);
          }
          return;
       }
@@ -343,9 +340,8 @@ namespace ASCOM.Lunatic
             }
          }
          catch (Exception ex) {
-            // TODO: Replace Winforms code.
-            //MessageBox.Show("Error while registering the server:\n" + ex.ToString(),
-            //      "UnityAstro.ASCOM.Winforms.TelescopeServer", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+            MessageBox.Show("Error while registering the server:\n" + ex.ToString(),
+                  "UnityAstro.ASCOM.Winforms.TelescopeServer", MessageBoxButton.OK, MessageBoxImage.Stop);
             return;
          }
          finally {
@@ -402,9 +398,8 @@ namespace ASCOM.Lunatic
                }
             }
             catch (Exception ex) {
-               // TODO: Replace WinForms code
-               //MessageBox.Show("Error while registering the server:\n" + ex.ToString(),
-               //      "UnityAstro.ASCOM.Winforms.TelescopeServer", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+               MessageBox.Show("Error while registering the server:\n" + ex.ToString(),
+                     "ASCOM.Lunatic.TelescopeServer", MessageBoxButton.OK, MessageBoxImage.Stop);
                bFail = true;
             }
             finally {
@@ -484,9 +479,8 @@ namespace ASCOM.Lunatic
             ClassFactory factory = new ClassFactory(type);              // Use default context & flags
             _ClassFactories.Add(factory);
             if (!factory.RegisterClassObject()) {
-               // TODO: Replace Winforms codes.
-               //MessageBox.Show("Failed to register class factory for " + type.Name,
-               //   "UnityAstro.ASCOM.Winforms.TelescopeServer", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+               MessageBox.Show("Failed to register class factory for " + type.Name,
+                  "ASCOM.Lunatic.TelescopeServer", MessageBoxButton.OK, MessageBoxImage.Stop);
                return false;
             }
          }
@@ -539,9 +533,8 @@ namespace ASCOM.Lunatic
                   break;
 
                default:
-                  //TODO Replace Winforms codes.
-                  //MessageBox.Show("Unknown argument: " + args[0] + "\nValid are : -register, -unregister and -embedding",
-                  //   "UnityAstro.ASCOM.Winforms.TelescopeServer", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                  MessageBox.Show("Unknown argument: " + args[0] + "\nValid are : -register, -unregister and -embedding",
+                     "ASCOM.Lunatic.TelescopeServer", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                   break;
             }
          }

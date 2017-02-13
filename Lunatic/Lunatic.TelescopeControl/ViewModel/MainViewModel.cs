@@ -1,7 +1,8 @@
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using System;
 
-namespace ASCOMTester.ViewModel
+namespace Lunatic.TelescopeControl.ViewModel
 {
    /// <summary>
    /// This class contains properties that the main View can data bind to.
@@ -41,6 +42,23 @@ namespace ASCOMTester.ViewModel
                return;
             }
             _DriverId = value;
+            RaisePropertyChanged();
+         }
+      }
+
+      private string _StatusMessage = "Not connected.";
+      public string StatusMessage
+      {
+         get
+         {
+            return _StatusMessage;
+         }
+         private set
+         {
+            if (_StatusMessage == value) {
+               return;
+            }
+            _StatusMessage = value;
             RaisePropertyChanged();
          }
       }
@@ -90,8 +108,13 @@ namespace ASCOMTester.ViewModel
                      }
                   }
                   else {
-                     _Driver = new ASCOM.DriverAccess.Telescope(Properties.Settings.Default.DriverId);
-                     _Driver.Connected = true;
+                     _Driver = new ASCOM.DriverAccess.Telescope(DriverId);
+                     try {
+                        _Driver.Connected = true;
+                     }
+                     catch (Exception ex) {
+                        StatusMessage = ex.Message; 
+                     }
                   }
                   RaisePropertyChanged("IsConnected");
                   RaiseCanExecuteChanged();

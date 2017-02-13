@@ -24,7 +24,7 @@
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <!-- You need to register and get your own key from https://www.bingmapsportal.com/ to use in the CredentialsProvider below-->
-        <m:Map CredentialsProvider="Insert_Your_Bing_Maps_Key"  x:Name="SiteMap"
+        <m:Map CredentialsProvider="AvE7WhC0pmFKwpB883TKQdp9tghcFh-r42kC3JdFW6p92tyxoJT43Kr7tlLNmrst"  x:Name="SiteMap"
                Mode="AerialWithLabels"
                MouseDoubleClick="SiteMap_MouseDoubleClick"
                Center="52.60,-1.3" 

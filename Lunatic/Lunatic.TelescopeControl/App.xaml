@@ -1,13 +1,13 @@
-<Application x:Class="ASCOMTester.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+<Application x:Class="Lunatic.TelescopeControl.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-             xmlns:local="clr-namespace:ASCOMTester" 
+             xmlns:local="clr-namespace:Lunatic.TelescopeControl" 
              xmlns:d1p1="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              d1p1:Ignorable="d" 
             StartupUri="MainWindow.xaml">
     <Application.Resources>
     <ResourceDictionary>
-      <vm:ViewModelLocator x:Key="Locator" d:IsDataSource="True" xmlns:vm="clr-namespace:ASCOMTester.ViewModel" />
+      <vm:ViewModelLocator x:Key="Locator" d:IsDataSource="True" xmlns:vm="clr-namespace:Lunatic.TelescopeControl.ViewModel" />
             <local:ReversedBooleanToVisibilityConverter x:Key="ReversedBooleanToVisiblityConverter" />
             <BooleanToVisibilityConverter x:Key="BooleanToVisiblityConverter"/>
         </ResourceDictionary>
