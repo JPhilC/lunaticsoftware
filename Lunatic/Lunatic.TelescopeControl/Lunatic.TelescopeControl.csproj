@@ -84,8 +84,36 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Classes\Converters\ReversedBooleanToVisibilityConverter.cs" />
+    <Compile Include="Controls\MountPositionControl.xaml.cs">
+      <DependentUpon>MountPositionControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ParkControl.xaml.cs">
+      <DependentUpon>ParkControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SlewControl.xaml.cs">
+      <DependentUpon>SlewControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\TrackingControl.xaml.cs">
+      <DependentUpon>TrackingControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
+    <Page Include="Controls\MountPositionControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ParkControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\SlewControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\TrackingControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -98,6 +126,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Skins\MainSkin.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -127,6 +159,33 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Skins\Images\Binoculars-96.png" />
+    <Resource Include="Skins\Images\Comet-96.png" />
+    <Resource Include="Skins\Images\East-96.png" />
+    <Resource Include="Skins\Images\Moon-96.png" />
+    <Resource Include="Skins\Images\North-96.png" />
+    <Resource Include="Skins\Images\South-96.png" />
+    <Resource Include="Skins\Images\Star-96.png" />
+    <Resource Include="Skins\Images\Stop Sign-96.png" />
+    <Resource Include="Skins\Images\Sun-96.png" />
+    <Resource Include="Skins\Images\West-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Skins\Images\ASCOM.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Skins\Images\ASCOM.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Skins\Images\LunaticMoon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Skins\Images\LunaticMoon.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Skins\Images\LunaticMoon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

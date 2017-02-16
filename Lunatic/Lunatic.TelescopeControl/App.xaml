@@ -6,10 +6,13 @@
              d1p1:Ignorable="d" 
             StartupUri="MainWindow.xaml">
     <Application.Resources>
-    <ResourceDictionary>
-      <vm:ViewModelLocator x:Key="Locator" d:IsDataSource="True" xmlns:vm="clr-namespace:Lunatic.TelescopeControl.ViewModel" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/MainSkin.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <vm:ViewModelLocator x:Key="Locator" d:IsDataSource="True" xmlns:vm="clr-namespace:Lunatic.TelescopeControl.ViewModel" />
             <local:ReversedBooleanToVisibilityConverter x:Key="ReversedBooleanToVisiblityConverter" />
             <BooleanToVisibilityConverter x:Key="BooleanToVisiblityConverter"/>
         </ResourceDictionary>
-  </Application.Resources>
+    </Application.Resources>
 </Application>

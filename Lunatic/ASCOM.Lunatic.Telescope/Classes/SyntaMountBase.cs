@@ -48,7 +48,7 @@ namespace ASCOM.Lunatic
    /// MCGetAxisStatus
    /// </summary>
    /// Checked 2/7/2011
-   public abstract class SyntaMountBase : DriverBase
+   public abstract class SyntaMountBase : ReferenceCountedObjectBase
    {
 
       private SerialConnect_COM _Connection = null;

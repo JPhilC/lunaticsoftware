@@ -99,7 +99,6 @@
     <Compile Include="Classes\Constant.cs" />
     <Compile Include="Classes\Converters\GeoCoordinateTypeConverter.cs" />
     <Compile Include="Classes\Converters\EnumTypeConverter.cs" />
-    <Compile Include="Classes\DriverBase.cs" />
     <Compile Include="Classes\ExtensionMethods.cs" />
     <Compile Include="Classes\SerialConnection.cs" />
     <Compile Include="Classes\ViewModelBase.cs" />

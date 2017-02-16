@@ -1,5 +1,4 @@
-﻿using Lunatic.TelescopeControl.ViewModel;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,20 +13,16 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Lunatic.TelescopeControl
+namespace Lunatic.TelescopeControl.Controls
 {
    /// <summary>
-   /// Interaction logic for MainWindow.xaml
+   /// Interaction logic for ParkControl.xaml
    /// </summary>
-   public partial class MainWindow : Window
+   public partial class ParkControl : UserControl
    {
-      private MainViewModel _ViewModel;
-
-      public MainWindow()
+      public ParkControl()
       {
          InitializeComponent();
-
-         _ViewModel = (MainViewModel)this.DataContext;
       }
    }
 }

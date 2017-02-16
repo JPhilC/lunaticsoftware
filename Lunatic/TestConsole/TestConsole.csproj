@@ -78,6 +78,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ASCOM.Lunatic.TelescopeServer\ASCOM.Lunatic.TelescopeServer.csproj">
+      <Project>{c2f85c09-caf9-49fd-8bdc-80a8136d3af3}</Project>
+      <Name>ASCOM.Lunatic.TelescopeServer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ASCOM.Lunatic.Telescope\ASCOM.Lunatic.TelescopeDriver.csproj">
       <Project>{e85b3304-41bd-4fa7-ad06-65bfa46b85ec}</Project>
       <Name>ASCOM.Lunatic.TelescopeDriver</Name>

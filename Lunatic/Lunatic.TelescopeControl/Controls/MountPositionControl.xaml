@@ -1,0 +1,48 @@
+﻿<UserControl x:Class="Lunatic.TelescopeControl.Controls.MountPositionControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Lunatic.TelescopeControl.Controls"
+             mc:Ignorable="d">
+    <GroupBox Header="Mount Position">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="3" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="3" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="3" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="3" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="3" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="LST" Style="{StaticResource LEDLabel}" />
+            <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding LST}" Style="{StaticResource LEDValue}"/>
+
+            <TextBlock Grid.Column="0" Grid.Row="2" Text="RA" Style="{StaticResource LEDLabel}" />
+            <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding RightAscension}" Style="{StaticResource LEDValue}"/>
+
+            <TextBlock Grid.Column="0" Grid.Row="4" Text="DEC" Style="{StaticResource LEDLabel}"/>
+            <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding Declination}" Style="{StaticResource LEDValue}"/>
+
+            <TextBlock Grid.Column="0" Grid.Row="6" Text="AZ" Style="{StaticResource LEDLabel}"/>
+            <TextBlock Grid.Column="2" Grid.Row="6" Text="{Binding Azimuth}" Style="{StaticResource LEDValue}"/>
+
+            <TextBlock Grid.Column="0" Grid.Row="8" Text="ALT" Style="{StaticResource LEDLabel}"/>
+            <TextBlock Grid.Column="2" Grid.Row="8" Text="{Binding Altitude}" Style="{StaticResource LEDValue}"/>
+
+            <TextBlock Grid.Column="0" Grid.Row="10" Text="PierSide" Style="{StaticResource LEDLabel}"/>
+            <TextBlock Grid.Column="2" Grid.Row="10" Text="{Binding PierSide}" Style="{StaticResource LEDValue}"/>
+
+        </Grid>
+    </GroupBox>
+</UserControl>
