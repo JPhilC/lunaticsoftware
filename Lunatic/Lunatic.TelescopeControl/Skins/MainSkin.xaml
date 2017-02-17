@@ -9,6 +9,8 @@
     <Style TargetType="{x:Type Button}" x:Key="SmallSquareButton">
         <Setter Property="Width" Value="30" />
         <Setter Property="Height" Value="30" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
     </Style>
 
     <Style TargetType="{x:Type Button}" x:Key="Button80">
@@ -141,6 +143,7 @@
         <Setter Property="BorderBrush" Value="#FFA41515"/>
         <Setter Property="Foreground" Value="#FFA46A15" />
         <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Margin" Value="0,0,0,5" />
     </Style>
 
     <!-- Window -->

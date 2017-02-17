@@ -12,40 +12,14 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="120" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <!-- Slew buttons -->
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="30" />
-                    <ColumnDefinition Width="30" />
-                    <ColumnDefinition Width="30" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="30" />
-                    <RowDefinition Height="30" />
-                    <RowDefinition Height="30" />
-                </Grid.RowDefinitions>
-                <Button Grid.Column="1" Style="{StaticResource SmallSquareButton}">
-                    <Image Source="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/Images/North-96.png" />
-                </Button>
-                <Button Grid.Column="1" Grid.Row="2" Style="{StaticResource SmallSquareButton}">
-                    <Image Source="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/Images/South-96.png" />
-                </Button>
-                <Button Grid.Column="2" Grid.Row="1" Style="{StaticResource SmallSquareButton}">
-                    <Image Source="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/Images/East-96.png" />
-                </Button>
-                <Button Grid.Column="0" Grid.Row="1" Style="{StaticResource SmallSquareButton}">
-                    <Image Source="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/Images/West-96.png" />
-                </Button>
-                <Button Grid.Column="1" Grid.Row="1" Style="{StaticResource SmallSquareButton}">
-                    <Image Source="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/Images/Stop Sign-96.png" />
-                </Button>
-            </Grid >
+            <local:SlewButtons />
             <!-- Rate sliders -->
-            <Grid Grid.Column="1">
+            <Grid Grid.Column="1" Margin="-10,0,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto"/>
@@ -60,19 +34,21 @@
                     </Grid.RowDefinitions>
                     <TextBlock>RA Rate</TextBlock>
                     <Slider Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Stretch" Orientation="Vertical"/>
-                    <TextBlock Grid.Row="2">RA Value</TextBlock>
+                    <TextBlock Grid.Row="2" Margin="0,2,0,0"
+                               Text="{Binding RATrackingValue}" Style="{StaticResource LEDValue}" MinWidth="30" Width="30" />
                 </Grid>
-                <ComboBox Grid.Column="1" VerticalAlignment="Center" Width="50  "  Margin="-10,0,0,0" ></ComboBox>
+                <ComboBox Grid.Column="1" VerticalAlignment="Center" Width="30"  Margin="-5,0,0,0" ></ComboBox>
                 <!-- DEC Rate -->
-                <Grid Grid.Column="2" >
+                <Grid Grid.Column="2" Margin="-10,0,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TextBlock Margin="-10,0,0,0">DEC Rate</TextBlock>
-                    <Slider Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Stretch" Orientation="Vertical" Margin="-10,0,0,0"/>
-                    <TextBlock Grid.Row="2" Margin="-10,0,0,0">DEC Value</TextBlock>
+                    <TextBlock>DEC Rate</TextBlock>
+                    <Slider Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Stretch" Orientation="Vertical" />
+                    <TextBlock Grid.Row="2" Margin="0,2,0,0"
+                               Text="{Binding DECTrackingValue}" Style="{StaticResource LEDValue}" MinWidth="30" Width="30" />
                 </Grid>
             </Grid>
             <!-- Reverse check boxes -->
@@ -102,10 +78,10 @@
                     <Image Source="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/Images/Binoculars-96.png" />
                 </Button>
                 <Button Grid.Column="2" Style="{StaticResource SmallSquareButton}">
-                    <Image Source="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/Images/Binoculars-96.png" />
+                    <Image Source="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/Images/Mosaic-96.png" />
                 </Button>
                 <Button Grid.Column="4" Style="{StaticResource SmallSquareButton}">
-                    <Image Source="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/Images/Binoculars-96.png" />
+                    <Image Source="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/Images/Spiral-96.png" />
                 </Button>
             </Grid>
             <Grid Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" Margin="5,0,0,0" >

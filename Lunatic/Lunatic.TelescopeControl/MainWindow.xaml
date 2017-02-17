@@ -6,10 +6,13 @@
         xmlns:local="clr-namespace:Lunatic.TelescopeControl"
         xmlns:localcontrols="clr-namespace:Lunatic.TelescopeControl.Controls"
         mc:Ignorable="d"
-        Title="Lunatic Telescope Control" Height="350" Width="525"
+        Title="Lunatic Telescope Control" 
         DataContext="{Binding Main, Source={StaticResource Locator}}"
         SizeToContent="WidthAndHeight"
-        >
+        d:DesignHeight="650" d:DesignWidth="750">
+    <Window.Resources>
+        <local:DisplayModeToBooleanConverter x:Key="DisplayModeConverter" />
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -22,6 +25,20 @@
                 <MenuItem Header="Disconnect" Command="{Binding ConnectCommand}" Visibility="{Binding IsConnected, Converter={StaticResource BooleanToVisiblityConverter}}"/>
                 <Separator></Separator>
                 <MenuItem Header="Exit" />
+            </MenuItem>
+            <MenuItem Header="Display">
+                <MenuItem Header="Mount position" Command="{Binding DisplayModeCommand}" CommandParameter="{x:Static local:DisplayMode.MountPosition}" 
+                          IsChecked="{Binding DisplayMode, Converter={StaticResource DisplayModeConverter}, ConverterParameter={x:Static local:DisplayMode.MountPosition}}"/>
+                <MenuItem Header="Slew Controls Only" Command="{Binding DisplayModeCommand}"  CommandParameter="{x:Static local:DisplayMode.ReducedSlew}"  
+                           IsChecked="{Binding DisplayMode, Converter={StaticResource DisplayModeConverter}, ConverterParameter={x:Static local:DisplayMode.ReducedSlew}}"/>
+                <MenuItem Header="Mount Axis Position" Command="{Binding DisplayModeCommand}"  CommandParameter="{x:Static local:DisplayMode.AxisPosition}"  
+                          IsChecked="{Binding DisplayMode, Converter={StaticResource DisplayModeConverter}, ConverterParameter={x:Static local:DisplayMode.AxisPosition}}"/>
+                <MenuItem Header="Message Centre" Command="{Binding DisplayModeCommand}"  CommandParameter="{x:Static local:DisplayMode.MessageCentre}"  
+                          IsChecked="{Binding DisplayMode, Converter={StaticResource DisplayModeConverter}, ConverterParameter={x:Static local:DisplayMode.MessageCentre}}"/>
+                <MenuItem Header="PEC Chart" Command="{Binding DisplayModeCommand}"  CommandParameter="{x:Static local:DisplayMode.PEC}"  
+                          IsChecked="{Binding DisplayMode, Converter={StaticResource DisplayModeConverter}, ConverterParameter={x:Static local:DisplayMode.PEC}}"/>
+                <MenuItem Header="Pulse Guiding"  Command="{Binding DisplayModeCommand}"  CommandParameter="{x:Static local:DisplayMode.PulseGuideMonitor}"  
+                          IsChecked="{Binding DisplayMode, Converter={StaticResource DisplayModeConverter}, ConverterParameter={x:Static local:DisplayMode.PulseGuideMonitor}}"/>
             </MenuItem>
         </Menu>
         <Grid Grid.Row="1" Margin="5">
@@ -37,19 +54,19 @@
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="5"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="5"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="5"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <localcontrols:MountPositionControl />
-                <localcontrols:SlewControl Grid.Row="2"/>
-                <localcontrols:TrackingControl Grid.Row="4"/>
-                <localcontrols:ParkControl Grid.Row="6" />
-                <Expander Grid.RowSpan="7" Grid.Column="1"
-                          ExpandDirection="Right">
+                <localcontrols:ReducedSlewControl Grid.Row="0" Visibility="{Binding ReducedSlewVisibility}"/>
+                <localcontrols:MountPositionControl Grid.Row="1" Visibility="{Binding MountPositionVisibility}"/>
+                <localcontrols:SlewControl Grid.Row="2" Visibility="{Binding SlewVisibility}"/>
+                <localcontrols:TrackingControl Grid.Row="3" Visibility="{Binding TrackingVisibility}"/>
+                <localcontrols:ParkControl Grid.Row="4" Visibility="{Binding ParkStatusVisibility}"/>
+                <Expander Grid.RowSpan="5" Grid.Column="1"
+                          ExpandDirection="Right"
+                          Visibility="{Binding ExpanderVisibility}">
                     <Grid>
                         <localcontrols:SlewControl />
                     </Grid>
