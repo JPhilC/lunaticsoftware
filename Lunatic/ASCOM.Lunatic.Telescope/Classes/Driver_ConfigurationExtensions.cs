@@ -1,4 +1,4 @@
-﻿using ASCOM.Lunatic.Interfaces;
+﻿using Lunatic.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,9 +11,9 @@ namespace ASCOM.Lunatic
 {
    public partial class SyntaTelescope
    {
-      private ISettingsProvider _SettingsManager = null;
+      private ISettingsProvider<Settings> _SettingsManager = null;
 
-      public ISettingsProvider SettingsManager
+      public ISettingsProvider<Settings> SettingsManager
       {
          get
          {

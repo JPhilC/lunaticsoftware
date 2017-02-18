@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Lunatic.TelescopeControl.Controls"
              mc:Ignorable="d">
-    <GroupBox Header="Slew Controls">
+    <GroupBox Header="Slew Controls" Template="{StaticResource LunaticGroupBoxControlTemplate}">
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />

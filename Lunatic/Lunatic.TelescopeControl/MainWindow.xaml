@@ -9,7 +9,9 @@
         Title="Lunatic Telescope Control" 
         DataContext="{Binding Main, Source={StaticResource Locator}}"
         SizeToContent="WidthAndHeight"
-        d:DesignHeight="650" d:DesignWidth="750">
+        d:DesignHeight="650" d:DesignWidth="750" 
+        Background="Black"
+        Icon="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/Images/LunaticMoon.ico">
     <Window.Resources>
         <local:DisplayModeToBooleanConverter x:Key="DisplayModeConverter" />
     </Window.Resources>
@@ -19,12 +21,18 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Menu>
-            <MenuItem Header="Telescope">
-                <MenuItem Header="Connect ..." Command="{Binding ConnectCommand}" Visibility="{Binding IsConnected, Converter={StaticResource ReversedBooleanToVisiblityConverter}}"/>
-                <MenuItem Header="Disconnect" Command="{Binding ConnectCommand}" Visibility="{Binding IsConnected, Converter={StaticResource BooleanToVisiblityConverter}}"/>
+        <Menu Template="{DynamicResource LunaticMenuControlTemplate2}" >
+            <MenuItem Header="Telescope" ItemContainerStyle="{DynamicResource LunaticMenuItemStyle}">
+                <MenuItem Header="Choose ..." 
+                          Command="{Binding ChooseCommand}" Visibility="{Binding IsConnected, Converter={StaticResource ReversedBooleanToVisiblityConverter}}" ItemsPanel="{DynamicResource ItemsPanelTemplate1}"/>
+                <MenuItem Header="{Binding ConnectMenuHeader}" 
+                          Command="{Binding ConnectCommand}" Visibility="{Binding IsConnected, Converter={StaticResource ReversedBooleanToVisiblityConverter}}"/>
+                <MenuItem Header="{Binding DisconnectMenuHeader}" 
+                          Command="{Binding ConnectCommand}" Visibility="{Binding IsConnected, Converter={StaticResource BooleanToVisiblityConverter}}"/>
+                <MenuItem Header="{Binding SetupMenuHeader}" 
+                          Command="{Binding SetupCommand}" Visibility="{Binding DriverSelected, Converter={StaticResource BooleanToVisiblityConverter}}"/>
                 <Separator></Separator>
-                <MenuItem Header="Exit" />
+                <MenuItem Header="Exit" Command="{Binding SaveChangesAndCloseCommand}"/>
             </MenuItem>
             <MenuItem Header="Display">
                 <MenuItem Header="Mount position" Command="{Binding DisplayModeCommand}" CommandParameter="{x:Static local:DisplayMode.MountPosition}" 
@@ -73,10 +81,7 @@
                 </Expander>
             </Grid>
             <DockPanel Grid.Column="2">
-                <StackPanel DockPanel.Dock="Bottom">
-                    <Button Content="Save" Margin="0,0,0,10" Command="{Binding SaveChangesCommand}" Style="{StaticResource Button80}"/>
-                    <Button Content="Cancel" Command="{Binding CancelChangesCommand}" Style="{StaticResource Button80}"/>
-                </StackPanel>
+                <StackPanel DockPanel.Dock="Bottom"/>
                 <Image HorizontalAlignment="Center" VerticalAlignment="Top" 
                        Source="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/Images/LunaticMoon.png" 
                     Stretch="None" Margin="0,0,0,10" />
@@ -84,7 +89,7 @@
 
             </DockPanel>
         </Grid>
-        <StatusBar Grid.Row="2">
+        <StatusBar Grid.Row="2" Background="#FF4B0909" Foreground="#FFEE0707">
             <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
         </StatusBar>
     </Grid>

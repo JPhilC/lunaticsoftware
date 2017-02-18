@@ -1,4 +1,3 @@
-using ASCOM.Lunatic.Interfaces;
 using GalaSoft.MvvmLight.Command;
 using Lunatic.Core;
 using Lunatic.Core.Services;
@@ -438,7 +437,7 @@ namespace ASCOM.Lunatic
       /// <summary>
       /// Initializes a new instance of the MainViewModel class.
       /// </summary>
-      public SetupViewModel(ISettingsProvider settingsProvider)
+      public SetupViewModel(ISettingsProvider<Settings> settingsProvider)
       {
          _Settings = settingsProvider.CurrentSettings;
          _Sites = new SiteCollection();

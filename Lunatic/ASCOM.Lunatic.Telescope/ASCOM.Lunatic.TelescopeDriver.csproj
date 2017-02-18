@@ -150,6 +150,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\GlobalAssemblyInfo.cs">
+      <Link>Properties\GlobalAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Classes\AxisStatus.cs" />
     <Compile Include="Classes\ConfigurationSettings.cs" />
     <Compile Include="Classes\Driver_ConfigurationExtensions.cs">
@@ -166,7 +169,6 @@
     <Compile Include="Controls\MapWindow.xaml.cs">
       <DependentUpon>MapWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Interfaces\ISettingsProvider.cs" />
     <Compile Include="ViewModel\MapViewModel.cs" />
     <Compile Include="ViewModel\SetupViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />

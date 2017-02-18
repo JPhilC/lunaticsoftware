@@ -1,4 +1,3 @@
-using ASCOM.Lunatic.Interfaces;
 using GalaSoft.MvvmLight.Command;
 using Lunatic.Core;
 using Lunatic.Core.Services;

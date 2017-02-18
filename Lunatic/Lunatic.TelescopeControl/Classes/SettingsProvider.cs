@@ -5,16 +5,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
-namespace ASCOM.Lunatic
+namespace Lunatic.TelescopeControl
 {
-   public class SettingsProvider:ISettingsProvider<Settings>
+   public class SettingsProvider : ISettingsProvider<TelescopeControlSettings>
    {
-      private static Settings _Settings = null;
+      private static TelescopeControlSettings _Settings = null;
 
-      private object _Lock = new object();
-
-      private const string CONFIG_SETTINGS_FILENAME = "SyntaMount.config";
-
+      private const string CONFIG_SETTINGS_FILENAME = "TelescopeControl.config";
 
       #region Version info ...
       private static string _CompanyName = null;
@@ -38,17 +35,6 @@ namespace ASCOM.Lunatic
                LoadAssemblyInfo();
             }
             return _Copyright;
-         }
-      }
-      private static string _Comments = null;
-      public static string Comments
-      {
-         get
-         {
-            if (_Comments == null) {
-               LoadAssemblyInfo();
-            }
-            return _Comments;
          }
       }
       private static int? _MajorVersion = null;
@@ -101,7 +87,6 @@ namespace ASCOM.Lunatic
          FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
          _CompanyName = versionInfo.CompanyName;
          _Copyright = versionInfo.LegalCopyright;
-         _Comments = versionInfo.Comments;
          _MajorVersion = versionInfo.ProductMajorPart;
          _MinorVersion = versionInfo.ProductMinorPart;
       }
@@ -117,7 +102,8 @@ namespace ASCOM.Lunatic
          }
       }
 
-      public Settings CurrentSettings
+
+      public TelescopeControlSettings CurrentSettings
       {
          get
          {
@@ -131,17 +117,15 @@ namespace ASCOM.Lunatic
       /// </summary>
       private void LoadSettings()
       {
-         lock (_Lock) {
-            string settingsFile = Path.Combine(UserSettingsFolder, CONFIG_SETTINGS_FILENAME);
-            if (File.Exists(settingsFile)) {
-               using (StreamReader sr = new StreamReader(settingsFile)) {
-                  JsonSerializer serializer = new JsonSerializer();
-                  _Settings = (Settings)serializer.Deserialize(sr, typeof(Settings));
-               }
+         string settingsFile = Path.Combine(UserSettingsFolder, CONFIG_SETTINGS_FILENAME);
+         if (File.Exists(settingsFile)) {
+            using (StreamReader sr = new StreamReader(settingsFile)) {
+               JsonSerializer serializer = new JsonSerializer();
+               _Settings = (TelescopeControlSettings)serializer.Deserialize(sr, typeof(TelescopeControlSettings));
             }
-            if (_Settings == null) {
-               _Settings = new Settings();   // Initilise with default values.
-            }
+         }
+         if (_Settings == null) {
+            _Settings = new TelescopeControlSettings();     // Initialise with default values.
          }
       }
 
@@ -150,20 +134,17 @@ namespace ASCOM.Lunatic
       /// </summary>
       public void SaveSettings()
       {
-         lock (_Lock) {
-            string settingsFile = Path.Combine(UserSettingsFolder, CONFIG_SETTINGS_FILENAME);
-            JsonSerializer serializer = new JsonSerializer();
-            serializer.NullValueHandling = NullValueHandling.Ignore;
-            using (StreamWriter sw = new StreamWriter(settingsFile))
-            using (JsonWriter writer = new JsonTextWriter(sw)) {
-               {
-                  writer.Formatting = Newtonsoft.Json.Formatting.Indented;
-                  serializer.Serialize(writer, _Settings);
-               }
+         string settingsFile = Path.Combine(UserSettingsFolder, CONFIG_SETTINGS_FILENAME);
+         JsonSerializer serializer = new JsonSerializer();
+         serializer.NullValueHandling = NullValueHandling.Ignore;
+         using (StreamWriter sw = new StreamWriter(settingsFile))
+         using (JsonWriter writer = new JsonTextWriter(sw)) {
+            {
+               writer.Formatting = Newtonsoft.Json.Formatting.Indented;
+               serializer.Serialize(writer, _Settings);
             }
          }
       }
-
 
    }
 }

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using Lunatic.TelescopeControl;
+using Lunatic.Core;
 
 namespace Lunatic.TelescopeControl.ViewModel
 {
@@ -19,16 +20,42 @@ namespace Lunatic.TelescopeControl.ViewModel
    /// See http://www.galasoft.ch/mvvm
    /// </para>
    /// </summary>
-   public class MainViewModel : ViewModelBase
+   public class MainViewModel : LunaticViewModelBase
    {
-      private ASCOM.DriverAccess.Telescope _Driver;
 
       #region Properties ....
+      #region Settings ...
+      ISettingsProvider<TelescopeControlSettings> _SettingsProvider;
+
+      private TelescopeControlSettings _Settings;
+
+      #endregion
+
+      #region Telescope driver selection etc ...
+
+      private ASCOM.DriverAccess.Telescope _Driver;
+
       public bool IsConnected
       {
          get
          {
             return ((_Driver != null) && (_Driver.Connected == true));
+         }
+      }
+
+      public bool DriverSelected
+      {
+         get
+         {
+            return (_Driver != null);
+         }
+      }
+
+      public string DriverName
+      {
+         get
+         {
+            return (_Driver != null ? _Driver.Description : "Telescope driver not selected.");
          }
       }
 
@@ -41,13 +68,50 @@ namespace Lunatic.TelescopeControl.ViewModel
          }
          set
          {
-            if (value == _DriverId) {
-               return;
+            if (Set<string>(ref _DriverId, value)) {
+               OnDriverChanged();
             }
-            _DriverId = value;
-            RaisePropertyChanged();
          }
       }
+
+      public string SetupMenuHeader
+      {
+         get
+         {
+            return (DriverSelected ? "Setup " + DriverName + "..." : "Setup");
+         }
+      }
+
+      public string DisconnectMenuHeader
+      {
+         get
+         {
+            return (DriverSelected ? "Disconnect from " + DriverName : "Disconnect");
+         }
+      }
+      public string ConnectMenuHeader
+      {
+         get
+         {
+            return (DriverSelected ? "Connect to " + DriverName : "Connect ...");
+         }
+      }
+
+      private void OnDriverChanged(bool saveSettings = true)
+      {
+         if (saveSettings) {
+            _Settings.DriverId = DriverId;
+            _SettingsProvider.SaveSettings();
+         }
+         RaisePropertyChanged("DriverName");
+         RaisePropertyChanged("DriverSelected");
+         RaisePropertyChanged("SetupMenuHeader");
+         RaisePropertyChanged("DisconnectMenuHeader");
+         RaisePropertyChanged("ConnectMenuHeader");
+         StatusMessage = (DriverSelected ? DriverName + " selected." : "Telescope driver not selected");
+      }
+
+      #endregion
 
       private string _StatusMessage = "Not connected.";
       public string StatusMessage
@@ -58,13 +122,10 @@ namespace Lunatic.TelescopeControl.ViewModel
          }
          private set
          {
-            if (_StatusMessage == value) {
-               return;
-            }
-            _StatusMessage = value;
-            RaisePropertyChanged();
+            Set<string>(ref _StatusMessage, value);
          }
       }
+
       #endregion
 
       #region Visibility display properties ...
@@ -83,6 +144,8 @@ namespace Lunatic.TelescopeControl.ViewModel
          set
          {
             if (Set<DisplayMode>(ref _DisplayMode, value)) {
+               _Settings.DisplayMode = DisplayMode;
+               _SettingsProvider.SaveSettings();
                RaiseVisiblitiesChanged();
             }
          }
@@ -187,8 +250,12 @@ namespace Lunatic.TelescopeControl.ViewModel
       /// <summary>
       /// Initializes a new instance of the MainViewModel class.
       /// </summary>
-      public MainViewModel()
+      public MainViewModel(ISettingsProvider<TelescopeControlSettings> settingsProvider)
       {
+         _SettingsProvider = settingsProvider;
+         _Settings = settingsProvider.CurrentSettings;
+         PopSettings();
+         
          ////if (IsInDesignMode)
          ////{
          ////    // Code runs in Blend --> create design time data.
@@ -197,8 +264,39 @@ namespace Lunatic.TelescopeControl.ViewModel
          ////{
          ////    // Code runs "for real"
          ////}
-         DisplayMode = DisplayMode.MountPosition;
+         
 
+      }
+
+
+      private void PopSettings()
+      {
+         _DriverId = _Settings.DriverId;
+         DisplayMode = _Settings.DisplayMode;
+
+         // Better try to instantiate the driver as well if we have a driver ID
+         if (!string.IsNullOrWhiteSpace(_DriverId)) {
+            try {
+               _Driver = new ASCOM.DriverAccess.Telescope(_DriverId);
+               OnDriverChanged(false);   // Update menu options and stuff for telescope.
+            }
+            catch (Exception ex) {
+               _DriverId = string.Empty;
+               StatusMessage = "Failed select previous telescope driver";
+            }
+         }
+      }
+
+      private void PushSettings()
+      {
+         _Settings.DriverId = this.DriverId;
+         _Settings.DisplayMode = this.DisplayMode;
+      }
+
+      public void SaveSettings()
+      {
+         PushSettings();
+         _SettingsProvider.SaveSettings();
       }
 
       #region Relay commands ...
@@ -218,6 +316,8 @@ namespace Lunatic.TelescopeControl.ViewModel
          }
       }
 
+
+      #region Choose, Connect, Disconnect etc ...
       private RelayCommand _ChooseCommand;
 
       public RelayCommand ChooseCommand
@@ -226,7 +326,11 @@ namespace Lunatic.TelescopeControl.ViewModel
          {
             return _ChooseCommand
                ?? (_ChooseCommand = new RelayCommand(() => {
-                  DriverId = ASCOM.DriverAccess.Telescope.Choose(Properties.Settings.Default.DriverId);
+                  string driverId = ASCOM.DriverAccess.Telescope.Choose(DriverId);
+                  if (driverId != null) {
+                     _Driver = new ASCOM.DriverAccess.Telescope(driverId);
+                     DriverId = driverId; // Triggers a refresh of menu options etc
+                  }
                   RaiseCanExecuteChanged();
                }, () => { return !IsConnected; }));
          }
@@ -246,7 +350,6 @@ namespace Lunatic.TelescopeControl.ViewModel
                      }
                   }
                   else {
-                     _Driver = new ASCOM.DriverAccess.Telescope(DriverId);
                      try {
                         _Driver.Connected = true;
                      }
@@ -256,9 +359,24 @@ namespace Lunatic.TelescopeControl.ViewModel
                   }
                   RaisePropertyChanged("IsConnected");
                   RaiseCanExecuteChanged();
-               }, () => { return !string.IsNullOrEmpty(DriverId); }));
+               }, () => { return _Driver != null; }));
          }
       }
+
+      private RelayCommand _SetupCommand;
+
+      public RelayCommand SetupCommand
+      {
+         get
+         {
+            return _SetupCommand
+               ?? (_SetupCommand = new RelayCommand(() => {
+                  _Driver.SetupDialog();
+               }, () => { return _Driver != null; }));
+         }
+      }
+
+      #endregion
 
       private RelayCommand<SlewDirection> _SlewCommand;
 

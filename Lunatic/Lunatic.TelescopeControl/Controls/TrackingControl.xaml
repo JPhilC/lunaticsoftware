@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Lunatic.TelescopeControl.Controls"
              mc:Ignorable="d" >
-    <GroupBox>
+    <GroupBox Template="{StaticResource LunaticGroupBoxControlTemplate}">
         <GroupBox.Header>
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Track Rate: "/>
@@ -29,7 +29,7 @@
                 <RowDefinition Height="5" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <Button Style="{StaticResource SmallSquareButton}">
+            <Button Style="{StaticResource SmallSquareButton}"  >
                 <Image Source="pack://application:,,,/Lunatic.TelescopeControl;component/Skins/Images/Stop Sign-96.png" />
             </Button>
             <Button Grid.Column="2" Style="{StaticResource SmallSquareButton}">

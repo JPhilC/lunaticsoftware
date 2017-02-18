@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:Lunatic.TelescopeControl.Controls"
              mc:Ignorable="d">
     <Grid>
-        <GroupBox>
+        <GroupBox Template="{StaticResource LunaticGroupBoxControlTemplate}">
             <GroupBox.Header>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Park Status: " />

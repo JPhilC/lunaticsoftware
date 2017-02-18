@@ -14,6 +14,7 @@
 
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
+using Lunatic.Core;
 using Microsoft.Practices.ServiceLocation;
 
 namespace Lunatic.TelescopeControl.ViewModel
@@ -31,18 +32,16 @@ namespace Lunatic.TelescopeControl.ViewModel
         {
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
 
-            ////if (ViewModelBase.IsInDesignModeStatic)
-            ////{
-            ////    // Create design time view services and models
-            ////    SimpleIoc.Default.Register<IDataService, DesignDataService>();
-            ////}
-            ////else
-            ////{
-            ////    // Create run time view services and models
-            ////    SimpleIoc.Default.Register<IDataService, DataService>();
-            ////}
+         if (ViewModelBase.IsInDesignModeStatic) {
+            // Create design time view services and models
+            SimpleIoc.Default.Register<ISettingsProvider<TelescopeControlSettings>, SettingsProvider>();
+         }
+         else {
+            // Create run time view services and models
+            SimpleIoc.Default.Register<ISettingsProvider<TelescopeControlSettings>, SettingsProvider>();
+         }
 
-            SimpleIoc.Default.Register<MainViewModel>();
+         SimpleIoc.Default.Register<MainViewModel>();
         }
 
         public MainViewModel Main
@@ -55,7 +54,8 @@ namespace Lunatic.TelescopeControl.ViewModel
         
         public static void Cleanup()
         {
-            // TODO Clear the ViewModels
-        }
+         SimpleIoc.Default.Unregister<MainViewModel>();
+         SimpleIoc.Default.Unregister<ISettingsProvider<TelescopeControlSettings>>();
+      }
     }
 }

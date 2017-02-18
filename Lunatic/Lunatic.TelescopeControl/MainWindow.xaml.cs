@@ -29,6 +29,25 @@ namespace Lunatic.TelescopeControl
 
          _ViewModel = (MainViewModel)this.DataContext;
 
+         // Hook up to the viewmodels close actions
+         if (_ViewModel.SaveAndCloseAction == null) {
+            _ViewModel.SaveAndCloseAction = new Action(() => {
+               this.Close();
+            });
+         }
+         if (_ViewModel.CancelAndCloseAction == null) {
+            _ViewModel.CancelAndCloseAction = new Action(() => {
+               this.Close();
+            });
+         }
+      }
+
+      protected override void OnClosed(EventArgs e)
+      {
+         _ViewModel.SaveSettings();
+         base.OnClosed(e);
+         _ViewModel.SaveAndCloseAction = null;
+         _ViewModel.CancelAndCloseAction = null;
       }
    }
 }

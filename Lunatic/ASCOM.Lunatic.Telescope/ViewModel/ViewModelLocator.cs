@@ -12,7 +12,7 @@
   See http://www.galasoft.ch/mvvm
 */
 
-using ASCOM.Lunatic.Interfaces;
+using Lunatic.Core;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
 using Microsoft.Practices.ServiceLocation;
@@ -50,11 +50,11 @@ namespace ASCOM.Lunatic
 
          if (ViewModelBase.IsInDesignModeStatic) {
             // Create design time view services and models
-            SimpleIoc.Default.Register<ISettingsProvider, SettingsProvider>();
+            SimpleIoc.Default.Register<ISettingsProvider<Settings>, SettingsProvider>();
          }
          else {
             // Create run time view services and models
-            SimpleIoc.Default.Register<ISettingsProvider, SettingsProvider>();
+            SimpleIoc.Default.Register<ISettingsProvider<Settings>, SettingsProvider>();
          }
 
          SimpleIoc.Default.Register<SetupViewModel>();
@@ -70,7 +70,8 @@ namespace ASCOM.Lunatic
 
       public static void Cleanup()
       {
-         // TODO Clear the ViewModels
+         SimpleIoc.Default.Unregister<SetupViewModel>();
+         SimpleIoc.Default.Unregister<ISettingsProvider<Settings>>();
       }
    }
 }
