@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace ASCOM.Lunatic.Telescope.Properties {
+namespace ASCOM.Lunatic.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

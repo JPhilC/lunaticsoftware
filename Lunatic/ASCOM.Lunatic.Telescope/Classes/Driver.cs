@@ -42,9 +42,9 @@ using System.Threading;
 namespace ASCOM.Lunatic
 {
    //
-   // Your driver's DeviceID is ASCOM.Lunatic.SyntaTelescope
+   // Your driver's DeviceID is ASCOM.Lunatic.Telescope
    //
-   // The Guid attribute sets the CLSID for ASCOM.Lunatic.SyntaTelescope
+   // The Guid attribute sets the CLSID for ASCOM.Lunatic.Telescope
    // The ClassInterface/None addribute prevents an empty interface called
    // _Winforms from being created and used as the [default] interface
    //
@@ -56,16 +56,16 @@ namespace ASCOM.Lunatic
    /// ASCOM Telescope Driver for Winforms.
    /// </summary>
    [Guid("C21225C0-EF9A-43C7-A7FA-F172501F0357")]
-   [ProgId("ASCOM.Lunatic.SyntaTelescope")]
+   [ProgId("ASCOM.Lunatic.Telescope")]
    [ServedClassName("Lunatic ASCOM Driver for Synta Telescopes")]
    [ClassInterface(ClassInterfaceType.None)]
-   public partial class SyntaTelescope : SyntaMountBase, ITelescopeV3
+   public partial class Telescope : SyntaMountBase, ITelescopeV3
    {
       /// <summary>
       /// ASCOM DeviceID (COM ProgID) for this driver.
       /// The DeviceID is used by ASCOM applications to load the driver at runtime.
       /// </summary>
-      internal static string DRIVER_ID = "ASCOM.Lunatic.SyntaTelescope";
+      internal static string DRIVER_ID = "ASCOM.Lunatic.Telescope";
       /// <summary>
       /// Driver description that displays in the ASCOM Chooser.
       /// </summary>
@@ -99,7 +99,7 @@ namespace ASCOM.Lunatic
       /// Initializes a new instance of the <see cref="Winforms"/> class.
       /// Must be public for COM registration.
       /// </summary>
-      public SyntaTelescope() : base()
+      public Telescope() : base()
       {
          // Check the current settings are loaded
          if (Settings == null) {
@@ -123,7 +123,6 @@ namespace ASCOM.Lunatic
          _Logger.LogMessage("Telescope", "Completed initialisation");
       }
 
-
       //
       // PUBLIC COM INTERFACE ITelescopeV3 IMPLEMENTATION
       //
@@ -138,7 +137,8 @@ namespace ASCOM.Lunatic
       /// </summary>
       public void SetupDialog()
       {
-         
+         // Increment the server lock to prevent it disappearing while the Setup dialog is open
+         TelescopeServer.CountLock();
          SetupViewModel setupVm = ViewModelLocator.Current.Setup;
          SetupThread setupThread = new SetupThread(setupVm, _Logger, new SetupCallback(ResultCallback));
          Thread thread = new Thread(new ThreadStart(setupThread.ThreadProc));
@@ -149,8 +149,11 @@ namespace ASCOM.Lunatic
       private void ResultCallback(bool? result)
       {
          if (result.HasValue && result.Value) {
-            SettingsManager.SaveSettings(); // Persist device configuration values to the ASCOM Profile store
+            SettingsManager.SaveSettings(); // Persist device configuration values Lunatic Settings
+            WriteProfile(); // Persist device configuration values to the ASCOM Profile store
          }
+         TelescopeServer.UncountLock();
+         TelescopeServer.ExitIf();
       }
 
       public ArrayList SupportedActions
@@ -196,8 +199,9 @@ namespace ASCOM.Lunatic
          throw new ASCOM.MethodNotImplementedException("CommandString");
       }
 
-      public void Dispose()
+      public new void Dispose()
       {
+         System.Diagnostics.Trace.WriteLine("ASCOM.Lunatic.Telescope.Dispose() called.");
          // Clean up the tracelogger and util objects
          _Logger.Enabled = false;
          _Logger.Dispose();
@@ -206,6 +210,7 @@ namespace ASCOM.Lunatic
          utilities = null;
          astroUtilities.Dispose();
          astroUtilities = null;
+         base.Dispose();
       }
 
       public bool Connected
@@ -1156,33 +1161,31 @@ namespace ASCOM.Lunatic
          }
       }
 
-      ///// <summary>
-      ///// Read the device configuration from the ASCOM Profile store
-      ///// </summary>
-      //internal void ReadProfile()
-      //{
-      //   lock (_Lock) {
-      //      using (Profile driverProfile = new Profile()) {
-      //         driverProfile.DeviceType = "Telescope";
-      //         TRACE_STATE = Convert.ToBoolean(driverProfile.GetValue(DRIVER_ID, traceStateProfileName, string.Empty, traceStateDefault));
-      //         COM_PORT = driverProfile.GetValue(DRIVER_ID, comPortProfileName, string.Empty, comPortDefault);
-      //      }
-      //   }
-      //}
+      /// <summary>
+      /// Read the device configuration from the ASCOM Profile store
+      /// </summary>
+      internal void ReadProfile()
+      {
+         lock (_Lock) {
+            using (Profile driverProfile = new Profile()) {
+               driverProfile.DeviceType = this.GetType().Name;
+            }
+         }
+      }
 
-      ///// <summary>
-      ///// Write the device configuration to the  ASCOM  Profile store
-      ///// </summary>
-      //internal void WriteProfile()
-      //{
-      //   lock (_Lock) {
-      //      using (Profile driverProfile = new Profile()) {
-      //         driverProfile.DeviceType = "Telescope";
-      //         //driverProfile.WriteValue(DRIVER_ID, traceStateProfileName, TRACE_STATE.ToString());
-      //         //driverProfile.WriteValue(DRIVER_ID, comPortProfileName, COM_PORT.ToString());
-      //      }
-      //   }
-      //}
+      /// <summary>
+      /// Write the device configuration to the  ASCOM  Profile store
+      /// </summary>
+      internal void WriteProfile()
+      {
+         lock (_Lock) {
+            using (Profile driverProfile = new Profile()) {
+               driverProfile.DeviceType = this.GetType().Name;
+               //driverProfile.WriteValue(DRIVER_ID, traceStateProfileName, TRACE_STATE.ToString());
+               driverProfile.WriteValue(DRIVER_ID, comPortProfileName, Settings.COMPort);
+            }
+         }
+      }
 
       #endregion
 

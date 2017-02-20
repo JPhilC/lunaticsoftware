@@ -35,6 +35,23 @@ namespace Lunatic.TelescopeControl.ViewModel
 
       private ASCOM.DriverAccess.Telescope _Driver;
 
+      private ASCOM.DriverAccess.Telescope Driver
+      {
+         get
+         {
+            return _Driver;
+         }
+         set
+         {
+            if (ReferenceEquals(_Driver, value)) {
+               return;
+            }
+            if (_Driver != null) {
+               _Driver.Dispose();
+            }
+            _Driver = value;
+         }
+      }
       public bool IsConnected
       {
          get
@@ -268,6 +285,12 @@ namespace Lunatic.TelescopeControl.ViewModel
 
       }
 
+      public override void Cleanup()
+      {
+         // Release the reference to the driver.
+         Driver = null;
+         base.Cleanup();
+      }
 
       private void PopSettings()
       {
@@ -277,7 +300,7 @@ namespace Lunatic.TelescopeControl.ViewModel
          // Better try to instantiate the driver as well if we have a driver ID
          if (!string.IsNullOrWhiteSpace(_DriverId)) {
             try {
-               _Driver = new ASCOM.DriverAccess.Telescope(_DriverId);
+               Driver = new ASCOM.DriverAccess.Telescope(_DriverId);
                OnDriverChanged(false);   // Update menu options and stuff for telescope.
             }
             catch (Exception ex) {
@@ -328,7 +351,7 @@ namespace Lunatic.TelescopeControl.ViewModel
                ?? (_ChooseCommand = new RelayCommand(() => {
                   string driverId = ASCOM.DriverAccess.Telescope.Choose(DriverId);
                   if (driverId != null) {
-                     _Driver = new ASCOM.DriverAccess.Telescope(driverId);
+                     Driver = new ASCOM.DriverAccess.Telescope(driverId);
                      DriverId = driverId; // Triggers a refresh of menu options etc
                   }
                   RaiseCanExecuteChanged();
@@ -345,13 +368,13 @@ namespace Lunatic.TelescopeControl.ViewModel
             return _ConnectCommand
                ?? (_ConnectCommand = new RelayCommand(() => {
                   if (IsConnected) {
-                     if (_Driver != null) {
-                        _Driver.Connected = false;
+                     if (Driver != null) {
+                        Driver.Connected = false;
                      }
                   }
                   else {
                      try {
-                        _Driver.Connected = true;
+                        Driver.Connected = true;
                      }
                      catch (Exception ex) {
                         StatusMessage = ex.Message; 
@@ -359,7 +382,7 @@ namespace Lunatic.TelescopeControl.ViewModel
                   }
                   RaisePropertyChanged("IsConnected");
                   RaiseCanExecuteChanged();
-               }, () => { return _Driver != null; }));
+               }, () => { return Driver != null; }));
          }
       }
 
@@ -371,8 +394,8 @@ namespace Lunatic.TelescopeControl.ViewModel
          {
             return _SetupCommand
                ?? (_SetupCommand = new RelayCommand(() => {
-                  _Driver.SetupDialog();
-               }, () => { return _Driver != null; }));
+                  Driver.SetupDialog();
+               }, () => { return Driver != null; }));
          }
       }
 

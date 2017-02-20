@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TestConsole</RootNamespace>
     <AssemblyName>TestConsole</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -105,6 +106,10 @@
     <ProjectReference Include="..\ASCOM.Lunatic.Telescope\ASCOM.Lunatic.TelescopeDriver.csproj">
       <Project>{e85b3304-41bd-4fa7-ad06-65bfa46b85ec}</Project>
       <Name>ASCOM.Lunatic.TelescopeDriver</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ASCOM\ASCOM.DriverAccess\ASCOM.DriverAccess.csproj">
+      <Project>{3b6c23f5-c590-4385-86bb-98b604b565ba}</Project>
+      <Name>ASCOM.DriverAccess</Name>
     </ProjectReference>
     <ProjectReference Include="..\Lunatic.Core\Lunatic.Core.csproj">
       <Project>{2e23d13a-8cb0-434b-9259-7789157e8677}</Project>

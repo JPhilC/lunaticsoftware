@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace ASCOM.Lunatic
 {
-   public partial class SyntaTelescope
+   public partial class Telescope
    {
 
       // special charactor for communication.
@@ -484,6 +484,7 @@ namespace ASCOM.Lunatic
          FactorRadToStep[(int)Axis] = GearRatio / (2 * Math.PI);
          FactorStepToRad[(int)Axis] = 2 * Math.PI / GearRatio;
       }
+      
       // Inquire Timer Interrupt Freq ":b1".
       protected void InquireTimerInterruptFreq(AxisId Axis)
       {
@@ -494,6 +495,7 @@ namespace ASCOM.Lunatic
 
          FactorRadRateToInt[(int)Axis] = (double)(StepTimerFreq[(int)Axis]) / FactorRadToStep[(int)Axis];
       }
+      
       // Inquire high speed ratio ":g(*2)", where *2: '1'= CH1, '2' = CH2.
       protected void InquireHighSpeedRatio(AxisId Axis)
       {
@@ -502,6 +504,7 @@ namespace ASCOM.Lunatic
          long highSpeedRatio = BCDstr2long(response);
          HighSpeedRatio[(int)Axis] = highSpeedRatio;
       }
+      
       // Inquire PEC Period ":s(*1)", where *1: '1'= CH1, '2'= CH2, '3'= Both.
       protected void InquirePECPeriod(AxisId Axis)
       {

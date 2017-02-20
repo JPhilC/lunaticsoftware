@@ -9,11 +9,12 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Lunatic.TelescopeControl</RootNamespace>
     <AssemblyName>Lunatic.TelescopeControl</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -58,14 +59,6 @@
     <ApplicationIcon>LunaticMoon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ASCOM.DeviceInterfaces, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\ASCOM\trunk\ASCOM.DeviceInterface\bin\x86\Debug\ASCOM.DeviceInterfaces.dll</HintPath>
-    </Reference>
-    <Reference Include="ASCOM.DriverAccess, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\ASCOM\trunk\ASCOM.DriverAccess\bin\x86\Debug\ASCOM.DriverAccess.dll</HintPath>
-    </Reference>
     <Reference Include="GalaSoft.MvvmLight, Version=5.3.0.19026, Culture=neutral, PublicKeyToken=e7570ab207bcb616, processorArchitecture=MSIL">
       <HintPath>..\packages\MvvmLightLibs.5.3.0.0\lib\net45\GalaSoft.MvvmLight.dll</HintPath>
       <Private>True</Private>
@@ -245,6 +238,18 @@
     <Resource Include="LunaticMoon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ASCOM\ASCOM.DeviceInterface\ASCOM.DeviceInterface.vbproj">
+      <Project>{872ef2d6-ac89-4c15-ac84-6c69b040a843}</Project>
+      <Name>ASCOM.DeviceInterface</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ASCOM\ASCOM.DriverAccess\ASCOM.DriverAccess.csproj">
+      <Project>{3b6c23f5-c590-4385-86bb-98b604b565ba}</Project>
+      <Name>ASCOM.DriverAccess</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ASCOM\ASCOM.Utilities\ASCOM.Utilities\ASCOM.Utilities.vbproj">
+      <Project>{c9bf0a8b-594f-4ab9-938a-edc8448d8520}</Project>
+      <Name>ASCOM.Utilities</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Lunatic.Core\Lunatic.Core.csproj">
       <Project>{2E23D13A-8CB0-434B-9259-7789157E8677}</Project>
       <Name>Lunatic.Core</Name>

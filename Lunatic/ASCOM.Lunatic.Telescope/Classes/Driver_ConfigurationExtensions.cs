@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ASCOM.Lunatic
 {
-   public partial class SyntaTelescope
+   public partial class Telescope
    {
       private ISettingsProvider<Settings> _SettingsManager = null;
 

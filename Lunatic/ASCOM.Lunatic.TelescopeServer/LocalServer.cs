@@ -25,6 +25,7 @@ using System.Threading;
 using System.Security.Principal;
 using System.Diagnostics;
 using ASCOM;
+using System.Windows.Threading;
 
 namespace ASCOM.Lunatic
 {
@@ -186,6 +187,7 @@ namespace ASCOM.Lunatic
       //
       public static void ExitIf()
       {
+         System.Diagnostics.Trace.WriteLine(string.Format("ExitIf: Objects {0}, ServerLocks {1}", ObjectsCount, ServerLockCount));
          lock (_lockObject) {
             if ((ObjectsCount <= 0) && (ServerLockCount <= 0)) {
                if (StartedByCOM) {
@@ -196,6 +198,7 @@ namespace ASCOM.Lunatic
             }
          }
       }
+
       #endregion
 
       // -----------------
@@ -235,7 +238,7 @@ namespace ASCOM.Lunatic
 
                   object[] attrbutes = info.GetCustomAttributes(typeof(ServedClassNameAttribute), false);
                   if (attrbutes.Length > 0) {
-                     MessageBox.Show("Adding Type: " + type.Name + " " + type.FullName);
+                     //MessageBox.Show("Adding Type: " + type.Name + " " + type.FullName);
                      _ComObjectTypes.Add(type); //PWGS - much simpler
                      _ComObjectAssys.Add(so);
                   }
@@ -341,7 +344,7 @@ namespace ASCOM.Lunatic
          }
          catch (Exception ex) {
             MessageBox.Show("Error while registering the server:\n" + ex.ToString(),
-                  "UnityAstro.ASCOM.Winforms.TelescopeServer", MessageBoxButton.OK, MessageBoxImage.Stop);
+                  "ASCOM.Lunatic.TelescopeServer", MessageBoxButton.OK, MessageBoxImage.Stop);
             return;
          }
          finally {
@@ -563,9 +566,10 @@ namespace ASCOM.Lunatic
          if (!LoadComObjectAssemblies()) return;                  // Load served COM class assemblies, get types
 
          if (!ProcessArguments(args)) return;                  // Register/Unregister
-//#if DEBUG
-//         RegisterObjects();
-//#endif
+                                                               //#if DEBUG
+                                                               //         RegisterObjects();
+                                                               //#endif
+         MessageBox.Show("Starting Telescope Server");
 
          // Initialize critical member variables.
          _ObjsInUse = 0;
@@ -612,6 +616,12 @@ namespace ASCOM.Lunatic
             GarbageCollector.StopThread();
             GarbageCollector.WaitForThreadToStop();
          }
+      }
+
+      private static void TestExitIf(object state, EventArgs e)
+      {
+         System.Diagnostics.Trace.WriteLine(string.Format("ExitIf: Objects {0}, ServerLocks {1}", ObjectsCount, ServerLockCount));
+
       }
       #endregion
    }

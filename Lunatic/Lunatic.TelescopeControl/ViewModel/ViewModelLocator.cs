@@ -54,6 +54,8 @@ namespace Lunatic.TelescopeControl.ViewModel
         
         public static void Cleanup()
         {
+         MainViewModel mv = ServiceLocator.Current.GetInstance<MainViewModel>();
+         mv.Cleanup();
          SimpleIoc.Default.Unregister<MainViewModel>();
          SimpleIoc.Default.Unregister<ISettingsProvider<TelescopeControlSettings>>();
       }

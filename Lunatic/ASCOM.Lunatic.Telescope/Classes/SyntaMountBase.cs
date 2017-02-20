@@ -114,6 +114,7 @@ namespace ASCOM.Lunatic
       }
       ~SyntaMountBase()
       {
+         System.Diagnostics.Trace.WriteLine("ASCOM.Lunatic.SyntaMountBase destructor is called.");
          if (Connection != null) {
             Connection.Close();
          }

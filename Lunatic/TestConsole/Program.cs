@@ -18,13 +18,28 @@ namespace TestConsole
             //   Console.WriteLine("Press a key to exit.");
             //   Console.ReadKey();
             //}
-            //Console.WriteLine("Press any key");
-            //Console.ReadKey();
-            ASCOM.Lunatic.SyntaTelescope driver = new ASCOM.Lunatic.SyntaTelescope();
-            driver.SetupDialog();
+            Console.WriteLine("Press <Enter> to choose a driver.");
+            Console.ReadLine();
 
-            //Type ProgIdType = Type.GetTypeFromProgID("ASCOM.Lunatic.TelescopeDriver.SyntaTelescope");
+            //ASCOM.Lunatic.Telescope driver = new ASCOM.Lunatic.Telescope();
+            //driver.SetupDialog();
+
+            //Type ProgIdType = Type.GetTypeFromProgID("ASCOM.Lunatic.TelescopeDriver.Telescope");
             //Object oDrv = Activator.CreateInstance(ProgIdType);
+
+            string driverId = ASCOM.DriverAccess.Telescope.Choose("");
+            if (!string.IsNullOrWhiteSpace(driverId)) {
+               ASCOM.DriverAccess.Telescope driver = new ASCOM.DriverAccess.Telescope(driverId);
+
+               Console.WriteLine("Press <Enter> to Dispose");
+               Console.ReadLine();
+
+               driver.Dispose();
+            }
+
+
+            Console.WriteLine("Press <Enter> to Exit");
+            Console.ReadLine();
          }
          catch (Exception ex) {
             System.Diagnostics.Debug.WriteLine(ex.Message);
