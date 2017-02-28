@@ -18,7 +18,7 @@ using GalaSoft.MvvmLight.Ioc;
 using Microsoft.Practices.ServiceLocation;
 
 
-namespace ASCOM.Lunatic
+namespace ASCOM.Lunatic.Telescope
 {
 
    /// <summary>

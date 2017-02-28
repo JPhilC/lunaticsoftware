@@ -2,7 +2,7 @@
 using System;
 using System.Windows.Markup;
 
-namespace ASCOM.Lunatic
+namespace ASCOM.Lunatic.Telescope
 {
    public class COMPortBindingSourceExtension : MarkupExtension
    {

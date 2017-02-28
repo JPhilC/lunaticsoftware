@@ -7,7 +7,7 @@
     <ProjectGuid>{E85B3304-41BD-4FA7-AD06-65BFA46B85EC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ASCOM.Lunatic</RootNamespace>
+    <RootNamespace>ASCOM.Lunatic.Telescope</RootNamespace>
     <AssemblyName>ASCOM.Lunatic.TelescopeDriver</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -61,6 +61,38 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ASCOM.Astrometry, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\ASCOM\Platform 6 Developer Components\Components\Platform6\ASCOM.Astrometry.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.Attributes, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\ASCOM\Platform 6 Developer Components\Components\Platform6\ASCOM.Attributes.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.Controls, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\ASCOM\Platform 6 Developer Components\Components\Platform6\ASCOM.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.DeviceInterfaces, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\ASCOM\Platform 6 Developer Components\Components\Platform6\ASCOM.DeviceInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.Exceptions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\ASCOM\Platform 6 Developer Components\Components\Platform6\ASCOM.Exceptions.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.SettingsProvider, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\ASCOM\Platform 6 Developer Components\Components\Platform6\ASCOM.SettingsProvider.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.Utilities, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\ASCOM\Platform 6 Developer Components\Components\Platform6\ASCOM.Utilities.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.Utilities.Video, Version=6.1.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\ASCOM\Platform 6 Developer Components\Components\Platform6\ASCOM.Utilities.Video.dll</HintPath>
+    </Reference>
     <Reference Include="GalaSoft.MvvmLight, Version=5.3.0.19026, Culture=neutral, PublicKeyToken=e7570ab207bcb616, processorArchitecture=MSIL">
       <HintPath>..\packages\MvvmLightLibs.5.3.0.0\lib\net45\GalaSoft.MvvmLight.dll</HintPath>
       <Private>True</Private>
@@ -134,29 +166,16 @@
     <Compile Include="..\GlobalAssemblyInfo.cs">
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Classes\AxisStatus.cs" />
     <Compile Include="Classes\ConfigurationSettings.cs" />
+    <Compile Include="Classes\Contants.cs" />
     <Compile Include="Classes\Driver_ConfigurationExtensions.cs">
       <DependentUpon>Driver.cs</DependentUpon>
     </Compile>
     <Compile Include="Classes\COMPortBindingSourceExtension.cs" />
-    <Compile Include="Classes\Enums.cs" />
     <Compile Include="Classes\SettingsProvider.cs" />
     <Compile Include="Classes\SyntaMountBase.cs" />
-    <Compile Include="Classes\MountControlException.cs" />
-    <Compile Include="Classes\Driver_SyntaExtenstions.cs">
-      <DependentUpon>Driver.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\MapWindow.xaml.cs">
-      <DependentUpon>MapWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ViewModel\MapViewModel.cs" />
     <Compile Include="ViewModel\SetupViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
-    <Page Include="Controls\MapWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Controls\SetupWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -216,29 +235,13 @@
       <Project>{c2f85c09-caf9-49fd-8bdc-80a8136d3af3}</Project>
       <Name>ASCOM.Lunatic.TelescopeServer</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ASCOM\ASCOM.Astrometry\ASCOM.Astrometry\ASCOM.Astrometry.vbproj">
-      <Project>{bce07b80-9e3d-43d9-be5b-50d121d40ed3}</Project>
-      <Name>ASCOM.Astrometry</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ASCOM\ASCOM.Attributes\ASCOM.Attributes.csproj">
-      <Project>{2c40fad9-de75-4360-a0ad-911c4d24d98c}</Project>
-      <Name>ASCOM.Attributes</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ASCOM\ASCOM.DeviceInterface\ASCOM.DeviceInterface.vbproj">
-      <Project>{872ef2d6-ac89-4c15-ac84-6c69b040a843}</Project>
-      <Name>ASCOM.DeviceInterface</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ASCOM\ASCOM.Utilities\ASCOM.Utilities\ASCOM.Utilities.vbproj">
-      <Project>{c9bf0a8b-594f-4ab9-938a-edc8448d8520}</Project>
-      <Name>ASCOM.Utilities</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ASCOM\Interfaces\ASCOMExceptions\ASCOM.Exceptions.csproj">
-      <Project>{5f6cf410-7b16-4a32-99d2-0d92196c4490}</Project>
-      <Name>ASCOM.Exceptions</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Lunatic.Core\Lunatic.Core.csproj">
       <Project>{2e23d13a-8cb0-434b-9259-7789157e8677}</Project>
       <Name>Lunatic.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Lunatic.SyntaController\Lunatic.SyntaController.csproj">
+      <Project>{8424511E-54D1-42D3-86FF-1E56569FE2B8}</Project>
+      <Name>Lunatic.SyntaController</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

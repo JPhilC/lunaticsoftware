@@ -7,7 +7,7 @@ using System.Linq;
 using System.Reflection;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
-namespace ASCOM.Lunatic
+namespace ASCOM.Lunatic.Telescope
 {
    /// <summary>
    /// This class contains properties that the main View can data bind to.
@@ -21,12 +21,8 @@ namespace ASCOM.Lunatic
    /// See http://www.galasoft.ch/mvvm
    /// </para>
    /// </summary>
-   [CategoryOrder("Mount Options", 1)]
-   [CategoryOrder("Port Details", 2)]
-   [CategoryOrder("Site Information", 3)]
-   [CategoryOrder("Gamepad", 5)]
-   [CategoryOrder("ASCOM Options", 6)]
-   [CategoryOrder("General", 7)]
+   [CategoryOrder("Port Details", 1)]
+   [CategoryOrder("ASCOM Options", 2)]
    public class SetupViewModel : LunaticViewModelBase
    {
 
@@ -40,53 +36,6 @@ namespace ASCOM.Lunatic
             return _Settings;
          }
       }
-      #region Mount options ...
-      private MountOptions _MountOption;
-      [Category("Mount Options")]
-      [DisplayName("Mount")]
-      [Description("Choose the type of mount")]
-      [PropertyOrder(0)]
-      [Browsable(true)]    // Need to allow this property to be hidden at runtime
-      public MountOptions MountOption
-      {
-         get
-         {
-            return _MountOption;
-         }
-         set
-         {
-            if (value == _MountOption) {
-               return;
-            }
-            _MountOption = value;
-            RaisePropertyChanged();
-         }
-      }
-
-      private PulseGuidingOption _PulseGuidingMode;
-      [Category("Mount Options")]
-      [DisplayName("Guiding")]
-      [Description("Choose type of guiding used.")]
-      [PropertyOrder(1)]
-      [Browsable(true)]    // Need to allow this property to be hidden at runtime
-      public PulseGuidingOption PulseGuidingMode
-      {
-         get
-         {
-            return _PulseGuidingMode;
-         }
-         set
-         {
-            if (value == _PulseGuidingMode) {
-               return;
-            }
-            _PulseGuidingMode = value;
-            RaisePropertyChanged();
-         }
-      }
-
-
-      #endregion
 
       #region Port details ...
       private COMPortInfo _SelectedCOMPort;
@@ -177,23 +126,28 @@ namespace ASCOM.Lunatic
 
       #endregion
 
-      #region General options ...
-
-      #endregion
-
-      #region Site information ...
-      private SiteCollection _Sites;
-      [Category("Site Information")]
-      [DisplayName("Available sites")]
-      [Description("Manage the available sites.")]
-      public SiteCollection Sites
+      private PulseGuidingOption _PulseGuidingMode;
+      [Category("Mount Options")]
+      [DisplayName("Guiding")]
+      [Description("Choose type of guiding used.")]
+      [PropertyOrder(1)]
+      [Browsable(true)]    // Need to allow this property to be hidden at runtime
+      public PulseGuidingOption PulseGuidingMode
       {
          get
          {
-            return _Sites;
+            return _PulseGuidingMode;
+         }
+         set
+         {
+            if (value == _PulseGuidingMode) {
+               return;
+            }
+            _PulseGuidingMode = value;
+            RaisePropertyChanged();
          }
       }
-      #endregion
+
 
       #region ASCOM Options ...
       private bool _IsTraceOn;
@@ -440,7 +394,6 @@ namespace ASCOM.Lunatic
       public SetupViewModel(ISettingsProvider<Settings> settingsProvider)
       {
          _Settings = settingsProvider.CurrentSettings;
-         _Sites = new SiteCollection();
          PopProperties();
       }
 
@@ -452,24 +405,12 @@ namespace ASCOM.Lunatic
 
       public void PopProperties()
       {
-         MountOption = _Settings.MountOption;
-         PulseGuidingMode = _Settings.PulseGuidingMode;
 
          SelectedCOMPort = COMPortService.GetCOMPortsInfo().Where(port => port.Name == Settings.COMPort).FirstOrDefault();
          TimeOut = _Settings.Timeout;
          Retry = _Settings.Retry;
          BaudRate = _Settings.BaudRate;
-
-         Sites.Clear();
-         foreach (Site site in _Settings.Sites) {
-            Sites.Add(new Site(site.Id) {
-               SiteName = site.SiteName,
-               Elevation = site.Elevation,
-               Longitude = site.Longitude,
-               Latitude = site.Latitude
-            });
-         }
-
+         PulseGuidingMode = _Settings.PulseGuidingMode;
 
          IsTraceOn = _Settings.IsTracing;
 
@@ -488,20 +429,6 @@ namespace ASCOM.Lunatic
 
       public void PushProperties()
       {
-         _Settings.MountOption = MountOption;
-         _Settings.PulseGuidingMode = PulseGuidingMode;
-
-
-         _Settings.Sites.Clear();
-         foreach (Site site in Sites) {
-            _Settings.Sites.Add(new Site(site.Id) {
-               SiteName = site.SiteName,
-               Elevation = site.Elevation,
-               Longitude = site.Longitude,
-               Latitude = site.Latitude
-            });
-         }
-
          if (SelectedCOMPort != null) {
             _Settings.COMPort = SelectedCOMPort.Name;
          }
@@ -509,6 +436,8 @@ namespace ASCOM.Lunatic
          _Settings.Timeout = TimeOut;
          _Settings.Retry = Retry;
          _Settings.BaudRate = BaudRate;
+
+         _Settings.PulseGuidingMode = PulseGuidingMode;
 
          _Settings.IsTracing = IsTraceOn;
 
@@ -548,65 +477,6 @@ namespace ASCOM.Lunatic
       }
 
       #region Relay commands ...
-      private RelayCommand<SiteCollection> _AddSiteCommand;
-
-      /// <summary>
-      /// Adds a new chart to the active model
-      /// </summary>
-      public RelayCommand<SiteCollection> AddSiteCommand
-      {
-         get
-         {
-            return _AddSiteCommand
-                ?? (_AddSiteCommand = new RelayCommand<SiteCollection>(
-                                      (collection) => {
-                                         collection.Add(new Site(Guid.NewGuid()) { SiteName = "<Site name>" });
-                                      }
-
-                                      ));
-         }
-      }
-
-
-      private RelayCommand<Site> _RemoveSiteCommand;
-
-      /// <summary>
-      /// Adds a new chart to the active model
-      /// </summary>
-      public RelayCommand<Site> RemoveSiteCommand
-      {
-         get
-         {
-            return _RemoveSiteCommand
-                ?? (_RemoveSiteCommand = new RelayCommand<Site>(
-                                      (site) => {
-                                         Sites.Remove(site);
-                                      }
-
-                                      ));
-         }
-      }
-
-      private RelayCommand<Site> _GetSiteCoordinateCommand;
-
-      /// <summary>
-      /// Adds a new chart to the active model
-      /// </summary>
-      public RelayCommand<Site> GetSiteCoordinateCommand
-      {
-         get
-         {
-            return _GetSiteCoordinateCommand
-                ?? (_GetSiteCoordinateCommand = new RelayCommand<Site>(
-                                      (site) => {
-                                         MapViewModel vm = new MapViewModel(site);
-                                         MapWindow map = new MapWindow(vm);
-                                         var result = map.ShowDialog();
-                                      }
-
-                                      ));
-         }
-      }
       #endregion
    }
 }

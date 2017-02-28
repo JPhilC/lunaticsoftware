@@ -1,16 +1,16 @@
 ﻿using System;
 
-namespace ASCOM.Lunatic
+namespace Lunatic.SyntaController
 {
-   public class MountControlException : Exception
+   public class MountControllerException : Exception
    {
       private ErrorCode ErrCode;
       private string ErrMessage;
-      public MountControlException(ErrorCode err)
+      public MountControllerException(ErrorCode err)
       {
          ErrCode = err;
       }
-      public MountControlException(ErrorCode err, String message)
+      public MountControllerException(ErrorCode err, String message)
       {
          ErrCode = err;
          ErrMessage = message;

@@ -21,21 +21,26 @@ namespace TestConsole
             Console.WriteLine("Press <Enter> to choose a driver.");
             Console.ReadLine();
 
-            //ASCOM.Lunatic.Telescope driver = new ASCOM.Lunatic.Telescope();
+            ASCOM.Lunatic.Telescope.Telescope driver = new ASCOM.Lunatic.Telescope.Telescope();
             //driver.SetupDialog();
+            driver.Connected = true;
 
             //Type ProgIdType = Type.GetTypeFromProgID("ASCOM.Lunatic.TelescopeDriver.Telescope");
             //Object oDrv = Activator.CreateInstance(ProgIdType);
 
-            string driverId = ASCOM.DriverAccess.Telescope.Choose("");
-            if (!string.IsNullOrWhiteSpace(driverId)) {
-               ASCOM.DriverAccess.Telescope driver = new ASCOM.DriverAccess.Telescope(driverId);
+            //string driverId = ASCOM.DriverAccess.Telescope.Choose("");
+            //if (!string.IsNullOrWhiteSpace(driverId)) {
+            //   ASCOM.DriverAccess.Telescope driver = new ASCOM.DriverAccess.Telescope(driverId);
 
-               Console.WriteLine("Press <Enter> to Dispose");
-               Console.ReadLine();
+            //   Console.WriteLine("Press <Enter> to Connect");
+            //   Console.ReadLine();
+            //   driver.Connected = true;
 
-               driver.Dispose();
-            }
+            //   Console.WriteLine("Press <Enter> to Dispose");
+            //   Console.ReadLine();
+
+            //   driver.Dispose();
+            //}
 
 
             Console.WriteLine("Press <Enter> to Exit");

@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
-namespace ASCOM.Lunatic
+namespace ASCOM.Lunatic.Telescope
 {
    public class SettingsProvider:ISettingsProvider<Settings>
    {

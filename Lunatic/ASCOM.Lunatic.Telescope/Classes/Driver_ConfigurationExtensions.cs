@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ASCOM.Lunatic
+namespace ASCOM.Lunatic.Telescope
 {
    public partial class Telescope
    {

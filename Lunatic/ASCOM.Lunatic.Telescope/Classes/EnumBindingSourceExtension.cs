@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Markup;
 
-namespace ASCOM.Lunatic.TelescopeDriver
+namespace ASCOM.Lunatic.Telescope
 {
    public class EnumBindingSourceExtension : MarkupExtension
    {

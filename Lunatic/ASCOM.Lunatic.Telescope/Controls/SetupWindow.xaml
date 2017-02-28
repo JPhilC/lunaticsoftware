@@ -1,10 +1,10 @@
-﻿<Window x:Class="ASCOM.Lunatic.SetupWindow"
+﻿<Window x:Class="ASCOM.Lunatic.Telescope.SetupWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-        xmlns:local="clr-namespace:ASCOM.Lunatic"
+        xmlns:local="clr-namespace:ASCOM.Lunatic.Telescope"
         mc:Ignorable="d"
         Title="Lunatic Telescope Setup" 
         d:DesignHeight="214" d:DesignWidth="400"
@@ -38,24 +38,12 @@
                                ShowTitle="False">
                 <xctk:PropertyGrid.PropertyDefinitions>
                     <xctk:PropertyDefinition TargetProperties="
-                                             MountOption,
-                                             PulseGuidingMode,
                                              TimeOut,
                     Retry,
                     BaudRate,
                     SelectedCOMPort,
                     IsTraceOn,
-                    SlewWithTrackingOff,
-                     AllowExceptions,
-                     AllowPulseGuidingExceptions,
-                     UseSynchronousParking,
-                     AllowSiteWrites,
-                     Epoch,
-                     SideOfPier,
-                     SwapPointingSideOfPier,
-                     SwapPhysicalSideOfPier,
-                     StrictAscom,
-                     Sites"/>
+                     StrictAscom"/>
                 </xctk:PropertyGrid.PropertyDefinitions>
 
             </xctk:PropertyGrid>

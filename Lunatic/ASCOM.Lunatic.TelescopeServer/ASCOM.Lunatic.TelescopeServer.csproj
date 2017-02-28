@@ -60,6 +60,14 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ASCOM.Attributes, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\ASCOM\Platform 6 Developer Components\Components\Platform6\ASCOM.Attributes.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.Utilities, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\ASCOM\Platform 6 Developer Components\Components\Platform6\ASCOM.Utilities.dll</HintPath>
+    </Reference>
     <Reference Include="GalaSoft.MvvmLight, Version=5.3.0.19026, Culture=neutral, PublicKeyToken=e7570ab207bcb616, processorArchitecture=MSIL">
       <HintPath>..\packages\MvvmLightLibs.5.3.0.0\lib\net45\GalaSoft.MvvmLight.dll</HintPath>
       <Private>True</Private>
@@ -106,6 +114,7 @@
     <Compile Include="Classes\ClassFactory.cs" />
     <Compile Include="Classes\GarbageCollection.cs" />
     <Compile Include="Classes\ReferenceCountedObjectBase.cs" />
+    <Compile Include="Classes\SharedResources.cs" />
     <Compile Include="Classes\TelescopeServerApp.cs" />
     <Compile Include="LocalServer.cs" />
     <Compile Include="TelescopeServerMainWindow.xaml.cs">
@@ -142,17 +151,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ASCOM\ASCOM.Attributes\ASCOM.Attributes.csproj">
-      <Project>{2c40fad9-de75-4360-a0ad-911c4d24d98c}</Project>
-      <Name>ASCOM.Attributes</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ASCOM\ASCOM.Utilities\ASCOM.Utilities\ASCOM.Utilities.vbproj">
-      <Project>{c9bf0a8b-594f-4ab9-938a-edc8448d8520}</Project>
-      <Name>ASCOM.Utilities</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Lunatic.Core\Lunatic.Core.csproj">
       <Project>{2e23d13a-8cb0-434b-9259-7789157e8677}</Project>
       <Name>Lunatic.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Lunatic.SyntaController\Lunatic.SyntaController.csproj">
+      <Project>{8424511e-54d1-42d3-86ff-1e56569fe2b8}</Project>
+      <Name>Lunatic.SyntaController</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

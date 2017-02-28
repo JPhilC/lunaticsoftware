@@ -49,6 +49,10 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ASCOM.Exceptions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\ASCOM\Platform 6 Developer Components\Components\Platform6\ASCOM.Exceptions.dll</HintPath>
+    </Reference>
     <Reference Include="GalaSoft.MvvmLight, Version=5.3.0.19026, Culture=neutral, PublicKeyToken=e7570ab207bcb616, processorArchitecture=MSIL">
       <HintPath>..\packages\MvvmLightLibs.5.3.0.0\lib\net45\GalaSoft.MvvmLight.dll</HintPath>
       <Private>True</Private>
@@ -118,12 +122,14 @@
     <Compile Include="Classes\AscomCompliance.cs" />
     <Compile Include="Classes\BasicMath.cs" />
     <Compile Include="Classes\BrowsableHelper.cs" />
-    <Compile Include="Classes\Constant.cs" />
+    <Compile Include="Classes\Constants.cs" />
     <Compile Include="Classes\Converters\GeoCoordinateTypeConverter.cs" />
     <Compile Include="Classes\Converters\EnumTypeConverter.cs" />
+    <Compile Include="Classes\Enums.cs" />
     <Compile Include="Classes\ExtensionMethods.cs" />
-    <Compile Include="Classes\SerialConnection.cs" />
+    <Compile Include="Classes\Structs.cs" />
     <Compile Include="Classes\ViewModelBase.cs" />
+    <Compile Include="Enums.cs" />
     <Compile Include="Interfaces\ISettingsProvider.cs" />
     <Compile Include="Model\DataObjectBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

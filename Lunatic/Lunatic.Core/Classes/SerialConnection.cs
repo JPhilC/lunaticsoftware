@@ -108,17 +108,18 @@ namespace Lunatic.Core
          public const int CBR_256000 = 256000;
       }
 
-      public SerialPort hCom;
+      private SerialPort hCom = null;
 
-      public SerialConnect_COM(SerialPort com)
+      public SerialConnect_COM()
       {
-         hCom = com;
       }
 
       ~SerialConnect_COM()
       {
-         hCom.Dispose();
-         hCom = null;
+         if (hCom != null) {
+            hCom.Dispose();
+            hCom = null;
+         }
       }
 
       /// Detect the serial connection need to have HardwareFlowControl or notb
@@ -183,6 +184,58 @@ namespace Lunatic.Core
       {
          //hCom.RtsEnable = true;
       }
+
+      public bool IsOpen
+      {
+         get
+         {
+            return (hCom != null && hCom.IsOpen);
+         }
+      }
+
+      public bool Connect(string serialPort, int baudRate, int readTimeout )
+      {
+         if (hCom != null && hCom.IsOpen) {
+            return true;  // Already connected.
+         }
+         try {
+            if (hCom != null && !hCom.IsOpen) {
+               hCom.Dispose();
+               hCom = null;
+            }
+            // May raise IOException 
+            //var hCom = new SerialPort(string.Format("\\$device\\COM{0}", TelescopePort));
+            hCom = new SerialPort(serialPort);
+
+            // Set communication parameter
+            hCom.BaudRate = baudRate;
+            // fOutxCTSFlow
+            // fOutxDsrFlow
+            hCom.DtrEnable = false;
+            // fDsrSensitivity            
+            hCom.Handshake = Handshake.RequestToSendXOnXOff;
+            // fOutX
+            // fInX
+            // fErrorChar
+            // fNull
+            hCom.RtsEnable = false;
+            // fAboveOnError
+            hCom.Parity = Parity.None;
+            hCom.DataBits = 8;
+            hCom.StopBits = StopBits.One;
+            hCom.Encoding = Encoding.ASCII;
+            hCom.ReadTimeout = readTimeout;
+            hCom.WriteTimeout = 60;
+
+            hCom.Open();
+
+            return true;
+         }
+         catch (Exception ex){
+            throw new ASCOM.NotConnectedException("Unable to connect to COM ports.", ex);
+         }
+      }
+
       public override void Write(string Command)
       {
          // throw IOException
@@ -219,8 +272,13 @@ namespace Lunatic.Core
 
       public override void Close()
       {
-         if (hCom.IsOpen)
+         if (hCom != null && hCom.IsOpen) {
             hCom.Close();
+         }
+         if (hCom != null) {
+            hCom.Dispose();
+            hCom = null;
+         }
       }
 
       #region  IEquatable ...

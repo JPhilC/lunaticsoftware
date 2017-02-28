@@ -8,7 +8,7 @@ using System.Linq;
 using System.Reflection;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
-namespace ASCOM.Lunatic
+namespace Lunatic.TelescopeControl.ViewModel
 {
    /// <summary>
    /// This class contains properties that the main View can data bind to.

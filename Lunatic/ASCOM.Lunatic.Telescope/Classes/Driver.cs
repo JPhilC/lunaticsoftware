@@ -38,8 +38,9 @@ using System.Collections;
 using Lunatic.Core;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Lunatic.SyntaController;
 
-namespace ASCOM.Lunatic
+namespace ASCOM.Lunatic.Telescope
 {
    //
    // Your driver's DeviceID is ASCOM.Lunatic.Telescope
@@ -77,9 +78,6 @@ namespace ASCOM.Lunatic
       internal static string traceStateDefault = "true";
 
 
-
-
-
       /// <summary>
       /// Private variable to hold an ASCOM Utilities object
       /// </summary>
@@ -94,6 +92,20 @@ namespace ASCOM.Lunatic
       /// Private variable to hold the trace logger object (creates a diagnostic log file with information that you specify)
       /// </summary>
       protected TraceLogger _Logger;
+
+      private MountController _Mount;
+
+
+      #region Internal properties ...
+      private const int RAAxisIndex = 0;
+      private const int DECAxisIndex = 1;
+      /// <summary>
+      /// The axis positions in Radians
+      /// </summary>
+      private double[] AxisPositionRadians = new double[2] { 0, 0 }; 
+
+      #endregion
+
 
       /// <summary>
       /// Initializes a new instance of the <see cref="Winforms"/> class.
@@ -119,15 +131,15 @@ namespace ASCOM.Lunatic
          _AlignmentMode = AlignmentModes.algGermanPolar;
          _TrackingRates = new TrackingRates();
 
-         
+         _Mount = SharedResources.Controller;
+
          _Logger.LogMessage("Telescope", "Completed initialisation");
       }
 
-      //
-      // PUBLIC COM INTERFACE ITelescopeV3 IMPLEMENTATION
-      //
+     
 
-      #region Common properties and methods.
+      #region PUBLIC COM INTERFACE ITelescopeV3 IMPLEMENTATION
+
 
       /// <summary>
       /// Displays the Setup Dialog form.
@@ -222,20 +234,34 @@ namespace ASCOM.Lunatic
          }
          set
          {
-            lock (_Lock) {
-               _Logger.LogMessage("Connected", "Set - " + value.ToString());
-               if (value == IsConnected)
-                  return;
+            _Logger.LogMessage("Connected", "Set - " + value.ToString());
+            if (value == IsConnected)
+               return;
 
-               if (value) {
-                  _Logger.LogMessage("Connected", "Set - Connecting to port " + Settings.COMPort);
-                  Connect_COM(Settings.COMPort);
-                  MCInit();
+            if (value) {
+               _Logger.LogMessage("Connected", "Set - Connecting to port " + Settings.COMPort);
+               int connectionResult = _Mount.Connect(Settings.COMPort, (int)Settings.BaudRate, (int)Settings.Timeout, (int)Settings.Retry);
+               if (connectionResult == 0) {
+                  // Need to send current axis position
+                  _Mount.MCSetAxisPosition(AxisId.Axis1_RA, AxisPositionRadians[RAAxisIndex]);
+                  _Mount.MCSetAxisPosition(AxisId.Axis2_DEC, AxisPositionRadians[DECAxisIndex]);
+
+                  IsConnected = true;
+               }
+               else if (connectionResult == 1) {
+                  // Was already connected to GET the current axis positions
+                  AxisPositionRadians[RAAxisIndex] = _Mount.MCGetAxisPosition(AxisId.Axis1_RA);
+                  AxisPositionRadians[DECAxisIndex] = _Mount.MCGetAxisPosition(AxisId.Axis2_DEC);
+                  IsConnected = true;
                }
                else {
-                  Disconnect_COM();
-                  _Logger.LogMessage("Connected", "Set - Disconnecting from port " + Settings.COMPort);
+                  // Something went wrong so not connected.
+                  IsConnected = false;
                }
+            }
+            else {
+               _Mount.Disconnect();
+               _Logger.LogMessage("Connected", "Set - Disconnecting from port " + Settings.COMPort);
             }
          }
       }
@@ -304,6 +330,29 @@ namespace ASCOM.Lunatic
       {
          _Logger.LogMessage("AbortSlew", "Not implemented");
          throw new ASCOM.MethodNotImplementedException("AbortSlew");
+         /*
+    If AscomTrace.AscomTraceEnabled Then AscomTrace.Add_log 6, ("COMMAND AbortSlew")
+    If gEQparkstatus <> 0 Then
+        ' no move axis if parked or parking!
+        RaiseError SCODE_INVALID_WHILST_PARKED, ERR_SOURCE, "AbortSlew() " & MSG_SCOPE_PARKED
+        Exit Sub
+    End If
+
+    If gSlewStatus Then
+        gSlewStatus = False
+        ' stop the slew if already slewing
+'        eqres = EQ_MotorStop(0)
+'        eqres = EQ_MotorStop(1)
+        eqres = EQ_MotorStop(2)
+        gRAStatus_slew = False
+    
+        ' restart tracking
+        RestartTracking
+
+    End If
+
+End Sub
+          */
       }
 
       private AlignmentModes _AlignmentMode;
@@ -566,7 +615,7 @@ namespace ASCOM.Lunatic
          }
       }
 
-      public PierSide DestinationSideOfPier(double RightAscension, double Declination)
+      public DeviceInterface.PierSide DestinationSideOfPier(double RightAscension, double Declination)
       {
          _Logger.LogMessage("DestinationSideOfPier Get", "Not implemented");
          throw new ASCOM.PropertyNotImplementedException("DestinationSideOfPier", false);
@@ -709,7 +758,7 @@ namespace ASCOM.Lunatic
          throw new ASCOM.MethodNotImplementedException("SetPark");
       }
 
-      public PierSide SideOfPier
+      public DeviceInterface.PierSide SideOfPier
       {
          get
          {
@@ -1139,16 +1188,6 @@ namespace ASCOM.Lunatic
 
       #endregion
 
-      /// <summary>
-      /// Returns true if there is a valid connection to the driver hardware
-      /// </summary>
-      private bool IsConnected
-      {
-         get
-         {
-            return (Connection != null);
-         }
-      }
 
       /// <summary>
       /// Use this function to throw an exception if we aren't connected to the hardware

@@ -5,6 +5,10 @@ using System.Collections.Generic;
 using System.Windows;
 using Lunatic.TelescopeControl;
 using Lunatic.Core;
+using System.Windows.Threading;
+using System.ComponentModel;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
+using Lunatic.TelescopeControl.Controls;
 
 namespace Lunatic.TelescopeControl.ViewModel
 {
@@ -20,14 +24,70 @@ namespace Lunatic.TelescopeControl.ViewModel
    /// See http://www.galasoft.ch/mvvm
    /// </para>
    /// </summary>
+   [CategoryOrder("Mount Options", 1)]
+   [CategoryOrder("Site Information", 2)]
+   [CategoryOrder("Gamepad", 3)]
+   [CategoryOrder("General", 4)]
    public class MainViewModel : LunaticViewModelBase
    {
 
       #region Properties ....
+
       #region Settings ...
       ISettingsProvider<TelescopeControlSettings> _SettingsProvider;
 
       private TelescopeControlSettings _Settings;
+      #region Mount options ...
+      private MountOptions _MountOption;
+      [Category("Mount Options")]
+      [DisplayName("Mount")]
+      [Description("Choose the type of mount")]
+      [PropertyOrder(0)]
+      [Browsable(true)]    // Need to allow this property to be hidden at runtime
+      public MountOptions MountOption
+      {
+         get
+         {
+            return _MountOption;
+         }
+         set
+         {
+            if (value == _MountOption) {
+               return;
+            }
+            _MountOption = value;
+            RaisePropertyChanged();
+         }
+      }
+
+
+      #endregion
+
+      #region Site information ...
+      [Category("Site Information")]
+      [DisplayName("Current site")]
+      [Description("The currently selected telescope site.")]
+      [PropertyOrder(0)]
+      public Site CurrentSite
+      {
+         get
+         {
+            return _Settings.Sites.CurrentSite;
+         }
+      }
+
+      [Category("Site Information")]
+      [DisplayName("Available sites")]
+      [Description("Manage the available sites.")]
+      [PropertyOrder(1)]
+      public SiteCollection Sites
+      {
+         get
+         {
+            return _Settings.Sites;
+         }
+      }
+      #endregion
 
       #endregion
 
@@ -263,7 +323,23 @@ namespace Lunatic.TelescopeControl.ViewModel
       }
 
       #endregion
-      
+
+      #region Telescope driver properties
+      private TimeSpan _LocalSiderealTime;
+
+      public TimeSpan LocalSiderealTime
+      {
+         get
+         {
+            return _LocalSiderealTime;
+         }
+         set
+         {
+            Set<TimeSpan>(ref _LocalSiderealTime, value);
+         }
+      }
+      #endregion
+
       /// <summary>
       /// Initializes a new instance of the MainViewModel class.
       /// </summary>
@@ -272,7 +348,7 @@ namespace Lunatic.TelescopeControl.ViewModel
          _SettingsProvider = settingsProvider;
          _Settings = settingsProvider.CurrentSettings;
          PopSettings();
-         
+
          ////if (IsInDesignMode)
          ////{
          ////    // Code runs in Blend --> create design time data.
@@ -281,7 +357,11 @@ namespace Lunatic.TelescopeControl.ViewModel
          ////{
          ////    // Code runs "for real"
          ////}
-         
+
+         _EncoderTimer = new DispatcherTimer();
+         _EncoderTimer.Interval = new TimeSpan(0, 0, 1);
+         _EncoderTimer.Tick += new EventHandler(this.EncoderTime_Tick);
+
 
       }
 
@@ -292,16 +372,62 @@ namespace Lunatic.TelescopeControl.ViewModel
          base.Cleanup();
       }
 
+      #region Timers ...
+      // This code creates a new DispatcherTimer with an interval of 15 seconds.
+      private DispatcherTimer _EncoderTimer;
+      private bool _ProcessingEncoderTimerTick = false;
+      private void EncoderTime_Tick(object state, EventArgs e)
+      {
+         if (!_ProcessingEncoderTimerTick) {
+            _ProcessingEncoderTimerTick = true;
+            LocalSiderealTime = TimeSpan.FromHours(_Driver.SiderealTime);
+
+            _ProcessingEncoderTimerTick = false;
+         }
+
+         // double rightAscension;
+         // double declination;
+         // double altitude;
+         // double azimuth;
+         // int ra;
+         // int dec;
+         // Coordt coord;
+
+         // if (!_ProcessingEncoderTimerTick) {
+         //    _ProcessingEncoderTimerTick = true;
+         //    // If(gEmulOneShot = True) Or(gEmulNudge = True) Or(gSlewStatus = True) Or(HC.CheckRASync.Value = 1) Then
+
+         //    // Else
+         //    //    ' emulate RA motor position
+         //    //    gEmulRA = GetEmulRA()
+         //    // End If
+
+         //    if 
+         //_ProcessingEncoderTimerTick = false;
+         // }
+
+
+      }
+      #endregion
+
+      #region Settings ...
       private void PopSettings()
       {
          _DriverId = _Settings.DriverId;
          DisplayMode = _Settings.DisplayMode;
 
+         MountOption = _Settings.MountOption;
+         // Sites are updated directly
+         // _Settings.Sites.CurrentSiteChanged += Sites_CurrentSiteChanged;
+         _Settings.Sites.PropertyChanged += Sites_PropertyChanged;
          // Better try to instantiate the driver as well if we have a driver ID
          if (!string.IsNullOrWhiteSpace(_DriverId)) {
             try {
                Driver = new ASCOM.DriverAccess.Telescope(_DriverId);
                OnDriverChanged(false);   // Update menu options and stuff for telescope.
+
+               // Update Driver properties
+               // Driver.SiteElevation = 
             }
             catch (Exception ex) {
                _DriverId = string.Empty;
@@ -310,10 +436,24 @@ namespace Lunatic.TelescopeControl.ViewModel
          }
       }
 
+      private void Sites_PropertyChanged(object sender, PropertyChangedEventArgs e)
+      {
+         SaveSettings();
+         if (e.PropertyName == "CurrentSite") {
+            RaisePropertyChanged("CurrentSite");
+         }
+      }
+
+      private void Sites_CurrentSiteChanged(object sender, EventArgs e)
+      {
+      }
+
       private void PushSettings()
       {
          _Settings.DriverId = this.DriverId;
          _Settings.DisplayMode = this.DisplayMode;
+         _Settings.MountOption = MountOption;
+
       }
 
       public void SaveSettings()
@@ -322,6 +462,8 @@ namespace Lunatic.TelescopeControl.ViewModel
          _SettingsProvider.SaveSettings();
       }
 
+      #endregion
+      
       #region Relay commands ...
       private RelayCommand<DisplayMode> _DisplayModeCommand;
 
@@ -338,6 +480,68 @@ namespace Lunatic.TelescopeControl.ViewModel
                }));
          }
       }
+
+      #region Setup Relay commands ...
+      private RelayCommand<SiteCollection> _AddSiteCommand;
+
+      /// <summary>
+      /// Adds a new chart to the active model
+      /// </summary>
+      public RelayCommand<SiteCollection> AddSiteCommand
+      {
+         get
+         {
+            return _AddSiteCommand
+                ?? (_AddSiteCommand = new RelayCommand<SiteCollection>(
+                                      (collection) => {
+                                         collection.Add(new Site(Guid.NewGuid()) { SiteName = "<Site name>" });
+                                      }
+
+                                      ));
+         }
+      }
+
+
+      private RelayCommand<Site> _RemoveSiteCommand;
+
+      /// <summary>
+      /// Adds a new chart to the active model
+      /// </summary>
+      public RelayCommand<Site> RemoveSiteCommand
+      {
+         get
+         {
+            return _RemoveSiteCommand
+                ?? (_RemoveSiteCommand = new RelayCommand<Site>(
+                                      (site) => {
+                                         Sites.Remove(site);
+                                      }
+
+                                      ));
+         }
+      }
+
+      private RelayCommand<Site> _GetSiteCoordinateCommand;
+
+      /// <summary>
+      /// Adds a new chart to the active model
+      /// </summary>
+      public RelayCommand<Site> GetSiteCoordinateCommand
+      {
+         get
+         {
+            return _GetSiteCoordinateCommand
+                ?? (_GetSiteCoordinateCommand = new RelayCommand<Site>(
+                                      (site) => {
+                                         MapViewModel vm = new MapViewModel(site);
+                                         MapWindow map = new MapWindow(vm);
+                                         var result = map.ShowDialog();
+                                      }
+
+                                      ));
+         }
+      }
+      #endregion
 
 
       #region Choose, Connect, Disconnect etc ...
@@ -368,21 +572,37 @@ namespace Lunatic.TelescopeControl.ViewModel
             return _ConnectCommand
                ?? (_ConnectCommand = new RelayCommand(() => {
                   if (IsConnected) {
-                     if (Driver != null) {
-                        Driver.Connected = false;
-                     }
+                     Disconnect();
                   }
                   else {
-                     try {
-                        Driver.Connected = true;
-                     }
-                     catch (Exception ex) {
-                        StatusMessage = ex.Message; 
-                     }
+                     Connect();
                   }
                   RaisePropertyChanged("IsConnected");
                   RaiseCanExecuteChanged();
                }, () => { return Driver != null; }));
+         }
+      }
+
+      // Perform the logic when connecting.
+      private void Connect()
+      {
+         try {
+            Driver.Connected = true;
+            // Start the timer.  Note that this call can be made from any thread.
+            _ProcessingEncoderTimerTick = false;
+            _EncoderTimer.Start();
+         }
+         catch (Exception ex) {
+            StatusMessage = ex.Message;
+         }
+      }
+
+      private void Disconnect()
+      {
+         _EncoderTimer.Stop();
+         _ProcessingEncoderTimerTick = false;
+         if (Driver != null) {
+            Driver.Connected = false;
          }
       }
 

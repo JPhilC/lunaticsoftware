@@ -3,21 +3,9 @@ using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
-namespace ASCOM.Lunatic
+namespace Lunatic.SyntaController
 {
-   [Flags]
-   public enum AxisState
-   {
-      Stopped = 0x0001,             // The axis is in a fully stopped state
-      Slewing = 0x0002,             // The axis is in constant speed operation
-      Slewing_To = 0x0004,          // The axis is in the process of running to the specified target position
-      Slewing_Forward = 0x0008,     // The axis runs forward
-      Slewing_Highspeed = 0x0010,   // The axis is in high-speed operation
-      Not_Initialised = 0x0020      // MC controller has not been initialized, axis is not initialized.
-   }
 
-   // Two-axis telescope code
-   public enum AxisId { Axis1 = 0, Axis2 = 1 }; // ID unsed in ASTRO.DLL for axis 1 and axis 2 of a mount.
 
    public enum ErrorCode
    {
@@ -54,50 +42,15 @@ namespace ASCOM.Lunatic
       ID_STARSEEKER114 = 11,        // NexStarGT-114 mount
    }
 
-   [TypeConverter(typeof(EnumTypeConverter))]
-   public enum MountOptions
-   {
-      [Description("Auto detect")]
-      AutoDetect,
-      [Description("Custom")]
-      Custom
-   }
-
-
-   [TypeConverter(typeof(EnumTypeConverter))]
-   public enum ParkStatus
-   {
-      [Description("Unparked")]
-      Unparked,
-      [Description("Parked")]
-      Parked,
-      [Description("Parking")]
-      Parking,
-      [Description("Unparking")]
-      Unparking
-   }
-
-   [TypeConverter(typeof(EnumTypeConverter))]
-   public enum BaudRate
-   {
-      [Description("4800")]
-      Baud4800 = 4800,
-      [Description("9600")]
-      Baud9600 = 9600,
-      [Description("11520")]
-      Baud115200 = 115200,
-      [Description("128000")]
-      Baud128000 = 128000,
-   }
-
-   [TypeConverter(typeof(EnumTypeConverter))]
-   public enum PulseGuidingOption
-   {
-      [Description("ASCOM Pulse Guiding")]
-      ASCOM,
-      [Description("ST-4 Pulse Guiding")]
-      ST4
-   }
+   //POLARHOME_RETICULE_START=1
+   //POLARHOME_GOTO_DEC=9469288
+   //POLARHOME_GOTO_RA=8026995
+   //POLAR_HOME_DISABLE=0
+   //POLAR_RETICULE_D2=0.355
+   //POLAR_RETICULE_D1=2.67
+   //POLAR_RETICULE_EPOCH=2000
+   //POLAR_RETICULE_TYPE=1
+   //POLAR_RETICULE_START=1
 
 
    [TypeConverter(typeof(EnumTypeConverter))]
@@ -118,13 +71,5 @@ namespace ASCOM.Lunatic
       Twice = 2
    }
 
-   [TypeConverter(typeof(EnumTypeConverter))]
-   public enum HemisphereOption
-   {
-      [Description("North")]
-      Northern,
-      [Description("South")]
-      Southern
 
-   }
 }
