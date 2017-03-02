@@ -39,6 +39,7 @@ namespace Lunatic.Core
    {
          public bool SlewWithTrackingOff { get; set; }
          public bool AllowExceptions { get; set; }
+         public bool AllowPulseGuide { get; set; }
          public bool AllowPulseGuidingExceptions { get; set; }
          public bool UseSynchronousParking { get; set; }
          public bool AllowSiteWrites { get; set; }

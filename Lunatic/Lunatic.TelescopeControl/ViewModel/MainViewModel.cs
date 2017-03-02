@@ -186,6 +186,10 @@ namespace Lunatic.TelescopeControl.ViewModel
          RaisePropertyChanged("DisconnectMenuHeader");
          RaisePropertyChanged("ConnectMenuHeader");
          StatusMessage = (DriverSelected ? DriverName + " selected." : "Telescope driver not selected");
+         if (DriverSelected) {
+            // Update the site settings
+            UpdateDriverSiteDetails();
+         }
       }
 
       #endregion
@@ -338,6 +342,144 @@ namespace Lunatic.TelescopeControl.ViewModel
             Set<TimeSpan>(ref _LocalSiderealTime, value);
          }
       }
+
+
+
+
+      #region GuideRateDeclination ...
+      // TODO: Migrate GuideRateDeclination and just pass the value to the driver
+      private double _GuideRateDeclination;
+      public double GuideRateDeclination
+      {
+         get
+         {
+            return _GuideRateDeclination;
+         }
+         set
+         {
+            _GuideRateDeclination = value;
+         }
+      }
+      /*
+      private double _GuideRateDeclination;
+      public double GuideRateDeclination
+      {
+         get
+         {
+            if (Settings.AscomCompliance.AllowPulseGuide) {
+               // movement rate offset in degress/sec
+               // TODO: _GuideRateDeclination = (HC.HScrollDecRate.Value * 0.1 * SID_RATE) / 3600
+            _Logger.LogMessage("GuideRateDeclination", "Get - " + _GuideRateDeclination.ToString());
+                  }
+            else {
+               // RaiseError SCODE_NOT_IMPLEMENTED, ERR_SOURCE, "Property Get GuideRateDeclination" & MSG_NOT_IMPLEMENTED
+               Select Case HC.DECGuideRateList.ListIndex
+                   Case 1
+                        GuideRateDeclination = (0.5 * SID_RATE) / 3600
+                    Case 2
+                        GuideRateDeclination = (0.75 * SID_RATE) / 3600
+                    Case 3
+                        GuideRateDeclination = (SID_RATE) / 3600
+                    Case 4
+                        RaiseError SCODE_NOT_IMPLEMENTED, ERR_SOURCE, "Property Get GuideRateDeclination" & MSG_NOT_IMPLEMENTED
+                    Case Else
+                        GuideRateDeclination = (0.25 * SID_RATE) / 3600
+                End Select
+                If AscomTrace.AscomTraceEnabled Then AscomTrace.Add_log 4, "GET GuideRateDEC :" & CStr(GuideRateDeclination)
+            }
+
+            throw new ASCOM.PropertyNotImplementedException("GuideRateDeclination", false);
+         }
+         set
+         {
+            _Logger.LogMessage("GuideRateDeclination Set", "Not implemented");
+            throw new ASCOM.PropertyNotImplementedException("GuideRateDeclination", true);
+         }
+      }
+       */
+      #endregion
+
+
+      #region GuideRateRightAscension ...
+      // TODO: Migrate GuideRateRightAscension and just pass the value to the driver
+      private double _GuideRateRightAscension;
+      public double GuideRateRightAscension
+      {
+         get
+         {
+            return _GuideRateRightAscension;
+         }
+         set
+         {
+            _GuideRateRightAscension = value;
+         }
+      }
+      /*
+Public Property Get GuideRateRightAscension() As Double
+ If gAscomCompatibility.AllowPulseGuide Then
+     ' movement rate offset in degrees/sec
+     GuideRateRightAscension = (HC.HScrollRARate.Value * 0.1 * SID_RATE) / 3600
+     If AscomTrace.AscomTraceEnabled Then AscomTrace.Add_log 4, "GET GuideRateRA :" & CStr(GuideRateRightAscension)
+ Else
+     ' RaiseError SCODE_NOT_IMPLEMENTED, ERR_SOURCE, "Property Get GuideRateRightAscension" & MSG_NOT_IMPLEMENTED
+     Select Case HC.RAGuideRateList.ListIndex
+         Case 1
+             GuideRateRightAscension = (0.5 * SID_RATE) / 3600
+         Case 2
+             GuideRateRightAscension = (0.75 * SID_RATE) / 3600
+         Case 3
+             GuideRateRightAscension = (SID_RATE) / 3600
+         Case 4
+             RaiseError SCODE_NOT_IMPLEMENTED, ERR_SOURCE, "Property Get GuideRateRightAscension" & MSG_NOT_IMPLEMENTED
+         Case Else
+             GuideRateRightAscension = (0.25 * SID_RATE) / 3600
+     End Select
+     If AscomTrace.AscomTraceEnabled Then AscomTrace.Add_log 4, "GET GuideRateRA :" & CStr(GuideRateRightAscension)
+ End If
+
+End Property
+
+Public Property Let GuideRateRightAscension(ByVal newval As Double)
+ ' We can't support properly beacuse the ASCOM spec does not distinquish between ST4 and Pulseguiding
+ ' and states that this property relates to both - crazy!
+ If gAscomCompatibility.AllowPulseGuide Then
+     If AscomTrace.AscomTraceEnabled Then AscomTrace.Add_log 4, "LET GuideRateRA(" & newval & ")"
+     newval = newval * 3600 / (0.1 * SID_RATE)
+     If newval < HC.HScrollRARate.min Then
+         newval = HC.HScrollRARate.min
+     Else
+         If newval > HC.HScrollRARate.max Then
+             newval = HC.HScrollRARate.max
+         End If
+     End If
+     HC.HScrollRARate.Value = CInt(newval)
+ Else
+     If HC.RAGuideRateList.ListIndex = 4 Then
+         If AscomTrace.AscomTraceEnabled Then AscomTrace.Add_log 4, "LET GuideRateRA(" & newval & ") :NOT_SUPPORTED"
+         RaiseError SCODE_NOT_IMPLEMENTED, ERR_SOURCE, "Property Let GuideRateRightAscension" & MSG_NOT_IMPLEMENTED
+     Else
+         newval = newval * 3600 / SID_RATE
+         If newval > 0.75 Then
+             HC.RAGuideRateList.ListIndex = 3
+         Else
+             If newval > 0.5 Then
+                 HC.RAGuideRateList.ListIndex = 2
+             Else
+                 If newval > 0.25 Then
+                     HC.RAGuideRateList.ListIndex = 1
+                 Else
+                     HC.RAGuideRateList.ListIndex = 0
+                 End If
+             End If
+         End If
+         If AscomTrace.AscomTraceEnabled Then AscomTrace.Add_log 4, "LET GuideRateRA(" & newval & ")"
+     End If
+ End If
+End Property
+       */
+      #endregion
+
+
       #endregion
 
       /// <summary>
@@ -438,9 +580,9 @@ namespace Lunatic.TelescopeControl.ViewModel
 
       private void Sites_PropertyChanged(object sender, PropertyChangedEventArgs e)
       {
-         SaveSettings();
          if (e.PropertyName == "CurrentSite") {
             RaisePropertyChanged("CurrentSite");
+            SaveSettings();
          }
       }
 
@@ -463,7 +605,7 @@ namespace Lunatic.TelescopeControl.ViewModel
       }
 
       #endregion
-      
+
       #region Relay commands ...
       private RelayCommand<DisplayMode> _DisplayModeCommand;
 
@@ -587,6 +729,7 @@ namespace Lunatic.TelescopeControl.ViewModel
       private void Connect()
       {
          try {
+            // Check to see if the driver
             Driver.Connected = true;
             // Start the timer.  Note that this call can be made from any thread.
             _ProcessingEncoderTimerTick = false;

@@ -60,5 +60,47 @@ namespace Lunatic.Core
       Unparking
    }
 
+   [TypeConverter(typeof(EnumTypeConverter))]
+   public enum TrackingStatus
+   {
+      [Description("Off")]
+      Off,
+      [Description("Sidereal")]
+      Sidereal,
+      [Description("Lunar")]
+      Lunar,
+      [Description("Solar")]
+      Solar,
+      [Description("Custom")]
+      Custom
+   }
+
+   [TypeConverter(typeof(EnumTypeConverter))]
+   public enum HemisphereOption
+   {
+      [Description("North")]
+      Northern,
+      [Description("South")]
+      Southern
+
+   }
+
+   [TypeConverter(typeof(EnumTypeConverter))]
+   public enum SyncModeOption
+   {
+      [Description("Dialog Based")]
+      Dialog,
+      [Description("Append on Sync")]
+      AppendOnSync
+   }
+
+   [TypeConverter(typeof(EnumTypeConverter))]
+   public enum SyncAlignmentModeOptions
+   {
+      [Description("3-point + nearest star")]
+      ThreePoint,
+      [Description("Nearest star")]
+      NearestStar
+   }
 
 }

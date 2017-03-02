@@ -196,6 +196,26 @@ namespace ASCOM.Lunatic.Telescope
          }
       }
 
+      private bool _AllowPulseGuide;
+      [Category("ASCOM Options")]
+      [DisplayName("Allow pulse guiding")]
+      [Description("Put a tick in here to allow pulse guiding.")]
+      [Browsable(true)]    // Need to allow this property to be hidden at runtime
+      public bool AllowPulseGuide
+      {
+         get
+         {
+            return _AllowPulseGuide;
+         }
+         set
+         {
+            if (value == _AllowPulseGuide) {
+               return;
+            }
+            _AllowPulseGuide = value;
+            RaisePropertyChanged();
+         }
+      }
 
       private bool _AllowPulseGuidingExceptions;
       [Category("ASCOM Options")]
@@ -416,6 +436,7 @@ namespace ASCOM.Lunatic.Telescope
 
          SlewWithTrackingOff = _Settings.AscomCompliance.SlewWithTrackingOff;
          AllowExceptions = _Settings.AscomCompliance.AllowExceptions;
+         AllowPulseGuide = _Settings.AscomCompliance.AllowPulseGuide;
          AllowPulseGuidingExceptions = _Settings.AscomCompliance.AllowPulseGuidingExceptions;
          UseSynchronousParking = _Settings.AscomCompliance.UseSynchronousParking;
          AllowSiteWrites = _Settings.AscomCompliance.AllowSiteWrites;
@@ -443,6 +464,7 @@ namespace ASCOM.Lunatic.Telescope
 
          _Settings.AscomCompliance.SlewWithTrackingOff = SlewWithTrackingOff;
          _Settings.AscomCompliance.AllowExceptions = AllowExceptions;
+         _Settings.AscomCompliance.AllowPulseGuide = AllowPulseGuide;
          _Settings.AscomCompliance.AllowPulseGuidingExceptions = AllowPulseGuidingExceptions;
          _Settings.AscomCompliance.UseSynchronousParking = UseSynchronousParking;
          _Settings.AscomCompliance.AllowSiteWrites = AllowSiteWrites;
@@ -457,7 +479,7 @@ namespace ASCOM.Lunatic.Telescope
       private void SetStrictAscom(bool strictAscom)
       {
          if (strictAscom) {
-            AllowPulseGuidingExceptions = false;
+            AllowPulseGuide = false;
             AllowExceptions = false;
             SlewWithTrackingOff = false;
             AllowExceptions = false;
@@ -466,7 +488,7 @@ namespace ASCOM.Lunatic.Telescope
             SwapPointingSideOfPier = false;
             SwapPhysicalSideOfPier = false;
          }
-         this.SetBrowsableProperty("AllowPulseGuidingExceptions", !strictAscom);
+         this.SetBrowsableProperty("AllowPulseGuide", !strictAscom);
          this.SetBrowsableProperty("AllowExceptions", !strictAscom);
          this.SetBrowsableProperty("SlewWithTrackingOff", !strictAscom);
          this.SetBrowsableProperty("AllowExceptions", !strictAscom);

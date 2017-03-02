@@ -81,11 +81,62 @@ namespace ASCOM.Lunatic.Telescope
 
       public AscomCompliance AscomCompliance { get; set; }
 
+      public bool ThreeStarEnable { get; set; }
+
+      public SyncAlignmentModeOptions SyncAlignmentMode { get; set; }
+
+      public bool DisableSyncLimit { get; set; }
+
+      /// <summary>
+      /// Initial RA sync adjustment (radians)
+      /// </summary>
+      public double RASync01 { get; set; }
+
+      /// <summary>
+      /// Initial DEC sync adjustment (radians)
+      /// </summary>
+      public double DECSync01 { get; set; }
+
+      /// <summary>
+      /// Initial RA Alignment adjustment (radians)
+      /// </summary>
+      public double RA1Star { get; set; }
+
+      /// <summary>
+      /// Initial DEC Alignment adjustment (radians)
+      /// </summary>
+      public double DEC1Star { get; set; }
+
+      /// <summary>
+      /// Max Sync Diff (EQ_MAXSYNC)
+      /// </summary>
+      public double MaxSync { get; set; }
+
+
+         /// <summary>
+         /// Total Common RA-Encoder Steps
+         /// </summary>
+      public double Tot_step { get; set; }
+
+      /// <summary>
+      /// otal RA Encoder Steps
+      /// </summary>
+      public double Tot_RA { get; set; }
+
+      /// <summary>
+      /// Total DEC Encoder Steps
+      /// </summary>
+      public double Tot_DEC { get; set; }
+
+
+      public bool EmulOneShot { get; set; }
+
       public Settings()
       {
          this.AscomCompliance = new AscomCompliance();
          SetDefaults();
       }
+
 
       private void SetDefaults()
       {

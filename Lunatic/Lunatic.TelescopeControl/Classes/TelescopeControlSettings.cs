@@ -74,15 +74,6 @@ namespace Lunatic.TelescopeControl
 
 
 
-   [TypeConverter(typeof(EnumTypeConverter))]
-   public enum HemisphereOption
-   {
-      [Description("North")]
-      Northern,
-      [Description("South")]
-      Southern
-
-   }
 
    [TypeConverter(typeof(EnumTypeConverter))]
    public enum PierSide
@@ -329,7 +320,9 @@ namespace Lunatic.TelescopeControl
                }
             }
          }
-         RaisePropertyChanged("Site." + e.PropertyName);
+         if (site.IsCurrentSite) {
+            RaisePropertyChanged("CurrentSite." + e.PropertyName);
+         }
       }
 
 

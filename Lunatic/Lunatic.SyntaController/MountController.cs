@@ -33,6 +33,29 @@ namespace Lunatic.SyntaController
       #endregion
 
 
+      #region Settings related stuff ...
+      private ISettingsProvider<ControllerSettings> _SettingsManager = null;
+
+      public ISettingsProvider<ControllerSettings> SettingsManager
+      {
+         get
+         {
+            if (_SettingsManager == null) {
+               _SettingsManager = new SettingsProvider();
+            }
+            return _SettingsManager;
+         }
+      }
+
+      private ControllerSettings Settings
+      {
+         get
+         {
+            return SettingsManager.CurrentSettings;
+         }
+      }
+      #endregion
+
       #region Properties ...
       // special charactor for communication.
       const char cStartChar_Out = ':';    // Leading charactor of a command 
@@ -47,13 +70,13 @@ namespace Lunatic.SyntaController
                               //             0x80=GT,  0x81=MF,   0x82=114GT
                               //             0x90=DOB
       private long MountCode;
-      private long[] StepTimerFreq = new long[2];        // Frequency of stepping timer.
-      private long[] PESteps = new long[2];
-      private long[] HighSpeedRatio = new long[2];
-      //private long[] StepPosition = new long[2];          // Never Used
-      private long[] BreakSteps = new long[2];           // Break steps from slewing to stop.
-      private long[] LowSpeedGotoMargin = new long[2];      // If slewing steps exceeds this LowSpeedGotoMargin, 
-                                                            // GOTO is in high speed slewing.
+      private long[] StepTimerFreq = new long[2];        // Frequency of stepping timer (read from mount)
+      private long[] PESteps = new long[2];              // PEC Period (read from mount)
+      private long[] HighSpeedRatio = new long[2];       // High Speed Ratio (read from mount)
+      //private long[] StepPosition = new long[2];       // Never Used
+      private long[] BreakSteps = new long[2];           // Break steps from slewing to stop. (currently hard coded)
+      private long[] LowSpeedGotoMargin = new long[2];   // If slewing steps exceeds this LowSpeedGotoMargin, 
+                                                         // GOTO is in high speed slewing.
 
       private bool IsDCMotor;                // Ture: The motor controller is a DC motor controller. It uses TX/RX line is bus topology.
                                              // False: The motor controller is a stepper motor controller. TX/RX lines are seperated.
@@ -797,13 +820,13 @@ namespace Lunatic.SyntaController
       /// 4) The AxesStatus are updated updated with MCGetAxisStatus, MCAxisSlewTo, MCAxisSlew
       /// Notes:
       /// 1. Positions may not represent the mount's position while it is slewing, or user manually update by hand
-      public double[] Positions = new double[2] { 0, 0 };          // The axis coordinate position of the carriage, in radians
-      public double[] TargetPositions = new double[2] { 0, 0 };   // The target position, in radians
-      public double[] SlewingSpeed = new double[2] { 0, 0 };      // The speed in radians per second                
-      private AxisStatus[] AxesStatus = new AxisStatus[2];             // The two-axis status of the carriage should pass AxesStatus[AXIS1] and AxesStatus[AXIS2] by Reference
+      public double[] Positions = new double[2] { 0, 0 };            // The axis coordinate position of the carriage, in radians
+      public double[] TargetPositions = new double[2] { 0, 0 };      // The target position, in radians
+      public double[] SlewingSpeed = new double[2] { 0, 0 };         // The speed in radians per second                
+      private AxisStatus[] AxesStatus = new AxisStatus[2];           // The two-axis status of the carriage should pass AxesStatus[AXIS1] and AxesStatus[AXIS2] by Reference
 
       // Converting an arc angle to a step
-      private double[] FactorRadToStep = new double[] { 0, 0 };             // Multiply the radian value by the coefficient to get the motor position value (24-bit number can be discarded the highest byte)
+      private double[] FactorRadToStep = new double[] { 0, 0 };      // Multiply the radian value by the coefficient to get the motor position value (24-bit number can be discarded the highest byte)
       private long AngleToStep(AxisId Axis, double AngleInRad)
       {
          return (long)(AngleInRad * FactorRadToStep[(int)Axis]);
