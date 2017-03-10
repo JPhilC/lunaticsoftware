@@ -25,7 +25,7 @@ using System.Threading.Tasks;//Public Const NUM_SLEW_RETRIES As Long = 5        
 
 namespace ASCOM.Lunatic.Telescope
 {
-   public static class Contants
+   public static class Constants
    {
       public const double EMUL_RATE = 20.98;                      //  0.2 * 9024000/( (23*60*60)+(56*60)+4)
                                                                   // 0.2 = 200ms
@@ -46,8 +46,6 @@ namespace ASCOM.Lunatic.Telescope
       public const double RAEncoder_Zero_pos = 0x800000;          // ENCODER 0 Hour initial position
       public const double DECEncoder_Zero_pos = 0x800000;         // ENCODER 0 Degree Initial position
 
-      public const double Default_step = 9024000;                 // Total Encoder count (EQ5/6)
-      public const double EQ_MAXSYNC_Const = 0x113640;                 // Allow a 45 degree discrepancy
-
+      public const double Default_step = 9024000;                       // Total Encoder count (EQ5/6)
    }
 }

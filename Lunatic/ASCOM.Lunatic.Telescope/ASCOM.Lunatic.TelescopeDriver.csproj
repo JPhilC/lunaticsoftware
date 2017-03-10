@@ -166,11 +166,9 @@
     <Compile Include="..\GlobalAssemblyInfo.cs">
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Classes\Alignment.cs" />
     <Compile Include="Classes\ConfigurationSettings.cs" />
-    <Compile Include="Classes\Contants.cs" />
-    <Compile Include="Classes\Driver_ConfigurationExtensions.cs">
-      <DependentUpon>Driver.cs</DependentUpon>
-    </Compile>
+    <Compile Include="Classes\Constants.cs" />
     <Compile Include="Classes\COMPortBindingSourceExtension.cs" />
     <Compile Include="Classes\SettingsProvider.cs" />
     <Compile Include="Classes\SyntaMountBase.cs" />

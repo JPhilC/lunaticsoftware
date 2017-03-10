@@ -5,10 +5,24 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace ASCOM.Lunatic.Telescope
 {
 
+   /// <summary>
+   /// Class for alignment data
+   /// </summary>
+   public class AlignmentData : DataObjectBase
+   {
+      public double OriginalTargetRA { get; set; }
+      public double OriginalTargetDEC { get; set; }
+      public double TargetRA { get; set; }
+      public double TargetDEC { get; set; }
+      public double EncoderRA { get; set; }
+      public double EncoderDEC { get; set; }
+      public DateTime AlignmentTime { get; set; }
+   }
 
    public class Settings : DataObjectBase
    {
@@ -76,6 +90,19 @@ namespace ASCOM.Lunatic.Telescope
          }
       }
 
+      private bool _IsSlewing;
+      public bool IsSlewing
+      {
+         get
+         {
+            return _IsSlewing;
+         }
+         set
+         {
+            Set<bool>(ref _IsSlewing, value);
+         }
+      }
+
       // gAscomCompatibility.AllowPulseGuide
       public PulseGuidingOption PulseGuidingMode { get; set; }
 
@@ -86,6 +113,16 @@ namespace ASCOM.Lunatic.Telescope
       public SyncAlignmentModeOptions SyncAlignmentMode { get; set; }
 
       public bool DisableSyncLimit { get; set; }
+
+      /// <summary>
+      /// The RA Axis position in Radians
+      /// </summary>
+      public double RAAxisPosition { get; set; }
+
+      /// <summary>
+      /// The DEC Axis position in Radians
+      /// </summary>
+      public double DECAxisPosition { get; set; }
 
       /// <summary>
       /// Initial RA sync adjustment (radians)
@@ -131,15 +168,29 @@ namespace ASCOM.Lunatic.Telescope
 
       public bool EmulOneShot { get; set; }
 
+      public List<AlignmentData> AlignmentStars { get; set; }
+
+      public bool SaveAlignmentStarsOnAppend { get; set; }
+
+      public bool UseAffineTakiAndPolar { get; set; }    // Formally HC.PolarEnable
+
+      /// <summary>
+      /// Alignment proximity in degrees
+      /// </summary>
+      public int AlignmentProximity { get; set; }      // ProximityRA
+
+
       public Settings()
       {
          this.AscomCompliance = new AscomCompliance();
+         this.AlignmentStars = new List<AlignmentData>();
          SetDefaults();
       }
 
 
       private void SetDefaults()
       {
+         this.SaveAlignmentStarsOnAppend = true;
       }
    }
 }

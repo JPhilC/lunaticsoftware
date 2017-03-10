@@ -2,7 +2,7 @@
 {
    public interface ISettingsProvider <T> where T : DataObjectBase
    {
-      T CurrentSettings { get; }
+      T Settings { get; }
       void SaveSettings();
 
    }

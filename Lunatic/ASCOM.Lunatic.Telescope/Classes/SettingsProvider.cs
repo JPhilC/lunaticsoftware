@@ -9,6 +9,22 @@ namespace ASCOM.Lunatic.Telescope
 {
    public class SettingsProvider:ISettingsProvider<Settings>
    {
+
+      #region Singleton implimentation
+      private static SettingsProvider _Current = null;
+
+      public static SettingsProvider Current
+      {
+         get
+         {
+            if (_Current == null) {
+               _Current = new SettingsProvider();
+            }
+            return _Current;
+         }
+      }
+      #endregion
+
       private static Settings _Settings = null;
 
       private object _Lock = new object();
@@ -110,14 +126,14 @@ namespace ASCOM.Lunatic.Telescope
 
 
 
-      public SettingsProvider()
+      private SettingsProvider()
       {
          if (_Settings == null) {
             LoadSettings();
          }
       }
 
-      public Settings CurrentSettings
+      public Settings Settings
       {
          get
          {

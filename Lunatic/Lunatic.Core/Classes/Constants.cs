@@ -79,8 +79,7 @@ namespace Lunatic.Core
       /// <summary>
       /// Allow a 45 degree discrepancy (radians)
       /// </summary>
-      public const double EQ_MAXSYNC_Const = 45 * DEG_RAD;                 // Allow a 45 degree discrepancy
-
+      public const double MaximumSyncDifference = (2 * Math.PI) / 8.0;    // Allow a 45.0 (360/8) but in degrees discrepancy in Radians.
 
    }
 }

@@ -90,12 +90,20 @@ namespace ASCOM.Lunatic.Telescope
 
 
       #region Internal properties ...
-      private const int RAAxisIndex = 0;
-      private const int DECAxisIndex = 1;
+      // private const int RAAxisIndex = 0;
+      // private const int DECAxisIndex = 1;
       /// <summary>
       /// The axis positions in Radians
       /// </summary>
-      private double[] AxisPositionRadians = new double[2] { 0, 0 };
+      // private double[] AxisPositionRadians = new double[2] { 0, 0 };
+
+      private Settings Settings
+      {
+         get
+         {
+            return SettingsProvider.Current.Settings;
+         }
+      }
 
       #endregion
 

@@ -98,5 +98,18 @@ namespace Lunatic.Core
          return siderealTime;
       }
 
+      public static double RAEncoderFromRA(double raHours, double decDegrees, double longitude, double encoderZero, double totalRa, HemisphereOption hemisphere)
+      {
+         throw new NotImplementedException();
+      }
+      public static double DECEncoderFromDEC(double decDegrees, int pier, double encoderZero, double totalDEC, HemisphereOption hemisphere)
+      {
+         throw new NotImplementedException();
+      }
+
+      public static double EncoderHours(double encoderZero, double encoderValue, double totalEncoder, HemisphereOption hemisphere)
+      {
+         throw new NotImplementedException();
+      }
    }
 }

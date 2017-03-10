@@ -36,7 +36,7 @@ namespace ASCOM.Lunatic.Telescope
       private void ResultCallback(bool? result)
       {
          if (result.HasValue && result.Value) {
-            SettingsManager.SaveSettings(); // Persist device configuration values Lunatic Settings
+            SettingsProvider.Current.SaveSettings(); // Persist device configuration values Lunatic Settings
             WriteProfile(); // Persist device configuration values to the ASCOM Profile store
          }
          TelescopeServer.UncountLock();
@@ -118,15 +118,15 @@ namespace ASCOM.Lunatic.Telescope
                int connectionResult = _Mount.Connect(Settings.COMPort, (int)Settings.BaudRate, (int)Settings.Timeout, (int)Settings.Retry);
                if (connectionResult == 0) {
                   // Need to send current axis position
-                  _Mount.MCSetAxisPosition(AxisId.Axis1_RA, AxisPositionRadians[RAAxisIndex]);
-                  _Mount.MCSetAxisPosition(AxisId.Axis2_DEC, AxisPositionRadians[DECAxisIndex]);
+                  _Mount.MCSetAxisPosition(AxisId.Axis1_RA, Settings.RAAxisPosition);
+                  _Mount.MCSetAxisPosition(AxisId.Axis2_DEC, Settings.DECAxisPosition);
 
                   IsConnected = true;
                }
                else if (connectionResult == 1) {
                   // Was already connected to GET the current axis positions
-                  AxisPositionRadians[RAAxisIndex] = _Mount.MCGetAxisPosition(AxisId.Axis1_RA);
-                  AxisPositionRadians[DECAxisIndex] = _Mount.MCGetAxisPosition(AxisId.Axis2_DEC);
+                  Settings.RAAxisPosition = _Mount.MCGetAxisPosition(AxisId.Axis1_RA);
+                  Settings.DECAxisPosition = _Mount.MCGetAxisPosition(AxisId.Axis2_DEC);
                   IsConnected = true;
                }
                else {
@@ -677,10 +677,10 @@ End Sub
          {
             double value;
             if (Hemisphere == HemisphereOption.Northern) {
-               value = _RightAscensionRate - Constants.SIDEREAL_RATE_ARCSECS;
+               value = _RightAscensionRate - global::Lunatic.Core.Constants.SIDEREAL_RATE_ARCSECS;
             }
             else {
-               value = _RightAscensionRate + Constants.SIDEREAL_RATE_ARCSECS;
+               value = _RightAscensionRate + global::Lunatic.Core.Constants.SIDEREAL_RATE_ARCSECS;
             }
             _Logger.LogMessage("RightAscensionRate", "Get - " + value.ToString());
             return value;
@@ -696,10 +696,10 @@ End Sub
                }
                else {
                   if (Hemisphere == HemisphereOption.Northern) {
-                     value = Constants.SIDEREAL_RATE_ARCSECS + value;      // Treat newval as an offset
+                     value = global::Lunatic.Core.Constants.SIDEREAL_RATE_ARCSECS + value;      // Treat newval as an offset
                   }
                   else {
-                     value = value - Constants.SIDEREAL_RATE_ARCSECS;      // Treat newval as an offset
+                     value = value - global::Lunatic.Core.Constants.SIDEREAL_RATE_ARCSECS;      // Treat newval as an offset
                   }
                   // if we're already tracking then apply the new rate.
                   if (TrackingState != TrackingStatus.Off) {
@@ -1223,8 +1223,8 @@ End Sub
             //'Compute for Sync RA/DEC Encoder Values
 
 
-            targetRAEncoder = Get_RAEncoderfromRA(tRA, 0, longitude, Constants.RAEncoder_Zero_pos, Settings.Tot_RA, hemisphere);
-            targetDECEncoder = Get_DECEncoderfromDEC(declination, tPier, Constants.DECEncoder_Zero_pos, Settings.Tot_DEC, hemisphere);
+            targetRAEncoder = Get_RAEncoderfromRA(tRA, 0, longitude, global::Lunatic.Core.Constants.RAEncoder_Zero_pos, Settings.Tot_RA, hemisphere);
+            targetDECEncoder = Get_DECEncoderfromDEC(declination, tPier, global::Lunatic.Core.Constants.DECEncoder_Zero_pos, Settings.Tot_DEC, hemisphere);
 
 
             if (Settings.DisableSyncLimit) {

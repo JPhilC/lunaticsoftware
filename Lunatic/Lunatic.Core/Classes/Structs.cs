@@ -79,13 +79,6 @@ namespace Lunatic.Core
       public double C;
    }
 
-   //Public Type Matrix
-   //    Element(1 To 3, 1 To 3) As Double    '2D array of elements
-   //End Type
-
-   //Public Type Matrix2
-   //    Element(1 To 4, 1 To 4) As Double    '2D array of elements
-   //End Type
 
    public struct Matrix
    {
