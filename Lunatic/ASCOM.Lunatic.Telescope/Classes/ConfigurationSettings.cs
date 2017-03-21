@@ -155,17 +155,6 @@ namespace ASCOM.Lunatic.Telescope
          /// </summary>
       public double Tot_step { get; set; }
 
-      /// <summary>
-      /// otal RA Encoder Steps
-      /// </summary>
-      public double Tot_RA { get; set; }
-
-      /// <summary>
-      /// Total DEC Encoder Steps
-      /// </summary>
-      public double Tot_DEC { get; set; }
-
-
       public bool EmulOneShot { get; set; }
 
       public List<AlignmentData> AlignmentStars { get; set; }

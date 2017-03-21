@@ -65,6 +65,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\ASCOM\Platform 6 Developer Components\Components\Platform6\ASCOM.DriverAccess.dll</HintPath>
     </Reference>
+    <Reference Include="ASCOM.Utilities, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\ASCOM\Platform 6 Developer Components\Components\Platform6\ASCOM.Utilities.dll</HintPath>
+    </Reference>
     <Reference Include="GalaSoft.MvvmLight, Version=5.3.0.19026, Culture=neutral, PublicKeyToken=e7570ab207bcb616, processorArchitecture=MSIL">
       <HintPath>..\packages\MvvmLightLibs.5.3.0.0\lib\net45\GalaSoft.MvvmLight.dll</HintPath>
       <Private>True</Private>
@@ -124,6 +128,10 @@
     <ProjectReference Include="..\ASCOM.Lunatic.Telescope\ASCOM.Lunatic.TelescopeDriver.csproj">
       <Project>{e85b3304-41bd-4fa7-ad06-65bfa46b85ec}</Project>
       <Name>ASCOM.Lunatic.TelescopeDriver</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ASCOM\ASCOM.Astrometry\ASCOM.Astrometry\ASCOM.Astrometry.vbproj">
+      <Project>{BCE07B80-9E3D-43D9-BE5B-50D121D40ED3}</Project>
+      <Name>ASCOM.Astrometry</Name>
     </ProjectReference>
     <ProjectReference Include="..\Lunatic.Core\Lunatic.Core.csproj">
       <Project>{2e23d13a-8cb0-434b-9259-7789157e8677}</Project>

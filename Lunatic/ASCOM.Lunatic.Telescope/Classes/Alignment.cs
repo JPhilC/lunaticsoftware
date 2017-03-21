@@ -71,11 +71,11 @@ namespace ASCOM.Lunatic.Telescope.Classes
 
 
          //    ' look at current position and detemrine if flipped
-         RAHours = LunaticMath.EncoderHours(global::Lunatic.Core.Constants.RAEncoder_Zero_pos, eRA, settings.Tot_RA, hemisphere);
+         RAHours = LunaticMath.AxisHours(global::Lunatic.Core.Constants.RAEncoder_Zero_pos, eRA, hemisphere);
          isFlipped = (RAHours > 12);
 
 
-         tHA = LunaticMath.RangeHA(vRA - LunaticMath.SiderealTime(longitude));
+         tHA = LunaticMath.RangeHA(vRA - LunaticMath.LocalSiderealTime(longitude));
          if (tHA < 0) {
             if (isFlipped) {
                if (hemisphere == HemisphereOption.Northern) {
@@ -134,8 +134,8 @@ namespace ASCOM.Lunatic.Telescope.Classes
          AlignmentData newStar = new AlignmentData() {
             OriginalTargetDEC = declination,
             OriginalTargetRA = rightAscension,
-            TargetRA = LunaticMath.RAEncoderFromRA(tRA, 0, longitude, global::Lunatic.Core.Constants.RAEncoder_Zero_pos, settings.Tot_RA, hemisphere),
-            TargetDEC = LunaticMath.DECEncoderFromDEC(vDEC, tPier, global::Lunatic.Core.Constants.DECEncoder_Zero_pos, settings.Tot_DEC, hemisphere),
+            TargetRA = LunaticMath.RAAxisPositionFromRA(tRA, 0, longitude, global::Lunatic.Core.Constants.RAEncoder_Zero_pos, hemisphere),
+            TargetDEC = LunaticMath.DECAxisPositionFromDEC(vDEC, tPier, global::Lunatic.Core.Constants.DECEncoder_Zero_pos, hemisphere),
             EncoderRA = eRA,
             EncoderDEC = eDEC,
             AlignmentTime = DateTime.Now

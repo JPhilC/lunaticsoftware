@@ -25,7 +25,7 @@ namespace Lunatic.SyntaController
 
       public ControllerSettings()
       {
-         ParkStatus = ParkStatus.Parked
+         ParkStatus = ParkStatus.Parked;
 
       }
 

@@ -23,16 +23,52 @@ namespace Lunatic.Core
 {
    public static class Constants
    {
+      public const double TWO_PI = 6.28318530718;  // 2 * Math.PI;
+      public const double HALF_PI = 1.5707963268;  // Math.PI / 2;
       public const string OrganisationName = "LunaticSoftware";
-      public const double SIDEREAL_RATE_RADIANS = 2 * Math.PI / 86164.09065;
-      public const double SIDEREAL_RATE_ARCSECS = 15.041067;  // arcsecs/sec  (60*60*360) / ((23*60*60)+(56*60)+4)
+      /// <summary>
+      /// Sidereal rate in Radians
+      /// </summary>
+      public const double SIDEREAL_RATE_RADIANS = 7.29211584522E-5;        // TWO_PI / 86164.09065;
+      /// <summary>
+      /// Sidereal rate in Arc Seconds.
+      /// </summary>
+      public const double SIDEREAL_RATE_ARCSECS = 15.041067;               // arcsecs/sec  (60*60*360) / ((23*60*60)+(56*60)+4)
+      /// <summary>
+      /// Solar rate in Arc Seconds.
+      /// </summary>
       public const double SOLAR_RATE = 15;
+      /// <summary>
+      /// Lunar rate in Arc Seconds.
+      /// </summary>
       public const double LUNAR_RATE = 14.511415;
 
-      public const double DEG_RAD = 0.0174532925;
-      public const double RAD_DEG = 57.2957795;
-      public const double HRS_RAD = 0.2617993881;
-      public const double RAD_HRS = 3.81971863;
+      /// <summary>
+      /// Radians per degree
+      /// </summary>
+      public const double DEG_RAD = 0.0174532925;           // Radians per degree
+      /// <summary>
+      /// Degrees per radian
+      /// </summary>
+      public const double RAD_DEG = 57.2957795;             // Degrees per Radian
+
+      /// <summary>
+      /// Radians per hour
+      /// </summary>
+      public const double HRS_RAD = 0.2617993881;           // Radians per hour
+      /// <summary>
+      /// Hours per radian
+      /// </summary>
+      public const double RAD_HRS = 3.81971863;             // Hours per radian
+
+      /// <summary>
+      /// Minutes per radian
+      /// </summary>
+      public const double RAD_MIN = 229.183118052;           // Minutes per radian
+      /// <summary>
+      /// Seconds per radian
+      /// </summary>
+      public const double RAD_SEC = 13750.9870831;          // Seconds per radian
 
       public const double EMUL_RATE = 20.98;             // 0.2 * 9024000/( (23*60*60)+(56*60)+4)
                                                          // 0.2 = 200ms

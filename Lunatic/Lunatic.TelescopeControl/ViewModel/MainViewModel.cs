@@ -188,7 +188,7 @@ namespace Lunatic.TelescopeControl.ViewModel
          StatusMessage = (DriverSelected ? DriverName + " selected." : "Telescope driver not selected");
          if (DriverSelected) {
             // Update the site settings
-            UpdateDriverSiteDetails();
+            // TODO: UpdateDriverSiteDetails();
          }
       }
 
@@ -488,7 +488,7 @@ End Property
       public MainViewModel(ISettingsProvider<TelescopeControlSettings> settingsProvider)
       {
          _SettingsProvider = settingsProvider;
-         _Settings = settingsProvider.CurrentSettings;
+         _Settings = settingsProvider.Settings;
          PopSettings();
 
          ////if (IsInDesignMode)

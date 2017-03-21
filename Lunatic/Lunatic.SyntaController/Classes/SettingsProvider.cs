@@ -117,7 +117,7 @@ namespace Lunatic.SyntaController
          }
       }
 
-      public ControllerSettings CurrentSettings
+      public ControllerSettings Settings
       {
          get
          {

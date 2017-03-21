@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Collections;
 using Lunatic.Core;
 using System.Threading;
+using ASCOM.Lunatic.Telescope.Classes;
 
 /// <summary>
 /// The ASCOM ITelescopeV3 implimentation for the driver.
@@ -763,7 +764,7 @@ End Sub
             //siderealTime += SiteLongitude / 360.0 * 24.0;
             //// reduce to the range 0 to 24 hours
             //siderealTime = siderealTime % 24.0;
-            double siderealTime = LunaticMath.SiderealTime(SiteLongitude);
+            double siderealTime = LunaticMath.LocalSiderealTime(SiteLongitude);
             _Logger.LogMessage("SiderealTime", "Get - " + siderealTime.ToString());
             return siderealTime;
          }
@@ -1145,7 +1146,7 @@ End Sub
 
          double tRA;
          double tHA;
-         double tPier;
+         int tPier;
          Coordt tmpCoord;
 
          bool result = true;
@@ -1153,14 +1154,14 @@ End Sub
          // If HC.ListSyncMode.ListIndex = 1 Then
          if (SyncMode == SyncModeOption.AppendOnSync) {
             //' Append via sync mode!
-            result = EQ_NPointAppend(rightAscension, declination, longitude, hemisphere);
+            result = Alignment.EQ_NPointAppend(rightAscension, declination, longitude, hemisphere);
             //Exit Function
          }
          else {
             //' its an ascom sync - shift whole model
             saveDECSync = Settings.DECSync01;
             saveRASync = Settings.RASync01;
-            Settings.DECSync01 = 0;
+            Settings.RASync01 = 0;
             Settings.DECSync01 = 0;
 
             //TODO: HC.EncoderTimer.Enabled = False
@@ -1176,19 +1177,19 @@ End Sub
                   case SyncAlignmentModeOptions.NearestStar:
                      //   Case 2
                      // ' nearest
-                     tmpCoord = DeltaSync_Matrix_Map(raAxisPositon, decAxisPosition);
+                     tmpCoord = LunaticMath.DeltaSyncMatrixMap(raAxisPositon, decAxisPosition);
                      currentRAEncoder = tmpCoord.X;
                      currentDECEncoder = tmpCoord.Y;
                      break;
 
                   default:
                      // 'n-star+nearest
-                     tmpCoord = Delta_Matrix_Reverse_Map(raAxisPositon, decAxisPosition);
+                     tmpCoord = LunaticMath.DeltaMatrixReverseMap(raAxisPositon, decAxisPosition);
                      currentRAEncoder = tmpCoord.X;
                      currentDECEncoder = tmpCoord.Y;
 
                      if (tmpCoord.F == 0) {
-                        tmpCoord = DeltaSync_Matrix_Map(raAxisPositon, decAxisPosition);
+                        tmpCoord = LunaticMath.DeltaSyncMatrixMap(raAxisPositon, decAxisPosition);
                         currentRAEncoder = tmpCoord.X;
                         currentDECEncoder = tmpCoord.Y;
                      }
@@ -1198,7 +1199,7 @@ End Sub
 
 
             //TODO: HC.EncoderTimer.Enabled = True
-            tHA = LunaticMath.RangeHA(rightAscension - LunaticMath.SiderealTime(longitude));
+            tHA = LunaticMath.RangeHA(rightAscension - LunaticMath.LocalSiderealTime(longitude));
 
 
             if (tHA < 0) {
@@ -1223,8 +1224,8 @@ End Sub
             //'Compute for Sync RA/DEC Encoder Values
 
 
-            targetRAEncoder = Get_RAEncoderfromRA(tRA, 0, longitude, global::Lunatic.Core.Constants.RAEncoder_Zero_pos, Settings.Tot_RA, hemisphere);
-            targetDECEncoder = Get_DECEncoderfromDEC(declination, tPier, global::Lunatic.Core.Constants.DECEncoder_Zero_pos, Settings.Tot_DEC, hemisphere);
+            targetRAEncoder = LunaticMath.RAAxisPositionFromRA(tRA, 0, longitude, global::Lunatic.Core.Constants.RAEncoder_Zero_pos, hemisphere);
+            targetDECEncoder = LunaticMath.DECAxisPositionFromDEC(declination, tPier, global::Lunatic.Core.Constants.DECEncoder_Zero_pos, hemisphere);
 
 
             if (Settings.DisableSyncLimit) {
@@ -1250,7 +1251,7 @@ End Sub
 
 
             //WriteSyncMap(); ==> Persist the values of RASync01 && RaSync02
-            _SettingsManager.SaveSettings();
+            SettingsProvider.Current.SaveSettings();
             Settings.EmulOneShot = true;    // Re Sync Display
             //TODO: HC.DxSalbl.Caption = Format$(str(gRASync01), "000000000")
             //TODO: HC.DxSblbl.Caption = Format$(str(gDECSync01), "000000000")

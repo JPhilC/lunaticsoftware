@@ -1,4 +1,10 @@
-﻿using Lunatic.Core.Properties;
+﻿/*
+ * This code was originally developed by Aeronautical Software Developments Limited as
+ * part of PDToolkit. It is included here with their permission.
+ * http://www.aerosoftdev.com/
+ * 
+ */
+using Lunatic.Core.Properties;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -43,7 +49,7 @@ namespace Lunatic.Core
    }
 
    /// <summary>
-   /// Represents a compass angle in degrees.
+   /// Represents an angle in degrees.
    /// </summary>
    public struct Angle
       : IComparable
@@ -68,20 +74,20 @@ namespace Lunatic.Core
       private const int DmsMinutes = 1;
       private const int DmsSeconds = 2;
 
-      private const string Int_0 = @"0?0";
-      private const string Int_0to59 = @"[0-5]?\d";
-      private const string Int_0to89 = @"0?[0-8]?\d";
-      private const string Int_90 = @"0?90";
-      private const string Int_0to179 = @"(?:0?\d?\d|1[0-7]\d)";
-      private const string Int_180 = @"180";
-      private const string Dbl_0 = @"0?0(?:\.0+)?";
-      private const string Dbl_0to59 = @"[0-5]?\d(?:\.\d+)?";
-      private const string Dbl_0to89 = @"0?[0-8]?\d(?:\.\d+)?";
-      private const string Dbl_90 = @"0?90(?:\.0+)?";
-      private const string Dbl_0to99 = @"0?\d?\d(?:\.\d+)?";
-      private const string Dbl_100to179 = @"1[0-7]\d(?:\.\d+)?";
+      //private const string Int_0 = @"0?0";
+      //private const string Int_0to59 = @"[0-5]?\d";
+      //private const string Int_0to89 = @"0?[0-8]?\d";
+      //private const string Int_90 = @"0?90";
+      //private const string Int_0to179 = @"(?:0?\d?\d|1[0-7]\d)";
+      //private const string Int_180 = @"180";
+      //private const string Dbl_0 = @"0?0(?:\.0+)?";
+      //private const string Dbl_0to59 = @"[0-5]?\d(?:\.\d+)?";
+      //private const string Dbl_0to89 = @"0?[0-8]?\d(?:\.\d+)?";
+      //private const string Dbl_90 = @"0?90(?:\.0+)?";
+      //private const string Dbl_0to99 = @"0?\d?\d(?:\.\d+)?";
+      //private const string Dbl_100to179 = @"1[0-7]\d(?:\.\d+)?";
 
-      private const decimal DefaultDegreesDelta = 0.00000000001M;    /* In decimal degrees */
+      private const double DefaultDegreesDelta = 0.00000000001;    /* In decimal degrees */
       public const string DegreesSymbol = "\u00B0";
       private const int NumberDecimalDigitsForCompactSeconds = 4;    /* 'Compact' format for DMS uses a standard no of decimal places */
 
@@ -115,17 +121,23 @@ namespace Lunatic.Core
       public const string CadDegMinSecSuffixedNs = @"(?:(?<LatDeg>[0-8]?[0-9])\s*\:\s*(?<LatMin>[0-5]?\d)\s*\:\s*(?<LatSec>[0-5]?\d(?:\.\d+)?)|(?<LatDeg>90)\s*\:\s*(?<LatMin>0?0)\s*\:\s*(?<LatSec>0?0(?:\.0+)?))\s*(?<NS>[NS])";
       public const string CadDegMinSecSignedNs = @"(?:(?<LatDeg>\-?0?[0-8]?\d)\s*\:\s*(?<LatMin>\-?\s*[0-5]?\d)\s*\:\s*(?<LatSec>\-?\s*[0-5]?\d(?:\.\d+)?)|(?<LatDeg>\-?\s*0?90)\s*\:\s*(?<LatMin>\-?\s*0?0)\s*\:\s*(?<LatSec>\-?\s*0?0(?:\.0+)?))";
 
+      public const string SimpleDegRegex = @"((?<Deg>(?:[+-])?(?:[0-9]|[0-9][0-9]|[1-2][0-9][0-9]|3[0-5][0-9])(?:\.\d{1,2})?|360(?:\.0{1,2}?))?)";
+      public const string SimpleDegMin = @"((?<Deg>(?:[+-])?(?:[0-9]|[0-9][0-9]|[1-2][0-9][0-9]|3[0-5][0-9]|000))[ :h](?<Min>(?:[0-9]|[0-5][0-9])(?:\.\d{1,2})?))";
+      public const string SimpleDegMinSec = @"((?<Deg>(?:[+-])?(?:[0-9]|1[0-9]|2[0-3]|00))(?:[ h])(?<Min>(?:[0-9]|[0-5][0-9]))[ m](?<Sec>(?:[0-9]|[0-5][0-9])(?:\.\d{1,2})?)(?:[ s])?)";
+      public const string SimpleCadDegMinSec = @"((?<Deg>(?:[+-])?(?:\d|\d\d|2\d\d|3[0-5]\d|[0]{1,3})):(?<Min>(?:\d|[0-5]\d)):(?<Sec>(?:\d|[0-5]\d)(?:\.\d{1,2})?))";
+
       private static Regex[] _DegRegexes;
       private static Regex[] _DdmRegexes;
       private static Regex[] _DmsRegexes;
       private static Regex[] _CadRegexes;
+      private static Regex[] _SimpleRegexes;
       private static int _NumberDecimalDigitsForDegrees = NumberFormatInfo.CurrentInfo.NumberDecimalDigits;
       private static int _NumberDecimalDigitsForSeconds = NumberFormatInfo.CurrentInfo.NumberDecimalDigits;
 
-      private decimal _Value;        /* Always held in decimal degrees */
+      private double _Value;        /* Always held in double degrees */
       private int _Degrees;
       private int _Minutes;
-      private decimal _Seconds;
+      private double _Seconds;
       private AngularFormat _Format;
       private bool _HasBeenSet;
 
@@ -164,12 +176,17 @@ namespace Lunatic.Core
                                                       CadDegMinSecSuffixedNs,
                                                       CadDegMinSecSignedNs
                                                      };
+         string[] simpleRegexes = new string[] {
+            SimpleDegRegex,
+            SimpleDegMin,
+            SimpleDegMinSec,
+            SimpleCadDegMinSec};
 
          _DegRegexes = BuildRegexArray(degreesFormats);
          _DdmRegexes = BuildRegexArray(degMinFormats);
          _DmsRegexes = BuildRegexArray(degMinSecFormats);
          _CadRegexes = BuildRegexArray(cadDegMinSecFormats);
-
+         _SimpleRegexes = BuildRegexArray(simpleRegexes);
          _NumberDecimalDigitsForDegrees = 2;
          _NumberDecimalDigitsForSeconds = 2;
       }
@@ -186,7 +203,7 @@ namespace Lunatic.Core
       }
 
       /// <summary>
-      /// Gets or sets the number of decimal places to display for decimal degrees (and degrees/decimal minutes) in calls to <see cref="Angle.ToString"/>.
+      /// Gets or sets the number of double places to display for double degrees (and degrees/double minutes) in calls to <see cref="Angle.ToString"/>.
       /// </summary>
       public static int NumberDecimalDigitsForDegrees
       {
@@ -201,7 +218,7 @@ namespace Lunatic.Core
       }
 
       /// <summary>
-      /// Gets or sets the number of decimal places to display for the seconds in calls to <see cref="Angle.ToString"/>.
+      /// Gets or sets the number of double places to display for the seconds in calls to <see cref="Angle.ToString"/>.
       /// </summary>
       public static int NumberDecimalDigitsForSeconds
       {
@@ -216,11 +233,6 @@ namespace Lunatic.Core
       }
 
       public Angle(double angle)
-         : this((decimal)angle)
-      {
-      }
-
-      public Angle(decimal angle)
       {
          _Value = angle;
          _Format = AngularFormat.DecimalDegrees;
@@ -231,26 +243,21 @@ namespace Lunatic.Core
          */
          _Degrees = 0;
          _Minutes = 0;
-         _Seconds = 0.0M;
+         _Seconds = 0.0;
          SetDmsFromDegrees(angle);
       }
 
       public Angle(double[] angle)
-         : this(CastToDecimalArray(angle))
-      {
-      }
-
-      public Angle(decimal[] angle)
       {
          /* All members must be set before calling out of the constructor so set dummy values
             so compiler is happy.
          */
-         _Value = 0.0M;
+         _Value = 0.0;
 
          if (angle.Length == 2) {
             _Format = AngularFormat.DegreesDecimalMinutes;
             _Minutes = (int)Truncate(angle[DmsMinutes]);
-            _Seconds = (angle[DmsMinutes] - (decimal)_Minutes) * 60.0M;
+            _Seconds = (angle[DmsMinutes] - (double)_Minutes) * 60.0;
          }
          else if (angle.Length == 3) {
             _Format = AngularFormat.DegreesMinutesSeconds;
@@ -266,33 +273,18 @@ namespace Lunatic.Core
          _Value = SetDegreesFromDms();
       }
 
-      public Angle(int degrees, int minutes, decimal seconds)
-      {
-         /* All members must be set before calling out of the constructor so set dummy values
-            so compiler is happy.
-         */
-         _Value = 0.0M;
-
-         _Format = AngularFormat.DegreesMinutesSeconds;
-         _HasBeenSet = true;
-         _Degrees = degrees;
-         _Minutes = minutes;
-         _Seconds = seconds;
-         _Value = SetDegreesFromDms();
-      }
-
       public Angle(int degrees, int minutes, double seconds)
       {
          /* All members must be set before calling out of the constructor so set dummy values
             so compiler is happy.
          */
-         _Value = 0.0M;
+         _Value = 0.0;
 
          _Format = AngularFormat.DegreesMinutesSeconds;
          _HasBeenSet = true;
          _Degrees = degrees;
          _Minutes = minutes;
-         _Seconds = (decimal)seconds;
+         _Seconds = (double)seconds;
          _Value = SetDegreesFromDms();
       }
 
@@ -301,17 +293,17 @@ namespace Lunatic.Core
          /* All members must be set before calling out of the constructor so set dummy values
             so compiler is happy.
          */
-         _Value = 0.0M;
+         _Value = 0.0;
          _Degrees = 0;
          _Minutes = 0;
-         _Seconds = 0.0M;
+         _Seconds = 0.0;
          _Format = AngularFormat.NotSpecified;
          _HasBeenSet = false;
 
          angle = Angle.StandardizeDegreesSymbol(angle);
 
          /* The 'CAD' format is checked first against the InvariantCulture; it uses a comma as
-            the lat/long delimiter, so a period must be used as the decimal point.
+            the lat/long delimiter, so a period must be used as the double point.
          */
          foreach (Regex regex in _CadRegexes) {
             Match match = regex.Match(angle);
@@ -321,12 +313,12 @@ namespace Lunatic.Core
                    || direction == Direction.South) {
                   _Degrees = Convert.ToInt32(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
                   _Minutes = Convert.ToInt32(match.Groups["LatMin"].Value, CultureInfo.InvariantCulture);
-                  _Seconds = Convert.ToDecimal(match.Groups["LatSec"].Value, CultureInfo.InvariantCulture);
+                  _Seconds = Convert.ToDouble(match.Groups["LatSec"].Value, CultureInfo.InvariantCulture);
                }
                else {
                   _Degrees = Convert.ToInt32(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
                   _Minutes = Convert.ToInt32(match.Groups["LongMin"].Value, CultureInfo.InvariantCulture);
-                  _Seconds = Convert.ToDecimal(match.Groups["LongSec"].Value, CultureInfo.InvariantCulture);
+                  _Seconds = Convert.ToDouble(match.Groups["LongSec"].Value, CultureInfo.InvariantCulture);
                }
 
                if (direction == Direction.South
@@ -342,7 +334,7 @@ namespace Lunatic.Core
          }
 
          /* The remaining formats can be locale-specific, but the regex patterns have to be
-            hardcoded with a period as the decimal point.  So to keep things simple, we'll
+            hardcoded with a period as the double point.  So to keep things simple, we'll
             just replace the locale-specific separator with the invariant one.  (Don't need
             to worry about grouping characters, etc, since the numbers shouldn't be that big.)
          */
@@ -355,15 +347,15 @@ namespace Lunatic.Core
                   Direction direction = CheckMatchForDirection(match);
                   if (direction == Direction.North
                       || direction == Direction.South) {
-                     _Value = Convert.ToDecimal(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
+                     _Value = Convert.ToDouble(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
                   }
                   else {
-                     _Value = Convert.ToDecimal(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
+                     _Value = Convert.ToDouble(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
                   }
 
                   if (direction == Direction.South
                       || direction == Direction.West) {
-                     _Value *= -1.0M;
+                     _Value *= -1.0;
                   }
 
                   SetDmsFromDegrees(_Value);
@@ -379,21 +371,21 @@ namespace Lunatic.Core
             foreach (Regex regex in _DdmRegexes) {
                Match match = regex.Match(angle);
                if (match.Success) {
-                  decimal minutes = 0.0M;
+                  double minutes = 0.0;
                   Direction direction = CheckMatchForDirection(match);
 
                   if (direction == Direction.North
                       || direction == Direction.South) {
                      _Degrees = Convert.ToInt32(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
-                     minutes = Convert.ToDecimal(match.Groups["LatMin"].Value, CultureInfo.InvariantCulture);
+                     minutes = Convert.ToDouble(match.Groups["LatMin"].Value, CultureInfo.InvariantCulture);
                   }
                   else {
                      _Degrees = Convert.ToInt32(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
-                     minutes = Convert.ToDecimal(match.Groups["LongMin"].Value, CultureInfo.InvariantCulture);
+                     minutes = Convert.ToDouble(match.Groups["LongMin"].Value, CultureInfo.InvariantCulture);
                   }
 
                   _Minutes = (int)Truncate(minutes);
-                  _Seconds = (minutes - (decimal)_Minutes) * 60.0M;
+                  _Seconds = (minutes - (double)_Minutes) * 60.0;
 
                   if (direction == Direction.South
                       || direction == Direction.West) {
@@ -417,12 +409,12 @@ namespace Lunatic.Core
                       || direction == Direction.South) {
                      _Degrees = Convert.ToInt32(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
                      _Minutes = Convert.ToInt32(match.Groups["LatMin"].Value, CultureInfo.InvariantCulture);
-                     _Seconds = Convert.ToDecimal(match.Groups["LatSec"].Value, CultureInfo.InvariantCulture);
+                     _Seconds = Convert.ToDouble(match.Groups["LatSec"].Value, CultureInfo.InvariantCulture);
                   }
                   else {
                      _Degrees = Convert.ToInt32(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
                      _Minutes = Convert.ToInt32(match.Groups["LongMin"].Value, CultureInfo.InvariantCulture);
-                     _Seconds = Convert.ToDecimal(match.Groups["LongSec"].Value, CultureInfo.InvariantCulture);
+                     _Seconds = Convert.ToDouble(match.Groups["LongSec"].Value, CultureInfo.InvariantCulture);
                   }
 
                   if (direction == Direction.South
@@ -439,12 +431,28 @@ namespace Lunatic.Core
          }
 
          if (!_HasBeenSet) {
+            foreach (Regex regex in _SimpleRegexes) {
+               Match match = regex.Match(angle);
+               if (match.Success) {
+                  _Degrees = Convert.ToInt32(match.Groups["Deg"].Value, CultureInfo.InvariantCulture);
+                  _Minutes = Convert.ToInt32(match.Groups["Min"].Value, CultureInfo.InvariantCulture);
+                  _Seconds = Convert.ToDouble(match.Groups["Sec"].Value, CultureInfo.InvariantCulture);
+
+                  _Value = SetDegreesFromDms();
+                  _Format = AngularFormat.DegreesMinutesSeconds;
+                  _HasBeenSet = true;
+                  break;
+               }
+            }
+         }
+
+         if (!_HasBeenSet) {
             throw new FormatException("Invalid angle format.");
          }
       }
 
       /// <summary>
-      /// Gets or sets the value of the <see cref="Angle"/> in decimal degrees.
+      /// Gets or sets the value of the <see cref="Angle"/> in double degrees.
       /// </summary>
       [DefaultValue(0.0)]
 #if !__MOBILE__
@@ -461,7 +469,7 @@ namespace Lunatic.Core
          }
          set
          {
-            _Value = (decimal)value;
+            _Value = (double)value;
             _HasBeenSet = true;
             SetDmsFromDegrees(_Value);
          }
@@ -483,7 +491,7 @@ namespace Lunatic.Core
          }
          set
          {
-            _Value = (decimal)Angle.RadiansToDegrees(value);
+            _Value = (double)Angle.RadiansToDegrees(value);
             _HasBeenSet = true;
             SetDmsFromDegrees(_Value);
          }
@@ -548,7 +556,7 @@ namespace Lunatic.Core
                throw new ArgumentException("Seconds must be between -60.0 and 60.0", "value");
             }
 
-            _Seconds = (decimal)value;
+            _Seconds = (double)value;
             MatchDmsSigns(value);
 
             _Value = DmsToDegrees(_Degrees, _Minutes, _Seconds);
@@ -571,7 +579,7 @@ namespace Lunatic.Core
             _Degrees = (int)Truncate(value / 3600.0);
             value %= 3600.0;
             _Minutes = (int)Truncate(value / 60.0);
-            _Seconds = (decimal)(value % 60.0);
+            _Seconds = (double)(value % 60.0);
 
             _Value = DmsToDegrees(_Degrees, _Minutes, _Seconds);
             _HasBeenSet = true;
@@ -631,18 +639,9 @@ namespace Lunatic.Core
 
       public static implicit operator double(Angle angle)
       {
-         return (double)angle._Value;
-      }
-
-      public static implicit operator Angle(decimal angle)
-      {
-         return new Angle(angle);
-      }
-
-      public static implicit operator decimal(Angle angle)
-      {
          return angle._Value;
       }
+
 
       public static implicit operator Angle(string angle)
       {
@@ -663,7 +662,7 @@ namespace Lunatic.Core
          return (Math.Abs(angle1._Value - angle2._Value) <= Angle.DefaultDegreesDelta
                  || (angle1._Degrees == angle2._Degrees
                      && angle1._Minutes == angle2._Minutes
-                     && Math.Abs(angle1._Seconds - angle2._Seconds) <= (Angle.DefaultDegreesDelta * 3600M)));
+                     && Math.Abs(angle1._Seconds - angle2._Seconds) <= (Angle.DefaultDegreesDelta * 3600.0)));
       }
 
       public static bool operator !=(Angle angle1, Angle angle2)
@@ -809,8 +808,8 @@ namespace Lunatic.Core
          string text = string.Empty;
          int degrees;
          int minutes;
-         decimal decimalMinutes;
-         decimal seconds;
+         double doubleMinutes;
+         double seconds;
          int increment;
 
          switch (format) {
@@ -819,32 +818,32 @@ namespace Lunatic.Core
                break;
 
             case AngularFormat.DegreesDecimalMinutes:
-               increment = (_Value >= 0.0M ? 1 : -1);
-               decimalMinutes = decimal.Round((decimal)_Minutes + (_Seconds / 60.0M), _NumberDecimalDigitsForDegrees);
-               if (Math.Abs(decimalMinutes) < 60.0M) {
+               increment = (_Value >= 0.0 ? 1 : -1);
+               doubleMinutes = Math.Round((double)_Minutes + (_Seconds / 60.0), _NumberDecimalDigitsForDegrees);
+               if (Math.Abs(doubleMinutes) < 60.0) {
                   degrees = _Degrees;
                }
                else {
-                  decimalMinutes = 0.0M;
+                  doubleMinutes = 0.0;
                   degrees = _Degrees + increment;
                }
 
                text = CustomFormat.ToString(Resources.AngleInDegreesDecimalMinutes, _NumberDecimalDigitsForDegrees,
-                                            degrees, decimalMinutes);
+                                            degrees, doubleMinutes);
                break;
 
             case AngularFormat.DegreesMinutesSeconds:
             case AngularFormat.CadDegreesMinutesSeconds:
             case AngularFormat.CompactDegreesMinutesSeconds:
-               increment = (_Value >= 0.0M ? 1 : -1);
-               seconds = decimal.Round(_Seconds, format != AngularFormat.CompactDegreesMinutesSeconds ? _NumberDecimalDigitsForSeconds
+               increment = (_Value >= 0.0 ? 1 : -1);
+               seconds = Math.Round(_Seconds, format != AngularFormat.CompactDegreesMinutesSeconds ? _NumberDecimalDigitsForSeconds
                                                                                                       : Angle.NumberDecimalDigitsForCompactSeconds);
 
-               if (Math.Abs(seconds) < 60.0M) {
+               if (Math.Abs(seconds) < 60.0) {
                   minutes = _Minutes;
                }
                else {
-                  seconds = 0.0M;
+                  seconds = 0.0;
                   minutes = _Minutes + increment;
                }
 
@@ -864,12 +863,12 @@ namespace Lunatic.Core
                   string stringFormat = asLongitude ? Resources.LongitudeInCompactDegreesMinutesSeconds
                                                     : Resources.LatitudeInCompactDegreesMinutesSeconds;
                   text = string.Format(stringFormat, Math.Abs(degrees), Math.Abs(minutes), Math.Abs(seconds),
-                                       asLongitude ? (_Value >= 0.0M ? "E" : "W")
-                                                   : (_Value >= 0.0M ? "N" : "S"));
+                                       asLongitude ? (_Value >= 0.0 ? "E" : "W")
+                                                   : (_Value >= 0.0 ? "N" : "S"));
                }
                else {
                   /* Because 'CAD' coordinates use a comma as the lat/long delimiter, a period must
-                     be used as the decimal point, hence the use of the InvariantCulture.
+                     be used as the double point, hence the use of the InvariantCulture.
                   */
                   text = CustomFormat.ToString(CultureInfo.InvariantCulture,
                                                Resources.AngleInCadDegreesMinutesSeconds, _NumberDecimalDigitsForSeconds,
@@ -878,11 +877,11 @@ namespace Lunatic.Core
                break;
 
             case AngularFormat.DecimalDegreesWestEast:
-               decimal angle = Angle.Normalize(_Value);
+               double angle = Angle.Normalize(_Value);
                string direction = "E";
 
-               if (angle > 180.0M) {
-                  angle = 360.0M - angle;
+               if (angle > 180.0) {
+                  angle = 360.0 - angle;
                   direction = "W";
                }
 
@@ -890,7 +889,7 @@ namespace Lunatic.Core
                break;
 
             case AngularFormat.DecimalDegreesPlusMinus:
-               decimal angle180 = Angle.NormalizeTo180(_Value);
+               double angle180 = Angle.NormalizeTo180(_Value);
                text = CustomFormat.ToString(Resources.AngleInDecimalDegreesPlusMinus, _NumberDecimalDigitsForDegrees, angle180);
                break;
 
@@ -906,26 +905,22 @@ namespace Lunatic.Core
       public void Normalize()
       {
          _Value = Angle.Normalize(_Value);
-         _Degrees = (int)Angle.Normalize((decimal)_Degrees);
+         _Degrees = (int)Angle.Normalize((double)_Degrees);
       }
+
+      /// <summary>
+      /// Converts an angle to the range 0.0 to 360.0 degrees
+      /// </summary>
 
       /// <summary>
       /// Converts an angle to the range 0.0 to 360.0 degrees
       /// </summary>
       public static double Normalize(double angle)
       {
-         return (double)Angle.Normalize((decimal)angle);
-      }
+         angle %= 360.0;
 
-      /// <summary>
-      /// Converts an angle to the range 0.0 to 360.0 degrees
-      /// </summary>
-      public static decimal Normalize(decimal angle)
-      {
-         angle %= 360.0M;
-
-         if (angle < 0.0M) {
-            angle += 360.0M;
+         if (angle < 0.0) {
+            angle += 360.0;
          }
 
          return angle;
@@ -940,26 +935,19 @@ namespace Lunatic.Core
          SetDmsFromDegrees(_Value);
       }
 
+
       /// <summary>
       /// Converts the angle to the range 180.0 to -180.0 degrees
       /// </summary>
       public static double NormalizeTo180(double angle)
       {
-         return (double)Angle.NormalizeTo180((decimal)angle);
-      }
+         angle %= 360.0;   /* Need it in the standard range first */
 
-      /// <summary>
-      /// Converts the angle to the range 180.0 to -180.0 degrees
-      /// </summary>
-      public static decimal NormalizeTo180(decimal angle)
-      {
-         angle %= 360.0M;   /* Need it in the standard range first */
-
-         if (angle > 180.0M) {
-            angle -= 360.0M;
+         if (angle > 180.0) {
+            angle -= 360.0;
          }
-         else if (angle < -180.0M) {
-            angle += 360.0M;
+         else if (angle < -180.0) {
+            angle += 360.0;
          }
 
          return angle;
@@ -976,13 +964,13 @@ namespace Lunatic.Core
          return new Angle(degrees, minutes, seconds);
       }
 
-      private static decimal DmsToDegrees(int degrees, int minutes, decimal seconds)
+      private static double DmsToDegrees(int degrees, int minutes, double seconds)
       {
-         Debug.Assert((degrees >= 0 && minutes >= 0 && seconds >= 0.0M)
-                      || (degrees <= 0 && minutes <= 0 && seconds <= 0.0M),
+         Debug.Assert((degrees >= 0 && minutes >= 0 && seconds >= 0.0)
+                      || (degrees <= 0 && minutes <= 0 && seconds <= 0.0),
                       "Degrees/minutes/seconds don't have consistent signs.");
 
-         return (decimal)degrees + ((decimal)minutes / 60.0M) + (seconds / 3600.0M);
+         return (double)degrees + ((double)minutes / 60.0) + (seconds / 3600.0);
       }
 
       public static double RadiansToDegrees(double radians)
@@ -1021,9 +1009,9 @@ namespace Lunatic.Core
          return angle;
       }
 
-      public static decimal GradientToDegrees(double gradient)
+      public static double GradientToDegrees(double gradient)
       {
-         return NormalizeTo180((decimal)Angle.RadiansToDegrees(Math.Atan(gradient)));   /* NormalizeTo180() because a gradient can be negative */
+         return NormalizeTo180((double)Angle.RadiansToDegrees(Math.Atan(gradient)));   /* NormalizeTo180() because a gradient can be negative */
       }
 
       public static double CompassAngleFrom2Points(double x1, double y1, double x2, double y2)
@@ -1109,32 +1097,32 @@ namespace Lunatic.Core
          return regexes;
       }
 
-      private static decimal[] CastToDecimalArray(double[] source)
+      private static double[] CastToDecimalArray(double[] source)
       {
-         decimal[] target = new decimal[source.Length];
+         double[] target = new double[source.Length];
 
          for (int i = 0; i < source.Length; i++) {
-            target[i] = (decimal)source[i];
+            target[i] = (double)source[i];
          }
 
          return target;
       }
 
-      private void SetDmsFromDegrees(decimal angle)
+      private void SetDmsFromDegrees(double angle)
       {
          _Degrees = (int)Truncate(angle);
-         angle = (angle - _Degrees) * 60.0M;
+         angle = (angle - _Degrees) * 60.0;
          _Minutes = (int)Truncate(angle);
-         _Seconds = (angle - _Minutes) * 60.0M;
+         _Seconds = (angle - _Minutes) * 60.0;
       }
 
-      private decimal SetDegreesFromDms()
+      private double SetDegreesFromDms()
       {
-         if (_Degrees < 0 || _Minutes < 0 || _Seconds < 0.0M) {
+         if (_Degrees < 0 || _Minutes < 0 || _Seconds < 0.0) {
             SetDmsToNegative();
          }
 
-         return (decimal)_Degrees + ((decimal)_Minutes / 60.0M) + (_Seconds / 3600.0M);
+         return (double)_Degrees + ((double)_Minutes / 60.0) + (_Seconds / 3600.0);
       }
 
       private void MatchDmsSigns(double value)
@@ -1158,8 +1146,8 @@ namespace Lunatic.Core
             _Minutes *= -1;
          }
 
-         if (_Seconds < 0.0M) {
-            _Seconds *= -1.0M;
+         if (_Seconds < 0.0) {
+            _Seconds *= -1.0;
          }
       }
 
@@ -1173,8 +1161,8 @@ namespace Lunatic.Core
             _Minutes *= -1;
          }
 
-         if (_Seconds > 0.0M) {
-            _Seconds *= -1.0M;
+         if (_Seconds > 0.0) {
+            _Seconds *= -1.0;
          }
       }
 
@@ -1216,15 +1204,9 @@ namespace Lunatic.Core
 
       #endregion
 
-      public static decimal Truncate(decimal value)
-      {
-         return Math.Truncate(value);
-      }
-
       public static double Truncate(double value)
       {
          return Math.Truncate(value);
       }
-
    }
 }

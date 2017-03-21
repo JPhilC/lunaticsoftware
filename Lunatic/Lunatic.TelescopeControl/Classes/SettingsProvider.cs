@@ -103,7 +103,7 @@ namespace Lunatic.TelescopeControl
       }
 
 
-      public TelescopeControlSettings CurrentSettings
+      public TelescopeControlSettings Settings
       {
          get
          {

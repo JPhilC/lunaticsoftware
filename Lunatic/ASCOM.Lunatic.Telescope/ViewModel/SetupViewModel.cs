@@ -413,7 +413,7 @@ namespace ASCOM.Lunatic.Telescope
       /// </summary>
       public SetupViewModel(ISettingsProvider<Settings> settingsProvider)
       {
-         _Settings = settingsProvider.CurrentSettings;
+         _Settings = settingsProvider.Settings;
          PopProperties();
       }
 
