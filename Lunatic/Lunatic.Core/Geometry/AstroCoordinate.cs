@@ -6,73 +6,12 @@ using System.Threading.Tasks;
 using ASCOM.Astrometry.Transform;
 using ASCOM.Utilities;
 
-namespace Lunatic.Core
+namespace Lunatic.Core.Geometry
 {
-
-   public struct EquatorialCoordinate
-   {
-      private HourAngle _RA;
-      private Angle _Dec;
-
-      public HourAngle RightAcension
-      {
-         get
-         {
-            return _RA;
-         }
-      }
-      public Angle Declination
-      {
-         get
-         {
-            return _Dec;
-         }
-      }
-
-      public EquatorialCoordinate(string rightAcension, string declination)
-      {
-         _RA = new HourAngle(rightAcension);
-         _Dec = new Angle(declination);
-      }
-      public EquatorialCoordinate(double rightAcension, double declination)
-      {
-         _RA = new HourAngle(rightAcension);
-         _Dec = new Angle(declination);
-      }
-   }
-
-   public struct AltAzCoordinate
-   {
-      private Angle _Alt;
-      private Angle _Az;
-
-      public Angle Altitude
-      {
-         get
-         {
-            return _Alt;
-         }
-      }
-      public Angle Azimuth
-      {
-         get
-         {
-            return _Az;
-         }
-      }
-
-      public AltAzCoordinate(string altitude, string azimuth)
-      {
-         _Alt = new Angle(altitude);
-         _Az = new Angle(azimuth);
-      }
-      public AltAzCoordinate(double altitude, double azimuth)
-      {
-         _Alt = new Angle(altitude);
-         _Az = new Angle(azimuth);
-      }
-   }
-
+   /// <summary>
+   /// A class for determining the Azimuth and Altitude of Equatorial 
+   /// coordinate at a given time and observing location. 
+   /// </summary>
    public class AstroCoordinate : IDisposable
    {
       private enum InitialisedWith
@@ -124,14 +63,13 @@ namespace Lunatic.Core
          }
       }
 
-
       public HourAngle HourAngle
       {
          get
          {
             //TODO: Code Hour Angle
             // Sidereal time at Greenwich - Longitude - Ra
-            
+
             return _Ha;
          }
       }
@@ -191,14 +129,14 @@ namespace Lunatic.Core
       public static AstroCoordinate FromRADec(string rightAcension, string declination, string latitude, string longitude, double elev)
       {
          AstroCoordinate coordinate = new AstroCoordinate(latitude, longitude, elev);
-         coordinate.Equatorial = new EquatorialCoordinate(rightAcension, declination);
+         coordinate.Equatorial = new EquatorialCoordinate(rightAcension, declination, longitude);
          return coordinate;
       }
 
       public static AstroCoordinate FromRADec(double rightAcension, double declination, double latitude, double longitude, double elev)
       {
          AstroCoordinate coordinate = new AstroCoordinate(latitude, longitude, elev);
-         coordinate.Equatorial = new EquatorialCoordinate(rightAcension, declination);
+         coordinate.Equatorial = new EquatorialCoordinate(rightAcension, declination, longitude);
          return coordinate;
       }
 
@@ -231,17 +169,17 @@ namespace Lunatic.Core
       }
 
 
-      public AstroCoordinate(string rightAcension, string declination, string latitude, string longitude, double elev) : this( latitude, longitude, elev)
+      public AstroCoordinate(string rightAcension, string declination, string latitude, string longitude, double elev) : this(latitude, longitude, elev)
       {
          _InitialisedWith = InitialisedWith.RADec;
-         _Equatorial = new EquatorialCoordinate(rightAcension, declination);
+         _Equatorial = new EquatorialCoordinate(rightAcension, declination, longitude);
       }
 
-      public AstroCoordinate(double rightAcension, double declination, double latitude, double longitude, double elev): this(latitude, longitude, elev) 
+      public AstroCoordinate(double rightAcension, double declination, double latitude, double longitude, double elev) : this(latitude, longitude, elev)
       {
 
          _InitialisedWith = InitialisedWith.RADec;
-         _Equatorial = new EquatorialCoordinate(rightAcension, declination);
+         _Equatorial = new EquatorialCoordinate(rightAcension, declination, longitude);
       }
 
       ~AstroCoordinate()
@@ -263,7 +201,7 @@ namespace Lunatic.Core
       private EquatorialCoordinate GetEquatorial()
       {
          _Transform.Refresh();
-         return new EquatorialCoordinate(_Transform.RATopocentric, _Transform.DECTopocentric);
+         return new EquatorialCoordinate(_Transform.RATopocentric, _Transform.DECTopocentric, _Transform.SiteLongitude);
       }
 
       #endregion

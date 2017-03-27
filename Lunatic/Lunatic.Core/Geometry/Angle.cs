@@ -11,7 +11,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace Lunatic.Core
+namespace Lunatic.Core.Geometry
 {
    public enum AngularFormat
    {
@@ -122,8 +122,8 @@ namespace Lunatic.Core
       public const string CadDegMinSecSignedNs = @"(?:(?<LatDeg>\-?0?[0-8]?\d)\s*\:\s*(?<LatMin>\-?\s*[0-5]?\d)\s*\:\s*(?<LatSec>\-?\s*[0-5]?\d(?:\.\d+)?)|(?<LatDeg>\-?\s*0?90)\s*\:\s*(?<LatMin>\-?\s*0?0)\s*\:\s*(?<LatSec>\-?\s*0?0(?:\.0+)?))";
 
       public const string SimpleDegRegex = @"((?<Deg>(?:[+-])?(?:[0-9]|[0-9][0-9]|[1-2][0-9][0-9]|3[0-5][0-9])(?:\.\d{1,2})?|360(?:\.0{1,2}?))?)";
-      public const string SimpleDegMin = @"((?<Deg>(?:[+-])?(?:[0-9]|[0-9][0-9]|[1-2][0-9][0-9]|3[0-5][0-9]|000))[ :h](?<Min>(?:[0-9]|[0-5][0-9])(?:\.\d{1,2})?))";
-      public const string SimpleDegMinSec = @"((?<Deg>(?:[+-])?(?:[0-9]|1[0-9]|2[0-3]|00))(?:[ h])(?<Min>(?:[0-9]|[0-5][0-9]))[ m](?<Sec>(?:[0-9]|[0-5][0-9])(?:\.\d{1,2})?)(?:[ s])?)";
+      public const string SimpleDegMin = @"((?<Deg>(?:[+-])?(?:[0-9]|[0-9][0-9]|[1-2][0-9][0-9]|3[0-5][0-9]|000))[\u00B0\s]\s*(?<Min>(?:[0-9]|[0-5][0-9])(?:\.\d{1,2})?))[\'\s]\s*";
+      public const string SimpleDegMinSec = @"\s*((?<Deg>(?:[+-])?(?:[0-9]|[0-9][0-9]|[1-2][0-9][0-9]|3[0-5][0-9]|000))[\u00B0\s]\s*(?<Min>(?:[0-9]|[0-5][0-9]))[\'\s]\s*(?<Sec>(?:[0-9]|[0-5][0-9])(?:\.\d{1,2})?))[\""\s]\s*";
       public const string SimpleCadDegMinSec = @"((?<Deg>(?:[+-])?(?:\d|\d\d|2\d\d|3[0-5]\d|[0]{1,3})):(?<Min>(?:\d|[0-5]\d)):(?<Sec>(?:\d|[0-5]\d)(?:\.\d{1,2})?))";
 
       private static Regex[] _DegRegexes;
@@ -232,9 +232,14 @@ namespace Lunatic.Core
          }
       }
 
-      public Angle(double angle)
+      public Angle(double angle, bool radians = false)
       {
-         _Value = angle;
+         if (radians) {
+            _Value = (double)Angle.RadiansToDegrees(angle);
+         }
+         else {
+            _Value = angle;
+         }
          _Format = AngularFormat.DecimalDegrees;
          _HasBeenSet = true;
 

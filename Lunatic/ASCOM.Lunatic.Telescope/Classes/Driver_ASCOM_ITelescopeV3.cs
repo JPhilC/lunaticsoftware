@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Collections;
 using Lunatic.Core;
 using System.Threading;
+using ASCOM.Lunatic.Telescope;
 using ASCOM.Lunatic.Telescope.Classes;
 
 /// <summary>

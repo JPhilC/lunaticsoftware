@@ -131,96 +131,96 @@ namespace ASCOM.Lunatic.Telescope.Classes
          //        DeltaDec = .TargetDEC - .EncoderDEC
 
          //    End With
-         AlignmentData newStar = new AlignmentData() {
-            OriginalTargetDEC = declination,
-            OriginalTargetRA = rightAscension,
-            TargetRA = LunaticMath.RAAxisPositionFromRA(tRA, 0, longitude, global::Lunatic.Core.Constants.RAEncoder_Zero_pos, hemisphere),
-            TargetDEC = LunaticMath.DECAxisPositionFromDEC(vDEC, tPier, global::Lunatic.Core.Constants.DECEncoder_Zero_pos, hemisphere),
-            EncoderRA = eRA,
-            EncoderDEC = eDEC,
-            AlignmentTime = DateTime.Now
-         };
-         settings.AlignmentStars.Add(newStar);
-         deltaRA = newStar.TargetRA - newStar.EncoderRA;
-         deltaDEC = newStar.TargetDEC - newStar.EncoderDEC;
+         //AlignmentData newStar = new AlignmentData() {
+         //   OriginalTargetDEC = declination,
+         //   OriginalTargetRA = rightAscension,
+         //   TargetRA = LunaticMath.RAAxisPositionFromRA(tRA, 0, longitude, global::Lunatic.Core.Constants.RAEncoder_Zero_pos, hemisphere),
+         //   TargetDEC = LunaticMath.DECAxisPositionFromDEC(vDEC, tPier, global::Lunatic.Core.Constants.DECEncoder_Zero_pos, hemisphere),
+         //   EncoderRA = eRA,
+         //   EncoderDEC = eDEC,
+         //   AlignmentTime = DateTime.Now
+         //};
+         //settings.AlignmentStars.Add(newStar);
+         //deltaRA = newStar.TargetRA - newStar.EncoderRA;
+         //deltaDEC = newStar.TargetDEC - newStar.EncoderDEC;
 
          //TODO:    HC.EncoderTimer.Enabled = True
-         double maxSyncDifference = global::Lunatic.Core.Constants.MaximumSyncDifference;
-         if (((Math.Abs(deltaRA) < maxSyncDifference) && (Math.Abs(deltaDEC) < maxSyncDifference)) || settings.DisableSyncLimit) {
+         //double maxSyncDifference = global::Lunatic.Core.Constants.MaximumSyncDifference;
+         //if (((Math.Abs(deltaRA) < maxSyncDifference) && (Math.Abs(deltaDEC) < maxSyncDifference)) || settings.DisableSyncLimit) {
 
 
-            // Use this data also for next sync until a three star is achieved
-            settings.RA1Star = deltaRA;
-            settings.DEC1Star = deltaDEC;
+         //   // Use this data also for next sync until a three star is achieved
+         //   settings.RA1Star = deltaRA;
+         //   settings.DEC1Star = deltaDEC;
 
-            if (alignmentStarCount < 3) {
-               // TODO:           HC.Add_Message(str(curalign) & " " & oLangDll.GetLangString(6009))
-            }
-            else {
-               if (alignmentStarCount == 3) {
-                  //                Call SendtoMatrix
-               }
-               else {
-                  // add new point
-                  //                Count = 1
-                  //                // copy points to temp array
-                  //                For i = 1 To curalign - 1
-                  List<AlignmentData> newStars = new List<AlignmentData>();
-                  foreach (AlignmentData star in settings.AlignmentStars) {
-                     deltaRA = Math.Abs(star.EncoderRA - eRA);
-                     deltaDEC = Math.Abs(star.EncoderDEC - eDEC);
-                     double proximity = LunaticMath.DegToRad(settings.AlignmentProximity);
-                     if (deltaRA > proximity || deltaDEC > proximity) {
-                        // point is far enough away from the new point - so keep it
-                        newStars.Add(star);
-                     }
-                     else {
-                        // TODO:                        HC.Add_Message ("Old Point too close " & CStr(deltaRA) & " " & CStr(deltadec) & " " & CStr(ProximityDec))
-                     }
-                     //                Next i
-                  }
-                  // Now clear and refresh the saved stars
-                  settings.AlignmentStars.Clear();
-                  foreach (AlignmentData star in newStars) {
-                     settings.AlignmentStars.Add(star);
-                  }
-                  //                AlignmentStars(Count) = AlignmentStars(curalign)
-                  //                curalign = Count
-                  //                gAlignmentStars_count = curalign
-
-
-                  //                Call SendtoMatrix
-
-                  //                StarEditform.RefreshDisplay = true
-
-               }
-            }
-         }
-         else {
-            //        // sync is too large!
-            //        result = false
-            //        HC.Add_Message(oLangDll.GetLangString(6004))
-            //        HC.Add_Message("Target  RA=" & FmtSexa(gRA, false))
-            //        HC.Add_Message("Sync    RA=" & FmtSexa(RightAscension, false))
-            //        HC.Add_Message("Target DEC=" & FmtSexa(gDec, true))
-            //        HC.Add_Message("Sync   DEC=" & FmtSexa(Declination, true))
-            //    }
+         //   if (alignmentStarCount < 3) {
+         //      // TODO:           HC.Add_Message(str(curalign) & " " & oLangDll.GetLangString(6009))
+         //   }
+         //   else {
+         //      if (alignmentStarCount == 3) {
+         //         //                Call SendtoMatrix
+         //      }
+         //      else {
+         //         // add new point
+         //         //                Count = 1
+         //         //                // copy points to temp array
+         //         //                For i = 1 To curalign - 1
+         //         List<AlignmentData> newStars = new List<AlignmentData>();
+         //         foreach (AlignmentData star in settings.AlignmentStars) {
+         //            deltaRA = Math.Abs(star.EncoderRA - eRA);
+         //            deltaDEC = Math.Abs(star.EncoderDEC - eDEC);
+         //            double proximity = LunaticMath.DegToRad(settings.AlignmentProximity);
+         //            if (deltaRA > proximity || deltaDEC > proximity) {
+         //               // point is far enough away from the new point - so keep it
+         //               newStars.Add(star);
+         //            }
+         //            else {
+         //               // TODO:                        HC.Add_Message ("Old Point too close " & CStr(deltaRA) & " " & CStr(deltadec) & " " & CStr(ProximityDec))
+         //            }
+         //            //                Next i
+         //         }
+         //         // Now clear and refresh the saved stars
+         //         settings.AlignmentStars.Clear();
+         //         foreach (AlignmentData star in newStars) {
+         //            settings.AlignmentStars.Add(star);
+         //         }
+         //         //                AlignmentStars(Count) = AlignmentStars(curalign)
+         //         //                curalign = Count
+         //         //                gAlignmentStars_count = curalign
 
 
-            //    if gSaveAPresetOnAppend = 1 {
-            //        ' don't write emtpy list!
-            //        if(gAlignmentStars_count > 0) {
-            //            'idx = GetPresetIdx
-            //            Call SaveAlignmentStars(GetPresetIdx, "")
-         }
+         //         //                Call SendtoMatrix
+
+         //         //                StarEditform.RefreshDisplay = true
+
+         //      }
+         //   }
+         //}
+         //else {
+         //   //        // sync is too large!
+         //   //        result = false
+         //   //        HC.Add_Message(oLangDll.GetLangString(6004))
+         //   //        HC.Add_Message("Target  RA=" & FmtSexa(gRA, false))
+         //   //        HC.Add_Message("Sync    RA=" & FmtSexa(RightAscension, false))
+         //   //        HC.Add_Message("Target DEC=" & FmtSexa(gDec, true))
+         //   //        HC.Add_Message("Sync   DEC=" & FmtSexa(Declination, true))
+         //   //    }
 
 
-         if (settings.SaveAlignmentStarsOnAppend) {
-            SettingsProvider.Current.SaveSettings();
-         }
-         else {
-            settings.AlignmentStars.Remove(newStar);
-         }
+         //   //    if gSaveAPresetOnAppend = 1 {
+         //   //        ' don't write emtpy list!
+         //   //        if(gAlignmentStars_count > 0) {
+         //   //            'idx = GetPresetIdx
+         //   //            Call SaveAlignmentStars(GetPresetIdx, "")
+         //}
+
+
+         //if (settings.SaveAlignmentStarsOnAppend) {
+         //   SettingsProvider.Current.SaveSettings();
+         //}
+         //else {
+         //   settings.AlignmentStars.Remove(newStar);
+         //}
          return result;
       }
 

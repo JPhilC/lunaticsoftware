@@ -1,6 +1,7 @@
 ﻿using ASCOM.Astrometry.Transform;
 using ASCOM.Utilities;
 using Lunatic.Core;
+using Lunatic.Core.Geometry;
 using System;
 
 namespace TestConsole
@@ -211,7 +212,7 @@ namespace TestConsole
 
             double az = 0.0;
             double alt = 0.0;
-            Astro.HaDecToAltAz(LunaticMath.DegToRad(latitude), LunaticMath.HrsToRad(hA), LunaticMath.DegToRad(dEC), ref alt, ref az);
+            AstroConvert.HaDecToAltAz(LunaticMath.DegToRad(latitude), LunaticMath.HrsToRad(hA), LunaticMath.DegToRad(dEC), ref alt, ref az);
             double azimuth = LunaticMath.RadToDeg(az);
             double altitude = LunaticMath.RadToDeg(alt);
             Console.WriteLine("Expecting Az/Alt: +97d08'28.9\"/+70d23'31.4\"");

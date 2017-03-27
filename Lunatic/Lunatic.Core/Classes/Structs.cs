@@ -78,14 +78,4 @@ namespace Lunatic.Core
       public double B;
       public double C;
    }
-
-
-   public struct Matrix
-   {
-      public double[,] Element;
-      public Matrix(int sizeX, int sizeY)
-      {
-         Element = new double[sizeX, sizeY];
-      }
-   }
 }

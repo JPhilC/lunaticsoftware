@@ -15,12 +15,8 @@ namespace ASCOM.Lunatic.Telescope
    /// </summary>
    public class AlignmentData : DataObjectBase
    {
-      public double OriginalTargetRA { get; set; }
-      public double OriginalTargetDEC { get; set; }
-      public double TargetRA { get; set; }
-      public double TargetDEC { get; set; }
-      public double EncoderRA { get; set; }
-      public double EncoderDEC { get; set; }
+      public double CatalogAxisPosition { get; set; }
+      public double ObservedAxisPosition { get; set; }
       public DateTime AlignmentTime { get; set; }
    }
 

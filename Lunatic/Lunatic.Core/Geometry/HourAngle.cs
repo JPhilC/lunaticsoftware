@@ -9,7 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace Lunatic.Core
+namespace Lunatic.Core.Geometry
 {
    public enum HourAngleFormat
    {
@@ -99,9 +99,14 @@ namespace Lunatic.Core
          _NumberDecimalDigitsForSeconds = 2;
       }
 
-      public HourAngle(double hour)
+      public HourAngle(double hour, bool radians = false)
       {
-         _Value = hour;
+         if (radians) {
+            _Value = (double)HourAngle.RadiansToHours(hour);
+         }
+         else {
+            _Value = hour;
+         }
          _Format = HourAngleFormat.DecimalHours;
          _HasBeenSet = true;
 

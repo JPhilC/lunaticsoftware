@@ -29,6 +29,16 @@ namespace Lunatic.Core
       public static double RadToDeg(double Rad) { return (Rad * Constants.RAD_DEG); }
       public static double RadToMin(double Rad) { return (Rad * Constants.RAD_MIN); }
       public static double RadToSec(double Rad) { return (Rad * Constants.RAD_SEC); }
+      public static double Range2Pi(double rad)
+      {
+         while (rad < 0.0) {
+            rad = rad + Constants.TWO_PI;
+         }
+         while (rad >= Constants.TWO_PI) {
+            rad = rad - Constants.TWO_PI;
+         }
+         return rad;
+      }
 
       public static double Range24(double vha)
       {
@@ -90,6 +100,11 @@ namespace Lunatic.Core
          return rangedValue;
       }
 
+      /// <summary>
+      /// Get the local sidereal time at the current time for a given longitude
+      /// </summary>
+      /// <param name="longitude">Longitude of observation site in decimal degrees</param>
+      /// <returns>Local Sidereal Time in decimal hours.</returns>
       public static double LocalSiderealTime(double longitude)
       {
          return LocalSiderealTime(longitude, DateTime.Now);
@@ -113,6 +128,12 @@ namespace Lunatic.Core
          //return siderealTime;
       }
 
+      /// <summary>
+      /// Return the Sidereal Time for a given longitude and local time.
+      /// </summary>
+      /// <param name="longitude">Longitude of observation site in decimal degrees</param>
+      /// <param name="localTime">Local date and time.</param>
+      /// <returns></returns>
       public static double LocalSiderealTime(double longitude, DateTime localTime)
       {
          // get greenwich sidereal time: https://en.wikipedia.org/wiki/Sidereal_time

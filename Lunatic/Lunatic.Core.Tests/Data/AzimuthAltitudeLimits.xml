@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Rows xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:x="urn:Row">
+  <!-- Schema -->
+  <xsd:schema targetNamespace="urn:Row" attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema" >
+    <xsd:element name="Row">
+      <xsd:complexType>
+        <xsd:sequence>
+          <xsd:element type="xsd:double" name="Altitude"/>
+          <xsd:element type="xsd:double" name="Azimuth"/>
+          <xsd:element type="xsd:string" name="FailMessage"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <!--End Schema-->
+  <!-- Azimuth outside limits-->
+  <x:Row>
+    <x:Altitude>0.0</x:Altitude>
+    <x:Azimuth>-0.000027777</x:Azimuth>
+    <x:FailMessage>Azimuth lower limit exceeded.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>0.0</x:Altitude>
+    <x:Azimuth>360.0</x:Azimuth>
+    <x:FailMessage>Azimuth upper limited exceeded (360).</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>00.0</x:Altitude>
+    <x:Azimuth>360.000027777</x:Azimuth>
+    <x:FailMessage>Azimuth lower limited exceeded.</x:FailMessage>
+  </x:Row>
+  <!-- Altitude outside limits-->
+  <x:Row>
+    <x:Altitude>90.000027777</x:Altitude>
+    <x:Azimuth>0.0</x:Azimuth>
+    <x:FailMessage>Altitude upper limit exceeded</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>-90.000027777</x:Altitude>
+    <x:Azimuth>0.0</x:Azimuth>
+    <x:FailMessage>Altitude lower limit exceeded.</x:FailMessage>
+  </x:Row>
+</Rows>

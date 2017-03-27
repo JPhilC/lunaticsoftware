@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Lunatic.Core
+namespace Lunatic.Core.Geometry
 {
-   public class Astro
+   public class AstroConvert
    {
       static double lastLatitide;
       static double sinLatitude = 0.0;
@@ -23,6 +23,22 @@ namespace Lunatic.Core
             hourAngle -= 2 * Math.PI;
       }
 
+
+      public static EquatorialCoordinate GetEquatorial(AltAzCoordinate altAz, Angle latitude, Angle longitude, DateTime localTime)
+      {
+         double hourAngle = 0.0;
+         double declination = 0.0;
+         aaha_aux(latitude.Radians, altAz.Azimuth.Radians, altAz.Altitude.Radians, ref hourAngle, ref declination);
+         if (hourAngle > Math.PI)
+            hourAngle -= 2 * Math.PI;
+
+         // LHA = LST - Ra
+         double lst = LunaticMath.LocalSiderealTime(longitude.Value, localTime);
+         double rightAscension = lst - hourAngle;
+         return new EquatorialCoordinate(new HourAngle(rightAscension, true), new Angle(declination, true), longitude, localTime);
+      }
+
+
       /* given geographical (n+, radians), lt, hour angle (radians), ha, and
           * declination (radians), dec, return altitude (up+, radians), alt, and
          * azimuth (angle round to the east from north+, radians),
@@ -30,6 +46,14 @@ namespace Lunatic.Core
       public static void HaDecToAltAz(double latitude, double hourAngle, double declination, ref double altitude, ref double azimuth)
       {
          aaha_aux(latitude, hourAngle, declination, ref azimuth, ref altitude);
+      }
+
+      public static AltAzCoordinate GetAltAz(EquatorialCoordinate equatorial, Angle latitude)
+      {
+         double alt = 0.0;
+         double az = 0.0;
+         aaha_aux(latitude.Radians, equatorial.Ha.Radians, equatorial.Declination.Radians, ref alt, ref az);
+         return new AltAzCoordinate(new Angle(alt, true), new Angle(az, true));
       }
 
       /* the actual formula is the same for both transformation directions so

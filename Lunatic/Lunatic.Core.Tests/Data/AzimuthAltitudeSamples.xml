@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Rows xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:x="urn:Row">
+  <!-- Schema -->
+  <xsd:schema targetNamespace="urn:Row" attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema" >
+    <xsd:element name="Row">
+      <xsd:complexType>
+        <xsd:sequence>
+          <xsd:element type="xsd:double" name="Altitude"/>
+          <xsd:element type="xsd:double" name="Azimuth"/>
+          <xsd:element type="xsd:double" name="Tolerance"/>
+          <xsd:element type="xsd:string" name="TestCaption"/>
+          <xsd:element type="xsd:string" name="FailMessage"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <!--End Schema-->
+  <!-- Edge cases for 0.0 Azimuth -->
+  <x:Row>
+    <x:Altitude>0.0</x:Altitude>
+    <x:Azimuth>0.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>90.0</x:Altitude>
+    <x:Azimuth>0.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>-90.0</x:Altitude>
+    <x:Azimuth>0.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <!-- Edge cases for 90.0 Azimuth -->
+  <x:Row>
+    <x:Altitude>0.0</x:Altitude>
+    <x:Azimuth>90.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>90.0</x:Altitude>
+    <x:Azimuth>90.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>-90.0</x:Altitude>
+    <x:Azimuth>90.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <!-- Edge cases for 270.0 Azimuth -->
+  <x:Row>
+    <x:Altitude>0.0</x:Altitude>
+    <x:Azimuth>270.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>90.0</x:Altitude>
+    <x:Azimuth>270.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>-90.0</x:Altitude>
+    <x:Azimuth>270.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <!-- Mid quadrant cases for 45.0 Azimuth -->
+  <x:Row>
+    <x:Altitude>0.0</x:Altitude>
+    <x:Azimuth>45.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>45.0</x:Altitude>
+    <x:Azimuth>45.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>-45.0</x:Altitude>
+    <x:Azimuth>45.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <!-- Mid quadrant cases for 135.0 Azimuth -->
+  <x:Row>
+    <x:Altitude>0.0</x:Altitude>
+    <x:Azimuth>135.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>45.0</x:Altitude>
+    <x:Azimuth>135.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>-45.0</x:Altitude>
+    <x:Azimuth>135.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <!-- Mid quadrant cases for 225.0 Azimuth -->
+  <x:Row>
+    <x:Altitude>0.0</x:Altitude>
+    <x:Azimuth>225.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>45.0</x:Altitude>
+    <x:Azimuth>225.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>-45.0</x:Altitude>
+    <x:Azimuth>225.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <!-- Mid quadrant cases for 315.0 Azimuth -->
+  <x:Row>
+    <x:Altitude>0.0</x:Altitude>
+    <x:Azimuth>315.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>45.0</x:Altitude>
+    <x:Azimuth>315.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+  <x:Row>
+    <x:Altitude>-45.0</x:Altitude>
+    <x:Azimuth>315.0</x:Azimuth>
+    <x:Tolerance>0.000027777</x:Tolerance>
+    <x:TestCaption>Az={0}, Alt={1}</x:TestCaption>
+    <x:FailMessage>{0} failed.</x:FailMessage>
+  </x:Row>
+</Rows>
