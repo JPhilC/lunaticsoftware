@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.Lunatic.TelescopeServ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lunatic.TelescopeControl", "Lunatic.TelescopeControl\Lunatic.TelescopeControl.csproj", "{F9742CCF-8238-488E-98C4-5E450A44526C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lunatic.Telescope", "Lunatic.Telescope\Lunatic.Telescope.csproj", "{BB9B56B9-0E22-4553-BBF9-2F5DDA2A8F24}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lunatic.SyntaController", "Lunatic.SyntaController\Lunatic.SyntaController.csproj", "{8424511E-54D1-42D3-86FF-1E56569FE2B8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test Projects", "Test Projects", "{0CF99B5A-BFEF-4670-9C83-CD6F7E2387C8}"
@@ -102,18 +100,6 @@ Global
 		{F9742CCF-8238-488E-98C4-5E450A44526C}.Release|x64.Build.0 = Release|x64
 		{F9742CCF-8238-488E-98C4-5E450A44526C}.Release|x86.ActiveCfg = Release|Any CPU
 		{F9742CCF-8238-488E-98C4-5E450A44526C}.Release|x86.Build.0 = Release|Any CPU
-		{BB9B56B9-0E22-4553-BBF9-2F5DDA2A8F24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BB9B56B9-0E22-4553-BBF9-2F5DDA2A8F24}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BB9B56B9-0E22-4553-BBF9-2F5DDA2A8F24}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{BB9B56B9-0E22-4553-BBF9-2F5DDA2A8F24}.Debug|x64.Build.0 = Debug|Any CPU
-		{BB9B56B9-0E22-4553-BBF9-2F5DDA2A8F24}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{BB9B56B9-0E22-4553-BBF9-2F5DDA2A8F24}.Debug|x86.Build.0 = Debug|Any CPU
-		{BB9B56B9-0E22-4553-BBF9-2F5DDA2A8F24}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BB9B56B9-0E22-4553-BBF9-2F5DDA2A8F24}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BB9B56B9-0E22-4553-BBF9-2F5DDA2A8F24}.Release|x64.ActiveCfg = Release|Any CPU
-		{BB9B56B9-0E22-4553-BBF9-2F5DDA2A8F24}.Release|x64.Build.0 = Release|Any CPU
-		{BB9B56B9-0E22-4553-BBF9-2F5DDA2A8F24}.Release|x86.ActiveCfg = Release|Any CPU
-		{BB9B56B9-0E22-4553-BBF9-2F5DDA2A8F24}.Release|x86.Build.0 = Release|Any CPU
 		{8424511E-54D1-42D3-86FF-1E56569FE2B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8424511E-54D1-42D3-86FF-1E56569FE2B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8424511E-54D1-42D3-86FF-1E56569FE2B8}.Debug|x64.ActiveCfg = Debug|Any CPU
