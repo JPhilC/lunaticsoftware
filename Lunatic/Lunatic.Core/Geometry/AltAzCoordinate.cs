@@ -153,10 +153,21 @@ namespace Lunatic.Core.Geometry
          return (obj is AltAzCoordinate
                  && this == (AltAzCoordinate)obj);
       }
+      public static AltAzCoordinate operator -(AltAzCoordinate pos1, AltAzCoordinate pos2)
+      {
+         return new AltAzCoordinate(pos1.Altitude - pos2.Altitude, pos1.Azimuth - pos2.Azimuth);
+      }
+
+      public static AltAzCoordinate operator +(AltAzCoordinate pos1, AltAzCoordinate pos2)
+      {
+         return new AltAzCoordinate(pos1.Altitude + pos2.Altitude, pos1.Azimuth + pos2.Azimuth);
+      }
 
       public override string ToString()
       {
-         return string.Format("Alt/Az = {0}/{1}", Altitude, Azimuth);
+         return string.Format("Alt/Az = {0}/{1}", 
+            Altitude.ToString(AngularFormat.DegreesMinutesSeconds, false), 
+            Azimuth.ToString(AngularFormat.DegreesMinutesSeconds, false));
       }
 
       /// <summary>
@@ -192,7 +203,7 @@ namespace Lunatic.Core.Geometry
                az = -1 * (Math.PI / 2.0);
             }
          }
-         return new AltAzCoordinate((alt - ALT_OFFSET), LunaticMath.Range360(LunaticMath.RadToDeg(az)));
+         return new AltAzCoordinate((alt - ALT_OFFSET), AstroConvert.Range360(AstroConvert.RadToDeg(az)));
       }
 
    }

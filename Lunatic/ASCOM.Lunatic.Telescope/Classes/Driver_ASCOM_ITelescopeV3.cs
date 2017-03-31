@@ -7,6 +7,7 @@ using Lunatic.Core;
 using System.Threading;
 using ASCOM.Lunatic.Telescope;
 using ASCOM.Lunatic.Telescope.Classes;
+using Lunatic.Core.Geometry;
 
 /// <summary>
 /// The ASCOM ITelescopeV3 implimentation for the driver.
@@ -765,7 +766,7 @@ End Sub
             //siderealTime += SiteLongitude / 360.0 * 24.0;
             //// reduce to the range 0 to 24 hours
             //siderealTime = siderealTime % 24.0;
-            double siderealTime = LunaticMath.LocalSiderealTime(SiteLongitude);
+            double siderealTime = AstroConvert.LocalApparentSiderealTime(SiteLongitude);
             _Logger.LogMessage("SiderealTime", "Get - " + siderealTime.ToString());
             return siderealTime;
          }
@@ -1148,7 +1149,7 @@ End Sub
          double tRA;
          double tHA;
          int tPier;
-         Coordt tmpCoord;
+         CarteseanCoordinate tmpCoord;
 
          bool result = true;
 
@@ -1178,19 +1179,19 @@ End Sub
                   case SyncAlignmentModeOptions.NearestStar:
                      //   Case 2
                      // ' nearest
-                     tmpCoord = LunaticMath.DeltaSyncMatrixMap(raAxisPositon, decAxisPosition);
+                     tmpCoord = AstroConvert.DeltaSyncMatrixMap(raAxisPositon, decAxisPosition);
                      currentRAEncoder = tmpCoord.X;
                      currentDECEncoder = tmpCoord.Y;
                      break;
 
                   default:
                      // 'n-star+nearest
-                     tmpCoord = LunaticMath.DeltaMatrixReverseMap(raAxisPositon, decAxisPosition);
+                     tmpCoord = AstroConvert.DeltaMatrixReverseMap(raAxisPositon, decAxisPosition);
                      currentRAEncoder = tmpCoord.X;
                      currentDECEncoder = tmpCoord.Y;
 
-                     if (tmpCoord.F == 0) {
-                        tmpCoord = LunaticMath.DeltaSyncMatrixMap(raAxisPositon, decAxisPosition);
+                     if (!tmpCoord.Flag) {
+                        tmpCoord = AstroConvert.DeltaSyncMatrixMap(raAxisPositon, decAxisPosition);
                         currentRAEncoder = tmpCoord.X;
                         currentDECEncoder = tmpCoord.Y;
                      }
@@ -1200,7 +1201,7 @@ End Sub
 
 
             //TODO: HC.EncoderTimer.Enabled = True
-            tHA = LunaticMath.RangeHA(rightAscension - LunaticMath.LocalSiderealTime(longitude));
+            tHA = AstroConvert.RangeHA(rightAscension - AstroConvert.LocalApparentSiderealTime(longitude));
 
 
             if (tHA < 0) {
@@ -1210,7 +1211,7 @@ End Sub
                else {
                   tPier = 0;
                }
-               tRA = LunaticMath.Range24(rightAscension - 12);
+               tRA = AstroConvert.Range24(rightAscension - 12);
             }
             else {
                if (hemisphere == HemisphereOption.Northern) {
@@ -1225,8 +1226,8 @@ End Sub
             //'Compute for Sync RA/DEC Encoder Values
 
 
-            targetRAEncoder = LunaticMath.RAAxisPositionFromRA(tRA, 0, longitude, global::Lunatic.Core.Constants.RAEncoder_Zero_pos, hemisphere);
-            targetDECEncoder = LunaticMath.DECAxisPositionFromDEC(declination, tPier, global::Lunatic.Core.Constants.DECEncoder_Zero_pos, hemisphere);
+            targetRAEncoder = AstroConvert.RAAxisPositionFromRA(tRA, 0, longitude, global::Lunatic.Core.Constants.RAEncoder_Zero_pos, hemisphere);
+            targetDECEncoder = AstroConvert.DECAxisPositionFromDEC(declination, tPier, global::Lunatic.Core.Constants.DECEncoder_Zero_pos, hemisphere);
 
 
             if (Settings.DisableSyncLimit) {

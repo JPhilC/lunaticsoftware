@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.Lunatic.TelescopeDriv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lunatic.Core", "Lunatic.Core\Lunatic.Core.csproj", "{2E23D13A-8CB0-434B-9259-7789157E8677}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "TestConsole\TestConsole.csproj", "{AE04FA3A-20CF-4C94-A49E-B5BB9BD8C714}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.Lunatic.TelescopeServer", "ASCOM.Lunatic.TelescopeServer\ASCOM.Lunatic.TelescopeServer.csproj", "{C2F85C09-CAF9-49FD-8BDC-80A8136D3AF3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lunatic.TelescopeControl", "Lunatic.TelescopeControl\Lunatic.TelescopeControl.csproj", "{F9742CCF-8238-488E-98C4-5E450A44526C}"
@@ -64,18 +62,6 @@ Global
 		{2E23D13A-8CB0-434B-9259-7789157E8677}.Release|x64.Build.0 = Release|x64
 		{2E23D13A-8CB0-434B-9259-7789157E8677}.Release|x86.ActiveCfg = Release|Any CPU
 		{2E23D13A-8CB0-434B-9259-7789157E8677}.Release|x86.Build.0 = Release|Any CPU
-		{AE04FA3A-20CF-4C94-A49E-B5BB9BD8C714}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AE04FA3A-20CF-4C94-A49E-B5BB9BD8C714}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AE04FA3A-20CF-4C94-A49E-B5BB9BD8C714}.Debug|x64.ActiveCfg = Debug|x64
-		{AE04FA3A-20CF-4C94-A49E-B5BB9BD8C714}.Debug|x64.Build.0 = Debug|x64
-		{AE04FA3A-20CF-4C94-A49E-B5BB9BD8C714}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{AE04FA3A-20CF-4C94-A49E-B5BB9BD8C714}.Debug|x86.Build.0 = Debug|Any CPU
-		{AE04FA3A-20CF-4C94-A49E-B5BB9BD8C714}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AE04FA3A-20CF-4C94-A49E-B5BB9BD8C714}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AE04FA3A-20CF-4C94-A49E-B5BB9BD8C714}.Release|x64.ActiveCfg = Release|x64
-		{AE04FA3A-20CF-4C94-A49E-B5BB9BD8C714}.Release|x64.Build.0 = Release|x64
-		{AE04FA3A-20CF-4C94-A49E-B5BB9BD8C714}.Release|x86.ActiveCfg = Release|Any CPU
-		{AE04FA3A-20CF-4C94-A49E-B5BB9BD8C714}.Release|x86.Build.0 = Release|Any CPU
 		{C2F85C09-CAF9-49FD-8BDC-80A8136D3AF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C2F85C09-CAF9-49FD-8BDC-80A8136D3AF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2F85C09-CAF9-49FD-8BDC-80A8136D3AF3}.Debug|x64.ActiveCfg = Debug|x64

@@ -68,6 +68,8 @@ namespace Lunatic.Core.Geometry
       protected void GenRef3()
       {
          double sqrt1, sqrt2;
+         _lmn3 = new Vector(3);
+         _LMN3 = new Vector(3);
          sqrt1 = (1 / (Math.Sqrt(Math.Pow(((_lmn1[1] * _lmn2[2]) - (_lmn1[2] * _lmn2[1])), 2) +
                      Math.Pow(((_lmn1[2] * _lmn2[0]) - (_lmn1[0] * _lmn2[2])), 2) +
                      Math.Pow(((_lmn1[0] * _lmn2[1]) - (_lmn1[1] * _lmn2[0])), 2))
@@ -100,7 +102,6 @@ namespace Lunatic.Core.Geometry
       /// </summary>
       const double _k = 1.002737908;    // // Constant.. Relationship between the solar time (M) and the sidereal time (S): (S = M * 1.002737908)
       DateTime _timeZero;
-      Angle _longitude;
 
 
       /// <summary>
@@ -117,42 +118,33 @@ namespace Lunatic.Core.Geometry
 
       public TakiEQMountMapper(MountCoordinate ref1, MountCoordinate ref2, MountCoordinate ref3, DateTime timeZero)
       {
-         if (ref2.SiteLongitude.Value != ref1.SiteLongitude.Value ||
-            ref3.SiteLongitude.Value != ref1.SiteLongitude.Value) {
-            throw new ArgumentException("All reference coordinates must share the same longitude.");
-         }
          //TODO: Sort out what time should be used.
          _timeZero = timeZero;
-         _longitude = ref1.Equatorial.SiteLongitude;
-         _LMN1 = GetEVC(ref1.Equatorial);
-         _lmn1 = GetHVC(ref1.SuggestedAxes);
-         _LMN2 = GetEVC(ref2.Equatorial);
-         _lmn2 = GetHVC(ref2.SuggestedAxes);
-         _LMN3 = GetEVC(ref3.Equatorial);
-         _lmn3 = GetHVC(ref3.SuggestedAxes);
+         _lmn1 = GetHVC(ref1.ObservedAxes);
+         _LMN1 = GetEVC(ref1.Equatorial, ref1.AxisObservationTime);
+         _lmn2 = GetHVC(ref2.ObservedAxes);
+         _LMN2 = GetEVC(ref2.Equatorial, ref3.AxisObservationTime);
+         _lmn3 = GetHVC(ref3.ObservedAxes);
+         _LMN3 = GetEVC(ref3.Equatorial, ref3.AxisObservationTime);
          setT();
       }
 
       public TakiEQMountMapper(MountCoordinate ref1, MountCoordinate ref2, DateTime timeZero)
       {
-         if (ref1.SiteLongitude.Value != ref2.SiteLongitude.Value) {
-            throw new ArgumentException("All reference coordinates must share the same longitude.");
-         }
-         //TODO: Sort out what time should be used.
          _timeZero = timeZero;
-         _LMN1 = GetEVC(ref1.Equatorial);
-         _lmn1 = GetHVC(ref1.SuggestedAxes);
-         _LMN2 = GetEVC(ref2.Equatorial);
-         _lmn2 = GetHVC(ref2.SuggestedAxes);
+         _lmn1 = GetHVC(ref1.ObservedAxes);
+         _LMN1 = GetEVC(ref1.Equatorial, ref1.AxisObservationTime);
+         _lmn2 = GetHVC(ref2.ObservedAxes);
+         _LMN2 = GetEVC(ref2.Equatorial, ref2.AxisObservationTime);
          // 
          GenRef3();
          setT();
       }
 
-      public AxisPosition GetAxisPosition(EquatorialCoordinate eq)
+      public AxisPosition GetAxisPosition(EquatorialCoordinate eq, DateTime targetTime)
       {
 
-         Vector EVC = GetEVC(eq);
+         Vector EVC = GetEVC(eq, targetTime);
          Vector HVC = new Vector(0.0, 0.0, 0.0);
          for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
@@ -160,20 +152,20 @@ namespace Lunatic.Core.Geometry
             }
          }
 
-         return new AxisPosition(LunaticMath.Range2Pi(Math.Atan2(HVC[1], HVC[0])), LunaticMath.Range2Pi(Math.Asin(HVC[2])));
+         return new AxisPosition(AstroConvert.Range2Pi(Math.Atan2(HVC[1], HVC[0])), AstroConvert.Range2Pi(Math.Asin(HVC[2])));
       }
 
       public EquatorialCoordinate GetEquatorialCoords(AxisPosition axes, DateTime localTime)
       {
          Vector EVC = new Vector(0.0, 0.0, 0.0);
          Vector HVC = GetHVC(axes);
-         double deltaTime = localTime.ToOADate() - _timeZero.ToOADate();
+         double deltaTime = AstroConvert.HrsToRad((localTime.ToOADate() - _timeZero.ToOADate())*24);   // (OADate-OADate)*24 yealds hours, need to convert to Radians
          for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                EVC[i] += _iT[i, j] * HVC[j];
             }
          }
-         return new EquatorialCoordinate(Math.Atan2(EVC[1], EVC[0]) + (_k * deltaTime), Math.Asin(EVC[2]), _longitude.Value, localTime);
+         return new EquatorialCoordinate(Math.Atan2(EVC[1], EVC[0]) + (_k * deltaTime), Math.Asin(EVC[2]));
       }
 
 
@@ -183,94 +175,94 @@ namespace Lunatic.Core.Geometry
       /// <param name="coord"></param>
       /// <param name="time"></param>
       /// <returns></returns>
-      private Vector GetEVC(EquatorialCoordinate coord)
+      private Vector GetEVC(EquatorialCoordinate coord, DateTime observationTime)
       {
-         double deltaTime = coord.ObservedWhen.ToOADate() - _timeZero.ToOADate();
+         double deltaTime = AstroConvert.HrsToRad((observationTime.ToOADate() - _timeZero.ToOADate())*24);  // (OADate-OADate)*24 yealds hours, need to convert to Radians
          Vector evc = new Vector(0.0, 0.0, 0.0);
-         evc[0] = Math.Cos(coord.Declination) * Math.Cos(coord.RightAcension - (_k * deltaTime));
-         evc[1] = Math.Cos(coord.Declination) * Math.Sin(coord.RightAcension - (_k * deltaTime));
-         evc[2] = Math.Sin(coord.Declination);
+         evc[0] = Math.Cos(coord.Declination.Radians) * Math.Cos(coord.RightAcension.Radians - (_k * deltaTime));
+         evc[1] = Math.Cos(coord.Declination.Radians) * Math.Sin(coord.RightAcension.Radians - (_k * deltaTime));
+         evc[2] = Math.Sin(coord.Declination.Radians);
          return evc;
       }
 
       private Vector GetHVC(AxisPosition axes)
       {
          Vector hvc = new Vector(0.0, 0.0, 0.0);
-         hvc[0] = Math.Cos(axes.DecAxis) * Math.Cos(axes.RAAxis);
-         hvc[1] = Math.Cos(axes.DecAxis) * Math.Sin(axes.RAAxis);
-         hvc[2] = Math.Sin(axes.DecAxis);
+         hvc[0] = Math.Cos(axes.DecAxis.Radians) * Math.Cos(axes.RAAxis.Radians);
+         hvc[1] = Math.Cos(axes.DecAxis.Radians) * Math.Sin(axes.RAAxis.Radians);
+         hvc[2] = Math.Sin(axes.DecAxis.Radians);
          return hvc;
       }
 
    }
 
 
-   /// <summary>
-   /// A class based on the logic of Tosimi Taki's matrix method of coordinate mapping
-   /// modified for interpoliting observed axis pospositios from theoretical positisions.
-   /// </summary>
-   public class TakiAlignmentMapper:TakiBase
-   {
+   ///// <summary>
+   ///// A class based on the logic of Tosimi Taki's matrix method of coordinate mapping
+   ///// modified for interpoliting observed axis pospositios from theoretical positisions.
+   ///// </summary>
+   //public class TakiAlignmentMapper:TakiBase
+   //{
 
-      public TakiAlignmentMapper(MountCoordinate ref1, MountCoordinate ref2, MountCoordinate ref3)
-      {
-         _LMN1 = GetVC(ref1.SuggestedAxes);
-         _lmn1 = GetVC(ref1.ObservedAxes);
-         _LMN2 = GetVC(ref2.SuggestedAxes);
-         _lmn2 = GetVC(ref2.ObservedAxes);
-         _LMN3 = GetVC(ref3.SuggestedAxes);
-         _lmn3 = GetVC(ref3.ObservedAxes);
-         setT();
-      }
+   //   public TakiAlignmentMapper(MountCoordinate ref1, MountCoordinate ref2, MountCoordinate ref3)
+   //   {
+   //      _LMN1 = GetVC(ref1.SuggestedAxes);
+   //      _lmn1 = GetVC(ref1.ObservedAxes);
+   //      _LMN2 = GetVC(ref2.SuggestedAxes);
+   //      _lmn2 = GetVC(ref2.ObservedAxes);
+   //      _LMN3 = GetVC(ref3.SuggestedAxes);
+   //      _lmn3 = GetVC(ref3.ObservedAxes);
+   //      setT();
+   //   }
 
-      public TakiAlignmentMapper(MountCoordinate ref1, MountCoordinate ref2)
-      {
-         _LMN1 = GetVC(ref1.SuggestedAxes);
-         _lmn1 = GetVC(ref1.ObservedAxes);
-         _LMN2 = GetVC(ref2.SuggestedAxes);
-         _lmn2 = GetVC(ref2.ObservedAxes);
-         // 
-         GenRef3();
-         setT();
-      }
+   //   public TakiAlignmentMapper(MountCoordinate ref1, MountCoordinate ref2)
+   //   {
+   //      _LMN1 = GetVC(ref1.SuggestedAxes);
+   //      _lmn1 = GetVC(ref1.ObservedAxes);
+   //      _LMN2 = GetVC(ref2.SuggestedAxes);
+   //      _lmn2 = GetVC(ref2.ObservedAxes);
+   //      // 
+   //      GenRef3();
+   //      setT();
+   //   }
 
-      public AxisPosition GetObservedPosition(AxisPosition theoretical)
-      {
+   //   public AxisPosition GetObservedPosition(AxisPosition theoretical)
+   //   {
 
-         Vector TVC = GetVC(theoretical);
-         Vector OVC = new Vector(0.0, 0.0, 0.0);
+   //      Vector TVC = GetVC(theoretical);
+   //      Vector OVC = new Vector(0.0, 0.0, 0.0);
 
-         for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-               OVC[i] += _T[i, j] * OVC[j];
-            }
-         }
-         return new AxisPosition(Math.Atan2(OVC[1], OVC[0]), Math.Asin(OVC[2]));
-      }
+   //      for (int i = 0; i < 3; i++) {
+   //         for (int j = 0; j < 3; j++) {
+   //            OVC[i] += _T[i, j] * OVC[j];
+   //         }
+   //      }
+   //      return new AxisPosition(Math.Atan2(OVC[1], OVC[0]), Math.Asin(OVC[2]));
+   //   }
 
-      public AxisPosition GetTheoreticalPosition(AxisPosition observed)
-      {
-         Vector TVC = new Vector(0.0, 0.0, 0.0);
-         Vector OVC = GetVC(observed);
+   //   public AxisPosition GetTheoreticalPosition(AxisPosition observed)
+   //   {
+   //      Vector TVC = new Vector(0.0, 0.0, 0.0);
+   //      Vector OVC = GetVC(observed);
 
-         for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-               TVC[i] += _iT[i, j] * TVC[j];
-            }
-         }
-         return new AxisPosition(Math.Atan2(TVC[1], TVC[0]), Math.Asin(TVC[2]));
-      }
+   //      for (int i = 0; i < 3; i++) {
+   //         for (int j = 0; j < 3; j++) {
+   //            TVC[i] += _iT[i, j] * TVC[j];
+   //         }
+   //      }
+   //      return new AxisPosition(Math.Atan2(TVC[1], TVC[0]), Math.Asin(TVC[2]));
+   //   }
 
 
-      private Vector GetVC(AxisPosition axes)
-      {
-         Vector hvc = new Vector(0.0, 0.0, 0.0);
-         hvc[0] = Math.Cos(axes.DecAxis) * Math.Cos(axes.RAAxis);
-         hvc[1] = Math.Cos(axes.DecAxis) * Math.Sin(axes.RAAxis);
-         hvc[2] = Math.Sin(axes.DecAxis);
-         return hvc;
-      }
+   //   private Vector GetVC(AxisPosition axes)
+   //   {
+   //      Vector hvc = new Vector(0.0, 0.0, 0.0);
+   //      hvc[0] = Math.Cos(axes.DecAxis) * Math.Cos(axes.RAAxis);
+   //      hvc[1] = Math.Cos(axes.DecAxis) * Math.Sin(axes.RAAxis);
+   //      hvc[2] = Math.Sin(axes.DecAxis);
+   //      return hvc;
+   //   }
 
-   }
+   //}
 
 }

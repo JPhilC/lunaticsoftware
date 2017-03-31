@@ -83,12 +83,22 @@ namespace Lunatic.Core.Geometry
       /// </summary>
       public static bool operator ==(AxisPosition pos1, AxisPosition pos2)
       {
-         return (pos1.RAAxis.Value == pos2.RAAxis.Value && pos1.DecAxis.Value == pos2.DecAxis.Value);
+         return (pos1.RAAxis.Radians == pos2.RAAxis.Radians && pos1.DecAxis.Radians == pos2.DecAxis.Radians);
       }
 
       public static bool operator !=(AxisPosition pos1, AxisPosition pos2)
       {
          return !(pos1 == pos2);
+      }
+
+      public static AxisPosition operator -(AxisPosition pos1, AxisPosition pos2)
+      {
+         return new AxisPosition(pos1.RAAxis.Radians - pos2.RAAxis.Radians, pos1.DecAxis.Radians - pos2.DecAxis.Radians);
+      }
+
+      public static AxisPosition operator +(AxisPosition pos1, AxisPosition pos2)
+      {
+         return new AxisPosition(pos1.RAAxis.Radians + pos2.RAAxis.Radians, pos1.DecAxis.Radians + pos2.DecAxis.Radians);
       }
 
       public override int GetHashCode()
@@ -109,6 +119,12 @@ namespace Lunatic.Core.Geometry
                  && this == (AxisPosition)obj);
       }
 
+
+      public bool Equals(AxisPosition obj, double toleranceRadians)
+      {
+         return ((Math.Abs(obj.RAAxis.Radians - this.RAAxis.Radians) < toleranceRadians)
+            && (Math.Abs(obj.DecAxis.Radians - this.DecAxis.Radians) < toleranceRadians));
+      }
 
       public override string ToString()
       {

@@ -23,6 +23,9 @@ namespace Lunatic.Core
 {
    public static class Constants
    {
+      public const double UTIL_LOCAL2JULIAN_TIME_CORRECTION = 0.2;      // Don't know why but we seem to have to add 0.2 secs to get accurate RA/Dec -> AltAz conversions.
+      public const double TENTH_SECOND = 27.778E-6;      // 1/10 second as a decimal degree or hour.
+
       public const double TWO_PI = 6.28318530718;  // 2 * Math.PI;
       public const double HALF_PI = 1.5707963268;  // Math.PI / 2;
       public const string OrganisationName = "LunaticSoftware";

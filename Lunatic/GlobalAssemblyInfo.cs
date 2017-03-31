@@ -4,7 +4,7 @@
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyCompany("LunaticSoftware")]
-[assembly: AssemblyCopyright("Copyright ©  2017 LunaticSoftware.org")]
+[assembly: AssemblyCopyright("MIT Licence, Copyright ©  2017 Phil Crompton")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

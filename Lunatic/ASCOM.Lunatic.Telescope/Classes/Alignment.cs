@@ -71,11 +71,11 @@ namespace ASCOM.Lunatic.Telescope.Classes
 
 
          //    ' look at current position and detemrine if flipped
-         RAHours = LunaticMath.AxisHours(global::Lunatic.Core.Constants.RAEncoder_Zero_pos, eRA, hemisphere);
+         RAHours = AstroConvert.AxisHours(global::Lunatic.Core.Constants.RAEncoder_Zero_pos, eRA, hemisphere);
          isFlipped = (RAHours > 12);
 
 
-         tHA = LunaticMath.RangeHA(vRA - LunaticMath.LocalSiderealTime(longitude));
+         tHA = AstroConvert.RangeHA(vRA - AstroConvert.LocalApparentSiderealTime(longitude));
          if (tHA < 0) {
             if (isFlipped) {
                if (hemisphere == HemisphereOption.Northern) {
@@ -93,7 +93,7 @@ namespace ASCOM.Lunatic.Telescope.Classes
                else {
                   tPier = 0;
                }
-               tRA = LunaticMath.Range24(vRA - 12);
+               tRA = AstroConvert.Range24(vRA - 12);
             }
          }
          else {
@@ -104,7 +104,7 @@ namespace ASCOM.Lunatic.Telescope.Classes
                else {
                   tPier = 0;
                }
-               tRA = LunaticMath.Range24(vRA - 12);
+               tRA = AstroConvert.Range24(vRA - 12);
             }
             else {
                if (hemisphere == HemisphereOption.Northern) {

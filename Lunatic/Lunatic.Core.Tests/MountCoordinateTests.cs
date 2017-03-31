@@ -1,6 +1,8 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Lunatic.Core.Geometry;
+using ASCOM.Utilities;
+using ASCOM.Astrometry.Transform;
 
 namespace Lunatic.Core.Tests
 {
@@ -11,18 +13,30 @@ namespace Lunatic.Core.Tests
       [TestMethod]
       public void MountCoordinateRAToAltAz()
       {
-         MountCoordinate deneb = new MountCoordinate(new EquatorialCoordinate("+20h42m1.78s", "+45°20'40.6\"", "-1°20'20.54\"", _localTime),
-            new AxisPosition(0.0, 0.0),
-            new Angle("52°40'6.38\""));
-         deneb.ObservedAltAzimuth = new AltAzCoordinate("+82°39'42.0\"", "+183°53'10.5\"");
-         AltAzCoordinate altAz = deneb.SuggestedAltAzimuth;
+         double localTimeZoneOffset = TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now).TotalHours;   // Taken from Util.GetTimeZoneOffset()
+         DateTime testTime = _localTime.AddHours(localTimeZoneOffset).AddSeconds(Constants.UTIL_LOCAL2JULIAN_TIME_CORRECTION);     // Fix for daylight saving 0.2 seconds
+         using (Util util = new Util())
+         using (Transform transform = new Transform()) {
+            Angle longitude = new Angle("-1°20'20.54\"");
+            double last = AstroConvert.LocalApparentSiderealTime(longitude, testTime);
+            System.Diagnostics.Debug.WriteLine(string.Format("Local Sidereal Time = {0}, Expecting 20:44:51.7", util.HoursToHMS(last, ":", ":", "", 1)));
+            transform.SiteLatitude = new Angle("52°40'6.38\"");
+            transform.SiteLongitude = longitude;
+            transform.SiteElevation = 175.5;
+            transform.JulianDateUTC = util.DateLocalToJulian(testTime);
 
-         System.Diagnostics.Debug.WriteLine(string.Format("Az/Alt (Suggested) = {0}, Expecting {1}",
-            deneb.SuggestedAltAzimuth,
-            deneb.ObservedAltAzimuth));
+            MountCoordinate deneb = new MountCoordinate("+20h42m1.78s", "+45°20'40.6\"");
+            deneb.ObservedAltAzimuth = new AltAzCoordinate("+82°39'42.0\"", "+183°53'10.5\"");
+            AltAzCoordinate suggestedAltAz = deneb.GetAltAzimuth(transform);
 
-         bool testResult = (deneb.SuggestedAltAzimuth == deneb.ObservedAltAzimuth);
-         Assert.IsTrue(testResult);
+            System.Diagnostics.Debug.WriteLine(string.Format("{0} (Suggested), Expecting {1}",
+               suggestedAltAz,
+               deneb.ObservedAltAzimuth));
+            double tolerance = 5.0 / 3600; // 5 seconds.
+            bool testResult = ((Math.Abs(suggestedAltAz.Altitude.Value-deneb.ObservedAltAzimuth.Altitude.Value) < tolerance) 
+                  && (Math.Abs(suggestedAltAz.Azimuth.Value - deneb.ObservedAltAzimuth.Azimuth.Value) < tolerance));
+            Assert.IsTrue(testResult);
+         }
       }
    }
 }

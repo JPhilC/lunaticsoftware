@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ASCOM.Astrometry.Transform;
+using ASCOM.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,7 +30,7 @@ namespace Lunatic.Core.Geometry
       Matrix _Q;
       Matrix _M;
 
-      public Affine(List<MountCoordinate> coordinates)
+      public Affine(List<MountCoordinate> coordinates, Transform transform)
       {
          _coordinateCount = coordinates.Count;
          _axisCount = 2;   // We are working with X & Y determined from AltAzimuth coordinates
@@ -39,7 +41,8 @@ namespace Lunatic.Core.Geometry
          _to = new double[_coordinateCount][];
          int i = 0;
          foreach (MountCoordinate mc in coordinates) {
-            _from[i] = new double[2] { mc.SuggestedAltAzimuth.X, mc.SuggestedAltAzimuth.Y };
+            AltAzCoordinate suggestedAltAzimuth = mc.GetAltAzimuth(transform);
+            _from[i] = new double[2] { suggestedAltAzimuth.X, suggestedAltAzimuth.Y };
             _to[i] = new double[2] { mc.ObservedAltAzimuth.X, mc.ObservedAltAzimuth.Y };
             i++;
          }

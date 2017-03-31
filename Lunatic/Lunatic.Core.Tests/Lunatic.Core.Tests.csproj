@@ -35,6 +35,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ASCOM.Astrometry, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL" />
+    <Reference Include="ASCOM.Utilities, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
   </ItemGroup>
@@ -58,6 +60,7 @@
     <Compile Include="AffineTests.cs" />
     <Compile Include="AltAzCoordinateTests.cs" />
     <Compile Include="MountCoordinateTests.cs" />
+    <Compile Include="CoordinateOperatorOverloadTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lunatic.Core\Lunatic.Core.csproj">

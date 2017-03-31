@@ -180,9 +180,9 @@ namespace Lunatic.Core.Geometry
          foreach (Regex regex in _CadRegexes) {
             Match match = regex.Match(hour);
             if (match.Success) {
-               _Hours = Convert.ToInt32(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
-               _Minutes = Convert.ToInt32(match.Groups["Mins"].Value, CultureInfo.InvariantCulture);
-               _Seconds = Convert.ToDouble(match.Groups["Secs"].Value, CultureInfo.InvariantCulture);
+               _Hours = System.Convert.ToInt32(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
+               _Minutes = System.Convert.ToInt32(match.Groups["Mins"].Value, CultureInfo.InvariantCulture);
+               _Seconds = System.Convert.ToDouble(match.Groups["Secs"].Value, CultureInfo.InvariantCulture);
 
 
                _Value = SetHoursFromHms();
@@ -202,7 +202,7 @@ namespace Lunatic.Core.Geometry
             foreach (Regex regex in _HrsRegexes) {
                Match match = regex.Match(hour);
                if (match.Success) {
-                  _Value = Convert.ToDouble(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
+                  _Value = System.Convert.ToDouble(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
                   SetHmsFromHours(_Value);
                   _Format = HourAngleFormat.DecimalHours;
                   _HasBeenSet = true;
@@ -216,8 +216,8 @@ namespace Lunatic.Core.Geometry
                Match match = regex.Match(hour);
                if (match.Success) {
                   double minutes = 0.0;
-                  _Hours = Convert.ToInt32(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
-                  minutes = Convert.ToDouble(match.Groups["Mins"].Value, CultureInfo.InvariantCulture);
+                  _Hours = System.Convert.ToInt32(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
+                  minutes = System.Convert.ToDouble(match.Groups["Mins"].Value, CultureInfo.InvariantCulture);
 
                   _Minutes = (int)Truncate(minutes);
                   _Seconds = (minutes - (double)_Minutes) * 60.0;
@@ -234,9 +234,9 @@ namespace Lunatic.Core.Geometry
             foreach (Regex regex in _HmsRegexes) {
                Match match = regex.Match(hour);
                if (match.Success) {
-                  _Hours = Convert.ToInt32(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
-                  _Minutes = Convert.ToInt32(match.Groups["Mins"].Value, CultureInfo.InvariantCulture);
-                  _Seconds = Convert.ToDouble(match.Groups["Secs"].Value, CultureInfo.InvariantCulture);
+                  _Hours = System.Convert.ToInt32(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
+                  _Minutes = System.Convert.ToInt32(match.Groups["Mins"].Value, CultureInfo.InvariantCulture);
+                  _Seconds = System.Convert.ToDouble(match.Groups["Secs"].Value, CultureInfo.InvariantCulture);
 
                   _Value = SetHoursFromHms();
                   _Format = HourAngleFormat.HoursMinutesSeconds;

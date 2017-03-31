@@ -316,14 +316,14 @@ namespace Lunatic.Core.Geometry
                Direction direction = CheckMatchForDirection(match);
                if (direction == Direction.North
                    || direction == Direction.South) {
-                  _Degrees = Convert.ToInt32(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
-                  _Minutes = Convert.ToInt32(match.Groups["LatMin"].Value, CultureInfo.InvariantCulture);
-                  _Seconds = Convert.ToDouble(match.Groups["LatSec"].Value, CultureInfo.InvariantCulture);
+                  _Degrees = System.Convert.ToInt32(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
+                  _Minutes = System.Convert.ToInt32(match.Groups["LatMin"].Value, CultureInfo.InvariantCulture);
+                  _Seconds = System.Convert.ToDouble(match.Groups["LatSec"].Value, CultureInfo.InvariantCulture);
                }
                else {
-                  _Degrees = Convert.ToInt32(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
-                  _Minutes = Convert.ToInt32(match.Groups["LongMin"].Value, CultureInfo.InvariantCulture);
-                  _Seconds = Convert.ToDouble(match.Groups["LongSec"].Value, CultureInfo.InvariantCulture);
+                  _Degrees = System.Convert.ToInt32(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
+                  _Minutes = System.Convert.ToInt32(match.Groups["LongMin"].Value, CultureInfo.InvariantCulture);
+                  _Seconds = System.Convert.ToDouble(match.Groups["LongSec"].Value, CultureInfo.InvariantCulture);
                }
 
                if (direction == Direction.South
@@ -352,10 +352,10 @@ namespace Lunatic.Core.Geometry
                   Direction direction = CheckMatchForDirection(match);
                   if (direction == Direction.North
                       || direction == Direction.South) {
-                     _Value = Convert.ToDouble(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
+                     _Value = System.Convert.ToDouble(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
                   }
                   else {
-                     _Value = Convert.ToDouble(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
+                     _Value = System.Convert.ToDouble(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
                   }
 
                   if (direction == Direction.South
@@ -381,12 +381,12 @@ namespace Lunatic.Core.Geometry
 
                   if (direction == Direction.North
                       || direction == Direction.South) {
-                     _Degrees = Convert.ToInt32(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
-                     minutes = Convert.ToDouble(match.Groups["LatMin"].Value, CultureInfo.InvariantCulture);
+                     _Degrees = System.Convert.ToInt32(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
+                     minutes = System.Convert.ToDouble(match.Groups["LatMin"].Value, CultureInfo.InvariantCulture);
                   }
                   else {
-                     _Degrees = Convert.ToInt32(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
-                     minutes = Convert.ToDouble(match.Groups["LongMin"].Value, CultureInfo.InvariantCulture);
+                     _Degrees = System.Convert.ToInt32(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
+                     minutes = System.Convert.ToDouble(match.Groups["LongMin"].Value, CultureInfo.InvariantCulture);
                   }
 
                   _Minutes = (int)Truncate(minutes);
@@ -412,14 +412,14 @@ namespace Lunatic.Core.Geometry
                   Direction direction = CheckMatchForDirection(match);
                   if (direction == Direction.North
                       || direction == Direction.South) {
-                     _Degrees = Convert.ToInt32(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
-                     _Minutes = Convert.ToInt32(match.Groups["LatMin"].Value, CultureInfo.InvariantCulture);
-                     _Seconds = Convert.ToDouble(match.Groups["LatSec"].Value, CultureInfo.InvariantCulture);
+                     _Degrees = System.Convert.ToInt32(match.Groups["LatDeg"].Value, CultureInfo.InvariantCulture);
+                     _Minutes = System.Convert.ToInt32(match.Groups["LatMin"].Value, CultureInfo.InvariantCulture);
+                     _Seconds = System.Convert.ToDouble(match.Groups["LatSec"].Value, CultureInfo.InvariantCulture);
                   }
                   else {
-                     _Degrees = Convert.ToInt32(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
-                     _Minutes = Convert.ToInt32(match.Groups["LongMin"].Value, CultureInfo.InvariantCulture);
-                     _Seconds = Convert.ToDouble(match.Groups["LongSec"].Value, CultureInfo.InvariantCulture);
+                     _Degrees = System.Convert.ToInt32(match.Groups["LongDeg"].Value, CultureInfo.InvariantCulture);
+                     _Minutes = System.Convert.ToInt32(match.Groups["LongMin"].Value, CultureInfo.InvariantCulture);
+                     _Seconds = System.Convert.ToDouble(match.Groups["LongSec"].Value, CultureInfo.InvariantCulture);
                   }
 
                   if (direction == Direction.South
@@ -439,9 +439,9 @@ namespace Lunatic.Core.Geometry
             foreach (Regex regex in _SimpleRegexes) {
                Match match = regex.Match(angle);
                if (match.Success) {
-                  _Degrees = Convert.ToInt32(match.Groups["Deg"].Value, CultureInfo.InvariantCulture);
-                  _Minutes = Convert.ToInt32(match.Groups["Min"].Value, CultureInfo.InvariantCulture);
-                  _Seconds = Convert.ToDouble(match.Groups["Sec"].Value, CultureInfo.InvariantCulture);
+                  _Degrees = System.Convert.ToInt32(match.Groups["Deg"].Value, CultureInfo.InvariantCulture);
+                  _Minutes = System.Convert.ToInt32(match.Groups["Min"].Value, CultureInfo.InvariantCulture);
+                  _Seconds = System.Convert.ToDouble(match.Groups["Sec"].Value, CultureInfo.InvariantCulture);
 
                   _Value = SetDegreesFromDms();
                   _Format = AngularFormat.DegreesMinutesSeconds;
