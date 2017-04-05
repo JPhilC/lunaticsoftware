@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +7,17 @@ using System.Threading.Tasks;
 
 namespace Lunatic.Core.Geometry
 {
+   public enum Quadrant
+   {
+      [Description("Norteast")]
+      NE,
+      [Description("Southeast")]
+      SE,
+      [Description("Southwest")]
+      SW,
+      [Description("Northwest")]
+      NW
+   }
    /// <summary>
    /// A structure to represent an EquatorialCoordinate
    /// </summary>
@@ -13,6 +25,7 @@ namespace Lunatic.Core.Geometry
    {
       private double _X;
       private double _Y;
+      private double _Z;
       private double _R;        // Radius Sign
       private double _RA;       // Radius Alpha
       private bool _Flag;        // Was .F in VB6 seems to be a flag used to indicate whether Taki transform worked         
@@ -39,6 +52,18 @@ namespace Lunatic.Core.Geometry
             _Y = value;
          }
       }
+      public double Z
+      {
+         get
+         {
+            return _Z;
+         }
+         set
+         {
+            _Z = value;
+         }
+      }
+
       public double R
       {
          get
@@ -73,10 +98,37 @@ namespace Lunatic.Core.Geometry
          }
       }
 
-      public CarteseanCoordinate(double x, double y) 
+      public Quadrant Quadrant
+      {
+         get
+         {
+            if (X >= 0) {
+               if (Y >= 0) {
+                  return Quadrant.NE;
+               }
+               else {
+                  return Quadrant.SE;
+               }
+            }
+            else {
+               if (Y < 0) {
+                  return Quadrant.SW;
+               }
+               else {
+                  return Quadrant.NW;
+               }
+            }
+         }
+      }
+
+      public CarteseanCoordinate(double x, double y) :this(x, y, 0.0)
+      {
+      }
+      public CarteseanCoordinate(double x, double y, double z)
       {
          _X = x;
          _Y = y;
+         _Z = z;
          //_Longitude = new Angle(longitude);
          //_ObservedWhen = observedTime;
          _R = 0.0;
@@ -114,7 +166,7 @@ namespace Lunatic.Core.Geometry
       /// </summary>
       public static bool operator ==(CarteseanCoordinate pos1, CarteseanCoordinate pos2)
       {
-         return (pos1.X == pos2.X && pos1.Y == pos2.Y);
+         return (pos1.X == pos2.X && pos1.Y == pos2.Y && pos1.Z == pos2.Z);
       }
 
       public static bool operator !=(CarteseanCoordinate pos1, CarteseanCoordinate pos2)
@@ -130,6 +182,7 @@ namespace Lunatic.Core.Geometry
             // Suitable nullity checks etc, of course :)
             hash = hash * 23 + _X.GetHashCode();
             hash = hash * 23 + _Y.GetHashCode();
+            hash = hash * 23 + _Z.GetHashCode();
             return hash;
          }
       }
@@ -142,12 +195,12 @@ namespace Lunatic.Core.Geometry
 
       public static CarteseanCoordinate operator -(CarteseanCoordinate pos1, CarteseanCoordinate pos2)
       {
-         return new CarteseanCoordinate(pos1.X - pos2.X, pos1.Y - pos2.Y);
+         return new CarteseanCoordinate(pos1.X - pos2.X, pos1.Y - pos2.Y, pos1.Z - pos2.Z);
       }
 
       public static CarteseanCoordinate operator +(CarteseanCoordinate pos1, CarteseanCoordinate pos2)
       {
-         return new CarteseanCoordinate(pos1.X + pos2.X, pos1.Y + pos2.Y);
+         return new CarteseanCoordinate(pos1.X + pos2.X, pos1.Y + pos2.Y, pos1.Z + pos2.Z);
       }
 
       public override string ToString()

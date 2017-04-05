@@ -206,6 +206,113 @@ namespace Lunatic.Core.Geometry
          return new AltAzCoordinate((alt - ALT_OFFSET), AstroConvert.Range360(AstroConvert.RadToDeg(az)));
       }
 
+      public CarteseanCoordinate ToCartesean()
+      {
+         double radius = this.Altitude + ALT_OFFSET;
+         CarteseanCoordinate cartCoord = new CarteseanCoordinate(Math.Cos(this.Azimuth.Radians), Math.Sin(this.Azimuth.Radians), 1.0);
+         return cartCoord;
+      }
+
+      /// <summary>
+      /// Calculates the great circle distance to another point assuming
+      /// both points at a given radial distance.
+      /// </summary>
+      /// <param name="toCoordinate"></param>
+      /// <returns></returns>
+      public double DistanceTo(AltAzCoordinate to, double radius)
+      {
+         /*
+            Taken from: http://www.movable-type.co.uk/scripts/latlong.html
+            Haversine
+            formula:	a = sin²(Δφ/2) + cos φ1 ⋅ cos φ2 ⋅ sin²(Δλ/2)
+            c = 2 ⋅ atan2( √a, √(1−a) )
+            d = R ⋅ c
+            where	φ is latitude, λ is longitude, R is earth’s radius (mean radius = 6,371km);
+            note that angles need to be in radians to pass to trig functions!
+            JavaScript:	
+            var R = 6371e3; // metres
+            var φ1 = lat1.toRadians();
+            var φ2 = lat2.toRadians();
+            var Δφ = (lat2-lat1).toRadians();
+            var Δλ = (lon2-lon1).toRadians();
+
+            var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                    Math.cos(φ1) * Math.cos(φ2) *
+                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            var d = R * c;
+          */
+         double theta1 = this.Altitude.Radians;  // Equivalent to φ1
+         double theta2 = to.Altitude.Radians;    // Equivalent to φ2
+         double deltaTheta = theta2 - theta1; // eqivalent to Δφ
+         double deltaGamma = to.Azimuth.Radians - this.Azimuth.Radians;    // equivalent to Δλ
+         double a = Math.Pow(Math.Sin(deltaTheta / 2), 2) +
+            Math.Cos(theta1) * Math.Cos(theta2) *
+            Math.Pow(Math.Sin(deltaGamma), 2);
+         double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+         double d = radius * c;
+         return d;
+      }
+
+      /// <summary>
+      /// Equirectangular approximation of distance between two points with a given
+      /// radial distance.
+      /// </summary>
+      /// <param name="to"></param>
+      /// <param name="radius"></param>
+      /// <returns></returns>
+      public double ApproxDistanceTo(AltAzCoordinate to, double radius)
+      {
+         /*
+             Taken from: http://www.movable-type.co.uk/scripts/latlong.html
+             Formula	x = Δλ ⋅ cos φm
+             y = Δφ
+             d = R ⋅ √x² + y²
+             JavaScript:	
+             var x = (λ2-λ1) * Math.cos((φ1+φ2)/2);
+             var y = (φ2-φ1);
+             var d = Math.sqrt(x*x + y*y) * R;         
+         */
+         double theta1 = this.Altitude.Radians;  // Equivalent to φ1
+         double theta2 = to.Altitude.Radians;    // Equivalent to φ2
+         double deltaTheta = theta2 - theta1; // eqivalent to Δφ
+         double deltaGamma = to.Azimuth.Radians - this.Azimuth.Radians;    // equivalent to Δλ
+         double x = deltaGamma * Math.Cos((theta1 + theta2) / 2);
+         double d = Math.Sqrt(Math.Pow(x, 2) + Math.Pow(deltaTheta, 2)) * radius;
+         return d;
+      }
+
+      /// <summary>
+      /// Provides a quick calculation of a pseudo distance to another 
+      /// point that can be used when find nearest positions.
+      /// Based on Equirrectangular approximation but without the radius and Sqrt calculation.
+      /// </summary>
+      /// <param name="to"></param>
+      /// <param name="radius"></param>
+      /// <returns></returns>
+      public double OrderingDistanceTo(AltAzCoordinate to)
+      {
+         /*
+             Taken from: http://www.movable-type.co.uk/scripts/latlong.html
+             Formula	x = Δλ ⋅ cos φm
+             y = Δφ
+             d = R ⋅ √x² + y²
+             JavaScript:	
+             var x = (λ2-λ1) * Math.cos((φ1+φ2)/2);
+             var y = (φ2-φ1);
+             var d = Math.sqrt(x*x + y*y) * R;         
+         */
+         double theta1 = this.Altitude.Radians;  // Equivalent to φ1
+         double theta2 = to.Altitude.Radians;    // Equivalent to φ2
+         double deltaTheta = theta2 - theta1; // eqivalent to Δφ
+         double deltaGamma = to.Azimuth.Radians - this.Azimuth.Radians;    // equivalent to Δλ
+         double x = deltaGamma * Math.Cos((theta1 + theta2) / 2);
+         double d = Math.Pow(x, 2) + Math.Pow(deltaTheta, 2);
+         return d;
+      }
+
    }
+
 
 }

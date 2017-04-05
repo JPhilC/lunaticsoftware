@@ -499,7 +499,7 @@ namespace Lunatic.Core
 
       //    ' re transform based on the nearest 3 stars
 
-      //  i = EQ_UpdateTaki(RA, DEC)
+      //  i = EQ_UpdateTaki(RA, DEC)      // Find the nearest 3 points and they update the Taki transformation matrix
 
 
       //  obtmp2 = EQ_plTaki(obtmp)
@@ -544,7 +544,7 @@ namespace Lunatic.Core
 
       //    ' re transform using the 3 nearest stars
 
-      //  i = EQ_UpdateAffine(obtmp.X, obtmp.Y)
+      //  i = EQ_UpdateAffine(obtmp.X, obtmp.Y)    // Gets the nearest 3 points then uses these to generate the Affine transformation
 
       //  obtmp2 = EQ_plAffine(obtmp)
 

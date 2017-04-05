@@ -98,11 +98,29 @@ namespace Lunatic.Core.Geometry
          return new EquatorialCoordinate(pos1.RightAcension + pos2.RightAcension, pos1.Declination + pos2.Declination);
       }
 
+
       public override string ToString()
       {
          return string.Format("{0}/{1}", _RA, _Dec);
       }
       #endregion
+
+      public CarteseanCoordinate ToCartesean(Angle latitude, bool affineTaki = true)
+      {
+         CarteseanCoordinate cartCoord;
+         if (affineTaki) {
+            // Get Polar (or should than be get AltAzimuth) from Equatorial coordinate (formerly call to EQ_SphericalPolar)
+            AltAzCoordinate polar = AstroConvert.GetAltAz(this, latitude);
+            // Get  Cartesean from Polar (formerly call to EQ_Polar2Cartes)
+            cartCoord = polar.ToCartesean();
+         }
+         else {
+            cartCoord = new CarteseanCoordinate(this.RightAcension.Radians, this.Declination.Radians, 1.0);
+         }
+         return cartCoord;
+      }
+
+
    }
 
 }
