@@ -49,7 +49,7 @@ namespace ASCOM.Lunatic.Telescope
    [ProgId("ASCOM.Lunatic.Telescope")]
    [ServedClassName("Lunatic ASCOM Driver for Synta Telescopes")]
    [ClassInterface(ClassInterfaceType.None)]
-   public partial class Telescope : SyntaMountBase, ITelescopeV3, ITelescope
+   public partial class Telescope : SyntaMountBase, ITelescopeV3
    {
       /// <summary>
       /// ASCOM DeviceID (COM ProgID) for this driver.
@@ -138,13 +138,13 @@ namespace ASCOM.Lunatic.Telescope
 
       #region Lunatic ITelescope implimentation ...
 
-      public TrackingStatus TrackingState { get; set; }
+      private TrackingStatus TrackingState { get; set; }
 
-      public HemisphereOption Hemisphere { get; set; }
+      private HemisphereOption Hemisphere { get; set; }
 
-      public SyncModeOption SyncMode { get; set; }
+      private SyncModeOption SyncMode { get; set; }
 
-      public SyncAlignmentModeOptions SyncAlignmentMode { get; set; }
+      private SyncAlignmentModeOptions SyncAlignmentMode { get; set; }
 
       #endregion
 

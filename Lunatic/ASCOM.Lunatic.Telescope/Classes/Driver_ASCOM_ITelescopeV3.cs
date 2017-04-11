@@ -640,10 +640,75 @@ End Sub
          }
       }
 
+
+      /// <summary>
+      /// Move the telescope in one axis at the given rate.
+      /// </summary>
+      /// <param name="Axis">The physical axis about which movement is desired</param>
+      /// <param name="Rate">The rate of motion (deg/sec) about the specified axis</param>
+      /// <exception cref="MethodNotImplementedException">If the method is not implemented.</exception>
+      /// <exception cref="InvalidValueException">If an invalid axis or rate is given.</exception>
+      /// <remarks>
+      /// This method supports control of the mount about its mechanical axes.
+      /// The telescope will start moving at the specified rate about the specified axis and continue indefinitely.
+      /// This method can be called for each axis separately, and have them all operate concurrently at separate rates of motion. 
+      /// Set the rate for an axis to zero to restore the motion about that axis to the rate set by the <see cref="Tracking"/> property.
+      /// Tracking motion (if enabled, see note below) is suspended during this mode of operation. 
+      /// <para>
+      /// Raises an error if <see cref="AtPark" /> is true. 
+      /// This must be implemented for the if the <see cref="CanMoveAxis" /> property returns True for the given axis.</para>
+      /// <para>This is only available for telescope InterfaceVersions 2 and 3</para>
+      /// <para>
+      /// <b>NOTES:</b>
+      /// <list type="bullet">
+      /// <item><description>The movement rate must be within the value(s) obtained from a <see cref="IRate" /> object in the 
+      /// the <see cref="AxisRates" /> collection. This is a signed value with negative rates moving in the oposite direction to positive rates.</description></item>
+      /// <item><description>The values specified in <see cref="AxisRates" /> are absolute, unsigned values and apply to both directions, determined by the sign used in this command.</description></item>
+      /// <item><description>The value of <see cref="Slewing" /> must be True if the telescope is moving about any of its axes as a result of this method being called. 
+      /// This can be used to simulate a handbox by initiating motion with the MouseDown event and stopping the motion with the MouseUp event.</description></item>
+      /// <item><description>When the motion is stopped by setting the rate to zero the scope will be set to the previous <see cref="TrackingRate" /> or to no movement, depending on the state of the <see cref="Tracking" /> property.</description></item>
+      /// <item><description>It may be possible to implement satellite tracking by using the <see cref="MoveAxis" /> method to move the scope in the required manner to track a satellite.</description></item>
+      /// </list>
+      /// </para>
+      /// </remarks>
       public void MoveAxis(TelescopeAxes Axis, double Rate)
       {
-         _Logger.LogMessage("MoveAxis", "Not implemented");
-         throw new ASCOM.MethodNotImplementedException("MoveAxis");
+         System.Diagnostics.Debug.Write(String.Format("MoveAxis({0}, {1})", Axis, Rate));
+         if (AtPark) {
+            throw new ASCOM.ParkedException("Method MoveAxis");
+         }
+         _Logger.LogMessage("MoveAxis", string.Format("({0}, {1})", Axis, Rate));
+         if (Axis == TelescopeAxes.axisPrimary) {
+            if (Rate == 0.0) {
+               if (_IsMoveAxisSlewing) {
+                  _Mount.MCAxisStop(AxisId.Axis1_RA);
+                  _IsMoveAxisSlewing = false;
+               }
+            }
+            else {
+               if (!Slewing) {
+                  _Mount.MCAxisSlew(AxisId.Axis1_RA, Rate);
+                  _IsMoveAxisSlewing = true;
+               }
+            }
+         }
+         else if (Axis == TelescopeAxes.axisSecondary) {
+            if (Rate == 0.0) {
+               if (_IsMoveAxisSlewing) {
+                  _Mount.MCAxisStop(AxisId.Axis2_DEC);
+                  _IsMoveAxisSlewing = false;
+               }
+            }
+            else {
+               if (!Slewing) {
+                  _Mount.MCAxisSlew(AxisId.Axis2_DEC, Rate);
+                  _IsMoveAxisSlewing = true;
+               }
+            }
+         }
+         else {
+            throw new ASCOM.InvalidValueException("Driver does not third axis.");
+         }
       }
 
       public void Park()
@@ -822,6 +887,7 @@ End Sub
                }
                else {
                   _SiteLatitude = value;
+                  Hemisphere = (_SiteLatitude >= 0 ? HemisphereOption.Northern : HemisphereOption.Southern);
                   RaisePropertyChanged();
                }
             }

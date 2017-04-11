@@ -25,36 +25,5 @@ namespace Lunatic.TelescopeControl.Controls
          InitializeComponent();
       }
 
-      private void Button_PreviewMouseDown(object sender, MouseButtonEventArgs e)
-      {
-         Button button = sender as Button;
-         System.Diagnostics.Debug.WriteLine(string.Format("Button {0} down.", button.Name));
-         switch (button.Name) {
-            case "North":     // DEC +
-               break;
-            case "South":     // DEC -
-               break;
-            case "East":      // RA +
-               break;
-            case "West":      // RA -
-               break;
-         }
-      }
-
-      private void Button_PreviewMouseUp(object sender, MouseButtonEventArgs e)
-      {
-         Button button = sender as Button;
-         System.Diagnostics.Debug.WriteLine(string.Format("Button {0} up.", button.Name));
-         switch (button.Name) {
-            case "North":     // DEC +
-               break;
-            case "South":     // DEC -
-               break;
-            case "East":      // RA +
-               break;
-            case "West":      // RA -
-               break;
-         }
-      }
    }
 }

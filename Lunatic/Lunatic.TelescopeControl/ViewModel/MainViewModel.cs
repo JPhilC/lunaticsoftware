@@ -37,6 +37,14 @@ namespace Lunatic.TelescopeControl.ViewModel
       ISettingsProvider<TelescopeControlSettings> _SettingsProvider;
 
       private TelescopeControlSettings _Settings;
+      public TelescopeControlSettings Settings
+      {
+         get
+         {
+            return _Settings;
+         }
+      }
+
       #region Mount options ...
       private MountOptions _MountOption;
       [Category("Mount Options")]
@@ -112,6 +120,8 @@ namespace Lunatic.TelescopeControl.ViewModel
             _Driver = value;
          }
       }
+
+
       public bool IsConnected
       {
          get
@@ -764,16 +774,71 @@ End Property
 
       #endregion
 
-      private RelayCommand<SlewDirection> _SlewCommand;
+      private RelayCommand<SlewButton> _StartSlewCommand;
 
-      public RelayCommand<SlewDirection> SlewCommand
+      public RelayCommand<SlewButton> StartSlewCommand
       {
          get
          {
-            return _SlewCommand
-               ?? (_SlewCommand = new RelayCommand<SlewDirection>((direction) => {
-                  //TODO: Add body of SlewCommand
-               }, (direction) => { return !IsConnected; }));
+            return _StartSlewCommand
+               ?? (_StartSlewCommand = new RelayCommand<SlewButton>((button) => {
+                  double rate;      // 10 x Sidereal;
+                  switch (button) {
+                     case SlewButton.North:
+                     case SlewButton.South:
+                        rate = Settings.SlewRatePreset.DecRate * Constants.SIDEREAL_RATE_RADIANS;
+                        if (button == SlewButton.South) {
+                           rate = -rate;
+                        }
+                        if (Settings.ReverseDec) {
+                           rate = -rate;
+                        }
+                        Driver.MoveAxis(ASCOM.DeviceInterface.TelescopeAxes.axisSecondary, rate);
+                        break;
+                     case SlewButton.East:
+                     case SlewButton.West:
+                        rate = Settings.SlewRatePreset.RARate * Constants.SIDEREAL_RATE_RADIANS;
+                        if (button == SlewButton.East) {
+                           rate = -rate;
+                        }
+                        if (Settings.ReverseRA) {
+                           rate = -rate;
+                        }
+                        Driver.MoveAxis(ASCOM.DeviceInterface.TelescopeAxes.axisPrimary, rate);
+                        break;
+                  }
+
+
+               }, (button) => { return (IsConnected); }));   // Check that we are connected
+         }
+      }
+
+      private RelayCommand<SlewButton> _StopSlewCommand;
+
+      public RelayCommand<SlewButton> StopSlewCommand
+      {
+         get
+         {
+            return _StopSlewCommand
+               ?? (_StopSlewCommand = new RelayCommand<SlewButton>((button) => {
+                  switch (button) {
+                     case SlewButton.Stop:
+                        Driver.AbortSlew();
+                        break;
+                     case SlewButton.North:
+                        Driver.MoveAxis(ASCOM.DeviceInterface.TelescopeAxes.axisSecondary, 0.0);
+                        break;
+                     case SlewButton.South:
+                        Driver.MoveAxis(ASCOM.DeviceInterface.TelescopeAxes.axisSecondary, 0.0);
+                        break;
+                     case SlewButton.East:
+                        Driver.MoveAxis(ASCOM.DeviceInterface.TelescopeAxes.axisPrimary, 0.0);
+                        break;
+                     case SlewButton.West:
+                        Driver.MoveAxis(ASCOM.DeviceInterface.TelescopeAxes.axisPrimary, 0.0);
+                        break;
+                  }
+               }, (button) => { return (IsConnected); }));   // Check that we are connected
          }
       }
       #endregion
@@ -783,7 +848,8 @@ End Property
       {
          ChooseCommand.RaiseCanExecuteChanged();
          ConnectCommand.RaiseCanExecuteChanged();
-         SlewCommand.RaiseCanExecuteChanged();
+         StartSlewCommand.RaiseCanExecuteChanged();
+         StopSlewCommand.RaiseCanExecuteChanged();
       }
    }
 }

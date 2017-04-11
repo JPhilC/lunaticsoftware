@@ -62,8 +62,8 @@ namespace Lunatic.SyntaController
       const char cStartChar_In = '=';        // Leading charactor of a NORMAL response.
       const char cErrChar = '!';              // Leading charactor of an ABNORMAL response.
       const char cEndChar = (char)13;         // Tailing charactor of command and response.
-      const double MAX_SPEED = 500;           //?
-      const double LOW_SPEED_MARGIN = (128.0 * Constants.SIDEREAL_RATE_ARCSECS);
+      const double MAX_SPEED = (800 * Constants.SIDEREAL_RATE_RADIANS);           //?
+      const double LOW_SPEED_MARGIN = (128.0 * Constants.SIDEREAL_RATE_RADIANS);
 
       private char dir = '0'; // direction
                               // Mount code: 0x00=EQ6, 0x01=HEQ5, 0x02=EQ5, 0x03=EQ3
@@ -895,15 +895,24 @@ namespace Lunatic.SyntaController
          BreakSteps[(int)AxisId.Axis2_DEC] = 3500;
       }
 
+      /// <summary>
+      /// Slew about a given axis
+      /// </summary>
+      /// <param name="Axis"></param>
+      /// <param name="Speed">Slew speed in Radians per second.</param>
       public void MCAxisSlew(AxisId Axis, double Speed)
       {
+         System.Diagnostics.Debug.WriteLine(string.Format("MCAxisSlew: ({0}, {1})", Axis, Speed));
          // Limit maximum speed
-         if (Speed > MAX_SPEED)                  // 3.4 degrees/sec, 800X sidereal rate, is the highest speed.
+         if (Speed > MAX_SPEED) {                  // 3.4 degrees/sec, 800X sidereal rate, is the highest speed.
             Speed = MAX_SPEED;
-         else if (Speed < -MAX_SPEED)
+         }
+         else if (Speed < -MAX_SPEED) {
             Speed = -MAX_SPEED;
+         }
 
          double InternalSpeed = Speed;
+         System.Diagnostics.Debug.WriteLine(string.Format("1. Internal speed: {0}", InternalSpeed));
          bool forward = false, highspeed = false;
 
          // InternalSpeed lower than 1/1000 of sidereal rate?
@@ -914,6 +923,7 @@ namespace Lunatic.SyntaController
 
          // Stop motor and set motion mode if necessary.
          PrepareForSlewing(Axis, InternalSpeed);
+         System.Diagnostics.Debug.WriteLine(string.Format("1. Internal speed: {0}", InternalSpeed));
 
          if (InternalSpeed > 0.0)
             forward = true;
@@ -925,10 +935,10 @@ namespace Lunatic.SyntaController
          // TODO: ask the details
 
          // Calculate and set step period. 
-         if (InternalSpeed > LOW_SPEED_MARGIN) {                  // High speed adjustment
-            InternalSpeed = InternalSpeed / (double)HighSpeedRatio[(int)Axis];
-            highspeed = true;
-         }
+         //if (InternalSpeed > LOW_SPEED_MARGIN) {                  // High speed adjustment
+         //   InternalSpeed = InternalSpeed / (double)HighSpeedRatio[(int)Axis];
+         //   highspeed = true;
+         //}
          InternalSpeed = 1 / InternalSpeed;                    // For using function RadSpeedToInt(), change to unit Senonds/Rad.
          long SpeedInt = RadSpeedToInt(Axis, InternalSpeed);
          if ((MCVersion == 0x010600) || (MCVersion == 0x010601))  // For special MC version.
@@ -996,6 +1006,7 @@ namespace Lunatic.SyntaController
 
       public void MCAxisStop(AxisId Axis)
       {
+         System.Diagnostics.Debug.WriteLine(string.Format("MCAxisStop: ({0})", Axis));
          if (InstantStop)
             TalkWithAxis(Axis, 'L', null);
          else
@@ -1078,6 +1089,7 @@ namespace Lunatic.SyntaController
       /// <returns>The response string from mount</returns>
       private String TalkWithAxis(AxisId axis, char cmd, string cmdDataStr)
       {
+         System.Diagnostics.Debug.Write(String.Format("TalkWithAxis({0}, {1}, {2})", axis, cmd, cmdDataStr));
          string response = string.Empty;
 
          const int BufferSize = 20;
@@ -1142,6 +1154,7 @@ namespace Lunatic.SyntaController
          //   else
          //      throw new MountControllerException(ErrorCode.ERR_NORESPONSE_AXIS2);
          //}
+         System.Diagnostics.Debug.WriteLine(" -> Response: " + response);
          return response;
       }
 
@@ -1236,6 +1249,7 @@ namespace Lunatic.SyntaController
       }
       private void SetStepPeriod(AxisId Axis, long StepsCount)
       {
+         System.Diagnostics.Debug.WriteLine(String.Format("SetStepPeriod({0}, {1})", Axis, StepsCount));
          string szCmd = longTo6BitHEX(StepsCount);
          TalkWithAxis(Axis, 'I', szCmd);
       }
@@ -1303,13 +1317,13 @@ namespace Lunatic.SyntaController
       {
          char cDirection;
 
-         var axesstatus = MCGetAxisStatus(Axis);
+         var axesstatus = MCGetAxisStatus(Axis);   
          if (!axesstatus.FullStop) {
             if ((axesstatus.SlewingTo) ||                               // GOTO in action
                  (axesstatus.HighSpeed) ||                              // Currently high speed slewing
-                 (Math.Abs(speed) >= LOW_SPEED_MARGIN) ||                                    // Will be high speed slewing
-                 ((axesstatus.SlewingForward) && (speed < 0)) ||              // Different direction
-                 (!(axesstatus.SlewingForward) && (speed > 0))                // Different direction
+                 (Math.Abs(speed) >= LOW_SPEED_MARGIN) ||               // Will be high speed slewing
+                 ((axesstatus.SlewingForward) && (speed < 0)) ||        // Different direction
+                 (!(axesstatus.SlewingForward) && (speed > 0))          // Different direction
                 ) {
                // We need to stop the motor first to change Motion Mode, etc.
                MCAxisStop(Axis);

@@ -6,15 +6,6 @@ using System.Threading.Tasks;
 
 namespace Lunatic.TelescopeControl
 {
-   public enum SlewDirection
-   {
-      Stop,
-      North,
-      South,
-      East,
-      West
-   }
-
    [Flags]
    public enum Modules 
    {

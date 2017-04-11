@@ -10,6 +10,8 @@ using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 using System.Collections.Specialized;
 using System.Windows;
 using System.Runtime.Serialization;
+using GalaSoft.MvvmLight;
+using Newtonsoft.Json;
 
 namespace Lunatic.TelescopeControl
 {
@@ -61,6 +63,43 @@ namespace Lunatic.TelescopeControl
       public int RAStepsPer360 { get; set; }
    }
 
+   public class SlewRatePreset : ObservableObject
+   {
+      public int Rate { get; private set; }
+
+      private int _RARate;
+      public int RARate
+      {
+         get
+         {
+            return _RARate;
+         }
+         set
+         {
+            Set<int>(ref _RARate, value);
+         }
+      }
+
+      private int _DecRate;
+      public int DecRate
+      {
+         get
+         {
+            return _DecRate;
+         }
+         set
+         {
+            Set<int>(ref _DecRate, value);
+         }
+      }
+
+      public SlewRatePreset(int rate, int raRate, int decRate)
+      {
+         Rate = rate;
+         RARate = raRate;
+         DecRate = decRate;
+      }
+   }
 
    [TypeConverter(typeof(EnumTypeConverter))]
    public enum MountOptions
@@ -372,10 +411,32 @@ namespace Lunatic.TelescopeControl
 
 
       //DEC_REVERSE=0
-      public bool ReverseDec { get; set; }
+      private bool _ReverseDec;
+      public bool ReverseDec
+      {
+         get
+         {
+            return _ReverseDec;
+         }
+         set
+         {
+            Set<bool>(ref _ReverseDec, value);
+         }
+      }
 
       //RA_REVERSE=1
-      public bool ReverseRA { get; set; }
+      private bool _ReverseRA = true;
+      public bool ReverseRA
+      {
+         get
+         {
+            return _ReverseRA;
+         }
+         set
+         {
+            Set<bool>(ref _ReverseRA, value);
+         }
+      }
 
       //DSYNC01=0
       public int DecSync { get; set; }
@@ -407,11 +468,9 @@ namespace Lunatic.TelescopeControl
 
       //DEFAULT_UNPARK_MODE = 0
       public ParkPosition DefaultUnpark { get; set; }
-      private ObservableCollection<ParkPosition> _UNParkPositions;
       public ObservableCollection<ParkPosition> UNParkPositions { get; private set; }
       //DEFAULT_PARK_MODE=2
       public ParkPosition DefaultPark { get; set; }
-      private ObservableCollection<ParkPosition> _ParkPositions;
       public ObservableCollection<ParkPosition> ParkPositions { get; private set; }
 
       //CUSTOM_MOUNT=0
@@ -434,9 +493,27 @@ namespace Lunatic.TelescopeControl
       //BAR01_3=1  RARate
       public int RARate { get; set; }
       //BAR01_2=17 DecSlewRate
-      public int DecSlewRate { get; set; }
-      //BAR01_1=17 RASlewRate
-      public int RASlewRate { get; set; }
+
+      public ObservableCollection<SlewRatePreset> SlewRatePresets { get; private set; }
+
+      private SlewRatePreset _SlewRatePreset;
+
+      /// <summary>
+      /// The currently selected slew preset. Not stored in the config settings as
+      /// always starts off on the lowest setting.
+      /// </summary>
+      [JsonIgnore]
+      public SlewRatePreset SlewRatePreset
+      {
+         get
+         {
+            return _SlewRatePreset;
+         }
+         set
+         {
+            Set<SlewRatePreset>(ref _SlewRatePreset, value);
+         }
+      }
 
       //FLIP_AUTO_ENABLED = False
       //FLIP_AUTO_ALLOWED=False
@@ -561,12 +638,22 @@ namespace Lunatic.TelescopeControl
          this.ParkPositions = new ObservableCollection<ParkPosition>();
          this.UNParkPositions = new ObservableCollection<ParkPosition>();
          this.Sites = new SiteCollection();
+         this.SlewRatePresets = new ObservableCollection<SlewRatePreset>();
       }
 
       [OnDeserialized]
       private void Deserialized(StreamingContext context)
       {
          this.CurrentSite = this.Sites.Where(s => s.IsCurrentSite).FirstOrDefault();
+         if (this.SlewRatePresets.Count == 0) {
+            this.SlewRatePresets.Add(new SlewRatePreset(1, 1, 1));
+            this.SlewRatePresets.Add(new SlewRatePreset(2, 8, 8));
+            this.SlewRatePresets.Add(new SlewRatePreset(3, 64, 64));
+            this.SlewRatePresets.Add(new SlewRatePreset(4, 400, 400));
+            this.SlewRatePresets.Add(new SlewRatePreset(5, 800, 800));
+         }
+         // Always start with the lowest rate selected.
+         this.SlewRatePreset = this.SlewRatePresets.OrderBy(p => p.Rate).FirstOrDefault();
       }
    }
 }

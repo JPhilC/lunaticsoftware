@@ -48,15 +48,6 @@ namespace ASCOM.Lunatic.Telescope
       {
          ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
 
-         if (ViewModelBase.IsInDesignModeStatic) {
-            // Create design time view services and models
-            SimpleIoc.Default.Register<ISettingsProvider<Settings>, SettingsProvider>();
-         }
-         else {
-            // Create run time view services and models
-            SimpleIoc.Default.Register<ISettingsProvider<Settings>, SettingsProvider>();
-         }
-
          SimpleIoc.Default.Register<SetupViewModel>();
       }
 
@@ -71,7 +62,6 @@ namespace ASCOM.Lunatic.Telescope
       public static void Cleanup()
       {
          SimpleIoc.Default.Unregister<SetupViewModel>();
-         SimpleIoc.Default.Unregister<ISettingsProvider<Settings>>();
       }
    }
 }

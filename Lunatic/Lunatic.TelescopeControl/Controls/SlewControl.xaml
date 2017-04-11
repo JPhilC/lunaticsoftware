@@ -33,22 +33,34 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <TextBlock>RA Rate</TextBlock>
-                    <Slider Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Stretch" Orientation="Vertical"/>
+                    <Slider Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Stretch" Orientation="Vertical" 
+                            Minimum="1" Maximum="800" Value="{Binding Settings.SlewRatePreset.RARate}"/>
                     <TextBlock Grid.Row="2" Margin="0,2,0,0"
-                               Text="{Binding RATrackingValue}" Style="{StaticResource LEDValue}" MinWidth="30" Width="30" />
+                               Text="{Binding Settings.SlewRatePreset.RARate, Mode=OneWay}" Style="{StaticResource LEDValue}" MinWidth="30" Width="30" />
                 </Grid>
-                <ComboBox Grid.Column="1" VerticalAlignment="Center" Width="30"  Margin="-5,0,0,0" ></ComboBox>
+                <ComboBox Grid.Column="1" VerticalAlignment="Center" Width="40"  Margin="-5,0,0,0" 
+                          ItemsSource="{Binding Settings.SlewRatePresets}"
+                          SelectedItem="{Binding Settings.SlewRatePreset}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Rate}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
                 <!-- DEC Rate -->
                 <Grid Grid.Column="2" Margin="-10,0,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="83*" />
+                        <RowDefinition Height="22*" />
                     </Grid.RowDefinitions>
                     <TextBlock>DEC Rate</TextBlock>
-                    <Slider Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Stretch" Orientation="Vertical" />
+                    <Slider Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Stretch" Orientation="Vertical" 
+                            Minimum ="1" Maximum="800" Value="{Binding Settings.SlewRatePreset.DecRate}"/>
                     <TextBlock Grid.Row="2" Margin="0,2,0,0"
-                               Text="{Binding DECTrackingValue}" Style="{StaticResource LEDValue}" MinWidth="30" Width="30" />
+                               Text="{Binding Settings.SlewRatePreset.DecRate, Mode=OneWay}" Style="{StaticResource LEDValue}" MinWidth="30" Width="30" />
                 </Grid>
             </Grid>
             <!-- Reverse check boxes -->
@@ -60,9 +72,9 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <CheckBox></CheckBox>
+                <CheckBox IsChecked="{Binding Settings.ReverseRA}"></CheckBox>
                 <TextBlock Grid.Column="1">RA Reverse</TextBlock>
-                <CheckBox Grid.Column="3"></CheckBox>
+                <CheckBox Grid.Column="3" IsChecked="{Binding Settings.ReverseDec}"></CheckBox>
                 <TextBlock Grid.Column="4">DEC Reverse</TextBlock>
             </Grid>
             <!-- Tracking controls -->

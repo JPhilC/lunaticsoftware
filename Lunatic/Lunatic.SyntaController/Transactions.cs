@@ -75,6 +75,9 @@ namespace Lunatic.SyntaController.Transactions
                   Failed = true;
                }
             }
+            else {
+               Value = responseString;
+            }
          }
          base.OnCompleted();
       }

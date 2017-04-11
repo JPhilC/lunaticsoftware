@@ -411,9 +411,9 @@ namespace ASCOM.Lunatic.Telescope
       /// <summary>
       /// Initializes a new instance of the MainViewModel class.
       /// </summary>
-      public SetupViewModel(ISettingsProvider<Settings> settingsProvider)
+      public SetupViewModel()
       {
-         _Settings = settingsProvider.Settings;
+         _Settings = SettingsProvider.Current.Settings;
          PopProperties();
       }
 

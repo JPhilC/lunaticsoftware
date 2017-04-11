@@ -97,7 +97,23 @@ namespace Lunatic.Core
       Northern,
       [Description("South")]
       Southern
+   }
 
+   public enum SlewButton
+   {
+      Stop,
+      North,
+      East,
+      South,
+      West
+   }
+
+   public enum AxisDirection
+   {
+      [Description("Forward")]
+      Forward,
+      [Description("Reverse")]
+      Reverse
    }
 
    [TypeConverter(typeof(EnumTypeConverter))]

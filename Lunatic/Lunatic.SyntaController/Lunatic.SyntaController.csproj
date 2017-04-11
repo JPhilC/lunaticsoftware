@@ -87,8 +87,8 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="TA.Ascom.ReactiveCommunications, Version=0.3.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TA.Ascom.ReactiveCommunications.0.3.0\lib\net45\TA.Ascom.ReactiveCommunications.dll</HintPath>
+    <Reference Include="TA.Ascom.ReactiveCommunications, Version=0.4.6306.31345, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\TA.Ascom.ReactiveCommunications.0.4.2\lib\net45\TA.Ascom.ReactiveCommunications.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
