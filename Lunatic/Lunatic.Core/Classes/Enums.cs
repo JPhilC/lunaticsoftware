@@ -19,7 +19,14 @@ namespace Lunatic.Core
    }
 
    // Two-axis telescope code
-   public enum AxisId { Axis1_RA = 0, Axis2_DEC = 1 };
+   public enum AxisId
+   {
+      Axis1_RA,
+      Axis2_DEC,
+      Both_Axes,
+      Aux_RA_Encoder,
+      Aux_DEC_Encoder
+   };
 
 
    [TypeConverter(typeof(EnumTypeConverter))]

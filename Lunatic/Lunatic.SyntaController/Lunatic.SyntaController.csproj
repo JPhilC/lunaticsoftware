@@ -7,7 +7,7 @@
     <ProjectGuid>{8424511E-54D1-42D3-86FF-1E56569FE2B8}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Lunatic.SyntaContoller</RootNamespace>
+    <RootNamespace>Lunatic.SyntaController</RootNamespace>
     <AssemblyName>Lunatic.SyntaContoller</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -101,6 +101,9 @@
     <Compile Include="Classes\SettingsProvider.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="MountControllerException.cs" />
+    <Compile Include="MountController_EQContrl.cs">
+      <DependentUpon>MountController.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MountController.cs" />
     <Compile Include="Transactions.cs" />

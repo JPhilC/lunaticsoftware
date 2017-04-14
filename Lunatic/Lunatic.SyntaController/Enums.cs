@@ -71,5 +71,29 @@ namespace Lunatic.SyntaController
       Twice = 2
    }
 
+   public enum MountType
+   {
+      Unknown,
+      EqMount
+   }
 
+   public enum MountMode
+   {
+      Slew,
+      Goto
+   }
+
+   public enum MountSpeed
+   {
+      LowSpeed,
+      HighSpeed
+   }
+
+   public enum MountTracking
+   {
+      Sidereal,
+      Solar,
+      Lunar,
+      Custom
+   }
 }

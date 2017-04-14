@@ -14,7 +14,8 @@ using ASCOM.DeviceInterface;
 
 namespace Lunatic.SyntaController
 {
-   public sealed class MountController
+
+   public sealed partial class MountController
    {
       #region Singleton code ...
       private static MountController _Instance = null;
@@ -69,22 +70,37 @@ namespace Lunatic.SyntaController
                               // Mount code: 0x00=EQ6, 0x01=HEQ5, 0x02=EQ5, 0x03=EQ3
                               //             0x80=GT,  0x81=MF,   0x82=114GT
                               //             0x90=DOB
-      private long MountCode;
-      private long[] StepTimerFreq = new long[2];        // Frequency of stepping timer (read from mount)
-      private long[] PESteps = new long[2];              // PEC Period (read from mount)
-      private long[] HighSpeedRatio = new long[2];       // High Speed Ratio (read from mount)
-      //private long[] StepPosition = new long[2];       // Never Used
-      private long[] BreakSteps = new long[2];           // Break steps from slewing to stop. (currently hard coded)
-      private long[] LowSpeedGotoMargin = new long[2];   // If slewing steps exceeds this LowSpeedGotoMargin, 
+      private int MountCode;
+      private int[] StepTimerFreq = new int[2];        // Frequency of stepping timer (read from mount)
+      private int[] PESteps = new int[2];              // PEC Period (read from mount)
+      private int[] HighSpeedRatio = new int[2];       // High Speed Ratio (read from mount)
+      //private int[] StepPosition = new int[2];       // Never Used
+      private int[] BreakSteps = new int[2];           // Break steps from slewing to stop. (currently hard coded)
+      private int[] LowSpeedGotoMargin = new int[2];     // If slewing steps exceeds this LowSpeedGotoMargin, 
                                                          // GOTO is in high speed slewing.
+      private double[] LowSpeedSlewRate = new double[2];    // Low speed slew rate
+      private double[] HighSpeedSlewRate = new double[2];   // High speed slew rate
+      private int[] MountParameters = new int[2];
+      private bool[] HasHalfCurrent = new bool[2];
+      private bool[] HasEncoder = new bool[2];
+      private bool[] HasPPEC = new bool[2];
+      private bool[] HasSnap = new bool[2];
+
+      private int[] FastTarget = new int[2];
+      private int[] FinalTarget = new int[2];
+      private int[] CurrentPosition = new int[2];
+      private int[] Offset = new int[2];
 
       private bool IsDCMotor;                // Ture: The motor controller is a DC motor controller. It uses TX/RX line is bus topology.
                                              // False: The motor controller is a stepper motor controller. TX/RX lines are seperated.
       private bool InstantStop;              // Use InstantStop command for MCAxisStop
 
+      private bool HasPolarscopeLED;
+      private bool HasHomeSensor;
+
       private object lockObject = new object();
 
-      private long MCVersion = 0;   // Motor controller version number
+      private int MCVersion = 0;   // Motor controller version number
 
 
       /// <summary>
@@ -138,87 +154,43 @@ namespace Lunatic.SyntaController
          AxesStatus[1] = new AxisStatus { FullStop = false, NotInitialized = true, HighSpeed = false, Slewing = false, SlewingForward = false, SlewingTo = false };
       }
 
-      #region Old EQ_Contrl.dll methods ....
-      //---------------------------------------------------------------------
-      // Copyright © 2006 Raymund Sarmiento
-      //
-      // Permission is hereby granted to use this Software for any purpose
-      // including combining with commercial products, creating derivative
-      // works, and redistribution of source or binary code, without
-      // limitation or consideration. Any redistributed copies of this
-      // Software must include the above Copyright Notice.
-      //
-      // THIS SOFTWARE IS PROVIDED "AS IS". THE AUTHOR OF THIS CODE MAKES NO
-      // WARRANTIES REGARDING THIS SOFTWARE, EXPRESS OR IMPLIED, AS TO ITS
-      // SUITABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-      //---------------------------------------------------------------------
-      //
-      //
-      // Written:  07-Oct-06   Raymund Sarmiento
-      //
-      // Edits:
-      //
-      // When      Who     What
-      // --------- ---     --------------------------------------------------
-      // 24-Oct-03 rcs     Initial edit for EQ Mount Driver Function Prototype
-      // 29-Jan-07 rcs     Added functions for ALT/AZ tracking
-      //---------------------------------------------------------------------
-      //
-      //
-      //  SYNOPSIS:
-      //
-      //  This is a demonstration of a EQ6/ATLAS/EQG direct stepper motor control access
-      //  using the EQCONTRL.DLL driver code.
-      //
-      //  File EQCONTROL.bas contains all the function prototypes of all subroutines
-      //  encoded in the EQCONTRL.dll
-      //
-      //  The EQ6CONTRL.DLL simplifies execution of the Mount controller board stepper
-      //  commands.
-      //
-      //  The mount circuitry needs to be modified for this test program to work.
-      //  Circuit details can be found at http://www.freewebs.com/eq6mod/
-      //
 
-      //  DISCLAIMER:
+      #region Skywatcher_Open code ...
 
-      //  You can use the information on this site COMPLETELY AT YOUR OWN RISK.
-      //  The modification steps and other information on this site is provided
-      //  to you "AS IS" and WITHOUT WARRANTY OF ANY KIND, express, statutory,
-      //  implied or otherwise, including without limitation any warranty of
-      //  merchantability or fitness for any particular or intended purpose.
-      //  In no event the author will  be liable for any direct, indirect,
-      //  punitive, special, incidental or consequential damages or loss of any
-      //  kind whether or not the author  has been advised of the possibility
-      //  of such loss.
+      /// ************ Motion control related **********************
+      /// They are variables represent the mount's status, but not grantee always updated.        
+      /// 1) The Positions are updated with MCGetAxisPosition and MCSetAxisPosition
+      /// 2) The TargetPositions are updated with MCAxisSlewTo        
+      /// 3) The SlewingSpeed are updated with MCAxisSlew
+      /// 4) The AxesStatus are updated updated with MCGetAxisStatus, MCAxisSlewTo, MCAxisSlew
+      /// Notes:
+      /// 1. Positions may not represent the mount's position while it is slewing, or user manually update by hand
+      public double[] Positions = new double[2] { 0, 0 };            // The axis coordinate position of the carriage, in radians
+      public double[] TargetPositions = new double[2] { 0, 0 };      // The target position, in radians
+      public double[] SlewingSpeed = new double[2] { 0, 0 };         // The speed in radians per second                
+      private AxisStatus[] AxesStatus = new AxisStatus[2];           // The two-axis status of the carriage should pass AxesStatus[AXIS1] and AxesStatus[AXIS2] by Reference
 
-      //  WARNING:
+      private int[] GridPerRevolution = new int[2];                  // Number of steps for 360 degree
+      // Converting an arc angle to a step
+      private double[] FactorRadToStep = new double[] { 0, 0 };      // Multiply the radian value by the coefficient to get the motor position value (24-bit number can be discarded the highest byte)
+      private int AngleToStep(AxisId Axis, double AngleInRad)
+      {
+         return (int)(AngleInRad * FactorRadToStep[(int)Axis]);
+      }
 
-      //  Circuit modifications implemented on your setup could invalidate
-      //  any warranty that you may have with your product. Use this
-      //  information at your own risk. The modifications involve direct
-      //  access to the stepper motor controls of your mount. Any "mis-control"
-      //  or "mis-command"  / "invalid parameter" or "garbage" data sent to the
-      //  mount could accidentally activate the stepper motors and allow it to
-      //  rotate "freely" damaging any equipment connected to your mount.
-      //  It is also possible that any garbage or invalid data sent to the mount
-      //  could cause its firmware to generate mis-steps pulse sequences to the
-      //  motors causing it to overheat. Make sure that you perform the
-      //  modifications and testing while there is no physical "load" or
-      //  dangling wires on your mount. Be sure to disconnect the power once
-      //  this event happens or if you notice any unusual sound coming from
-      //  the motor assembly.
-      //
-      //  CREDITS:
-      //
-      //  Portions of the information on this code should be attributed
-      //  to Mr. John Archbold from his initial observations and analysis
-      //  of the interface circuits and of the ASCII data stream between
-      //  the Hand Controller (HC) and the Go To Controller.
-      //
+      // Converts Step to Radian
+      private double[] FactorStepToRad = new double[] { 0, 0 };                 // The value of the motor board position (need to deal with the problem after the symbol) multiplied by the coefficient can be a radian value
+      private double StepToAngle(AxisId Axis, int Steps)
+      {
+         return Steps * FactorStepToRad[(int)Axis];
+      }
 
-
-
+      // Converts the speed in radians per second to an integer used to set the speed
+      private double[] FactorRadRateToInt = new double[] { 0, 0 };           // Multiply the radians per second by this factor to obtain a 32-bit integer that sets the speed used by the motor board
+      private int RadSpeedToInt(AxisId Axis, double RateInRad)
+      {
+         return (int)(RateInRad * FactorRadRateToInt[(int)Axis]);
+      }
       /////// Conection-Initalization Functions /////
 
       //
@@ -240,8 +212,16 @@ namespace Lunatic.SyntaController
       // Public Declare Function EQ_Init Lib "EQCONTRL" (ByVal COMPORT As String, ByVal baud As Long, ByVal timeout As Long, ByVal retry As Long) As Long
       public int Connect(string ComPort, int baud, int timeout, int retry)
       {
+         if ((timeout == 0) || (timeout > 50000)) {
+            return MOUNT_BADPARAM;
+         }
+
+         if (retry > 100) {
+            return MOUNT_BADPARAM;
+         }
+
          lock (lockObject) {
-            int result = 0;
+            int result = MOUNT_SUCCESS; ;
             if (EndPoint == null) {
                #region Capture connection parameters
                // ConnectionString = string.Format("{0}:{1},None,8,One,DTR,RTS", ComPort, baud);
@@ -265,6 +245,7 @@ namespace Lunatic.SyntaController
       }
 
 
+
       //
       // Function name    : EQ_End()
       // Description      : Close the COM Port and end EQ Connection
@@ -286,569 +267,37 @@ namespace Lunatic.SyntaController
          }
       }
 
-      //
-      // Function name    : EQ_InitMotors()
-      // Description      : Initialize RA/DEC Motors and activate Motor Driver Coils
-      // Return type      : DOUBLE
-      //                     000 - Success
-      //                     001 - COM PORT Not available
-      //                     003 - COM Timeout Error
-      //                     006 - RA Motor still running
-      //                     007 - DEC Motor still running
-      //                     008 - Error Initializing RA Motor
-      //                     009 - Error Initilizing DEC Motor
-      //                     010 - Cannot execute command at the current stepper controller state
-      // Argument         : DOUBLE RA_val       Initial ra microstep counter value
-      // Argument         : DOUBLE DEC_val     Initial dec microstep counter value
-      //
-      // Public Declare Function EQ_InitMotors Lib "EQCONTRL" (ByVal RA As Long, ByVal DEC As Long) As Long
-      public int EQ_InitMotors(int RA, int DEC)
-      {
-         throw new NotImplementedException();
-      }
 
-      /////// Motor Status Functions /////
-
-
-      //
-      // Function name    : EQ_GetMotorValues()
-      // Description      : Get RA/DEC Motor microstep counts
-      // Return type      : Double - Stepper Counter Values
-      //                     0 - 16777215  Valid Count Values
-      //                     0x1000000 - Mount Not available
-      //                     0x1000005 - COM TIMEOUT
-      //                     0x10000FF - Illegal Mount reply
-      //                     0x3000000 - Invalid Parameter
-      // Argument         : DOUBLE motor_id
-      //                     00 - RA Motor
-      //                     01 - DEC Motor
-      //
-      // Public Declare Function EQ_GetMotorValues Lib "EQCONTRL" (ByVal motor_id As Long) As Long
-      public int EQ_MotorValues(int motorId)
-      {
-         throw new NotImplementedException();
-      }
-
-      //
-      // Function name    : EQ_GetMotorStatus()
-      // Description      : Get RA/DEC Stepper Motor Status
-      // Return type      : DOUBLE
-      //                     128 - Motor not rotating, Teeth at front contact
-      //                     144 - Motor rotating, Teeth at front contact
-      //                     160 - Motor not rotating, Teeth at rear contact
-      //                     176 - Motor rotating, Teeth at rear contact
-      //                     200 - Motor not initialized
-      //                     001 - COM Port Not available
-      //                     003 - COM Timeout Error
-      //                     999 - Invalid Parameter
-      // Argument         : DOUBLE motor_id
-      //                     00 - RA Motor
-      //                     01 - DEC Motor
-      //
-      // Public Declare Function EQ_GetMotorStatus Lib "EQCONTRL" (ByVal motor_id As Long) As Long
-      public int EQ_GetMotorStatus(int motorId)
-      {
-         throw new NotImplementedException();
-      }
-
-
-
-      //
-      // Function name    : EQ_SeTMotorValues()
-      // Description      : Sets RA/DEC Motor microstep counters (pseudo encoder position)
-      // Return type      : DOUBLE - Stepper Counter Values
-      //                     000 - Success
-      //                     001 - Comport Not available
-      //                     003 - COM Timeout Error
-      //                     010 - Cannot execute command at the current stepper controller state
-      //                     011 - Motor not initialized
-      //                     999 - Invalid Parameter
-      // Argument         : DOUBLE motor_id
-      //                     00 - RA Motor
-      //                     01 - DEC Motor
-      // Argument         : DOUBLE motor_val
-      //                     0 - 16777215  Valid Count Values
-      //
-      // Public Declare Function EQ_SetMotorValues Lib "EQCONTRL" (ByVal motor_id As Long, ByVal motor_val As Long) As Long
-      public int EQ_SetMotorValues(int motorId, int motorValue)
-      {
-         throw new NotImplementedException();
-      }
-
-
-
-      /////// Motor Movement Functions /////
-
-      //
-      // Function name    : EQ_StartMoveMotor
-      // Description      : Slew RA/DEC Motor based on provided microstep counts
-      // Return type      : DOUBLE
-      //                     000 - Success
-      //                     001 - COM PORT Not available
-      //                     003 - COM Timeout Error
-      //                     004 - Motor still busy, aborted
-      //                     010 - Cannot execute command at the current stepper controller state
-      //                     011 - Motor not initialized
-      //                     999 - Invalid Parameter
-      // Argument         : DOUBLE motor_id
-      //                     00 - RA Motor
-      //                     01 - DEC Motor
-      // Argument         : DOUBLE hemisphere
-      //                     00 - North
-      //                     01 - South
-      // Argument         : DOUBLE direction
-      //                     00 - Forward(+)
-      //                     01 - Reverse(-)
-      // Argument         : DOUBLE steps count
-      // Argument         : DOUBLE motor de-acceleration  point (set between 50% t0 90% of total steps)
-      //
-      /// Public Declare Function EQ_StartMoveMotor Lib "EQCONTRL" (ByVal motor_id As Long, ByVal hemisphere As Long, ByVal direction As Long, ByVal Steps As Long, ByVal stepslowdown As Long) As Long
-      public int EQ_StartMoveMotor(int motorId, int hemisphere, int direction, int steps, int stepSlowDown)
-      {
-         throw new NotImplementedException();
-      }
-
-
-      //
-      // Function name    : EQ_Slew()
-      // Description      : Slew RA/DEC Motor based on given rate
-      // Return type      : DOUBLE
-      //                     000 - Success
-      //                     001 - Comport Not available
-      //                     003 - COM Timeout Error
-      //                     004 - Motor still busy
-      //                     010 - Cannot execute command at the current stepper controller state
-      //                     011 - Motor not initialized
-      //                     999 - Invalid Parameter
-      // Argument         : DOUBLE motor_id
-      //                     00 - RA Motor
-      //                     01 - DEC Motor
-      // Argument         : INTEGER direction
-      //                    00 - Forward(+)
-      //                    01 - Reverse(-)
-      // Argument         : INTEGER rate
-      //                         1-800 of Sidreal Rate
-      //
-      // Public Declare Function EQ_Slew Lib "EQCONTRL" (ByVal motor_id As Long, ByVal hemisphere As Long, ByVal direction As Long, ByVal rate As Long) As Long
-      public int EQ_Slew(int motorId, int hemisphere, int direction, int rate)
-      {
-         throw new NotImplementedException();
-      }
-
-
-      //
-      // Function name    : EQ_StartRATrack()
-      // Description      : Track or rotate RA/DEC Stepper Motors at the specified rate
-      // Return type      : DOUBLE
-      //                     000 - Success
-      //                     001 - Comport Not available
-      //                     003 - COM Timeout Error
-      //                     010 - Cannot execute command at the current stepper controller state
-      //                     011 - Motor not initialized
-      //                     999 - Invalid Parameter
-      // Argument         : DOUBLE trackrate
-      //                     00 - Sidreal
-      //                     01 - Lunar
-      //                     02 - Solar
-      // Argument         : DOUBLE hemisphere
-      //                     00 - North
-      //                     01 - South
-      // Argument         : DOUBLE direction
-      //                     00 - Forward(+)
-      //                     01 - Reverse(-)
-      //
-      // Public Declare Function EQ_StartRATrack Lib "EQCONTRL" (ByVal trackrate As Long, ByVal hemisphere As Long, ByVal direction As Long) As Long
-      public int EQ_StartRATrack(int trackRate, int hemisphere, int direction)
-      {
-         throw new NotImplementedException();
-      }
-
-      //
-      // Function name    : EQ_SendGuideRate()
-      // Description      : Adjust the RA/DEC rotation trackrate based on a given speed adjustment rate
-      // Return type      : int
-      //                     000 - Success
-      //                     001 - Comport Not available
-      //                     003 - COM Timeout Error
-      //                     004 - Motor still busy
-      //                     010 - Cannot execute command at the current stepper controller state
-      //                     011 - Motor not initialized
-      //                     999 - Invalid Parameter
-      //
-      // Argument         : DOUBLE motor_id
-      //                     00 - RA Motor
-      //                     01 - DEC Motor
-      // Argument         : DOUBLE trackrate
-      //                     00 - Sidreal
-      //                     01 - Lunar
-      //                     02 - Solar
-      // Argument         : DOUBLE guiderate
-      //                     00 - No Change
-      //                     01 - 10%
-      //                     02 - 20%
-      //                     03 - 30%
-      //                     04 - 40%
-      //                     05 - 50%
-      //                     06 - 60%
-      //                     07 - 70%
-      //                     08 - 80%
-      //                     09 - 90%
-      // Argument         : DOUBLE guidedir
-      //                     00 - Positive
-      //                     01 - Negative
-      // Argument         : DOUBLE hemisphere (used for DEC Motor control)
-      //                     00 - North
-      //                     01 - South
-      // Argument         : DOUBLE direction (used for DEC Motor control)
-      //                     00 - Forward(+)
-      //                     01 - Reverse(-)
-      //
-      // Public Declare Function EQ_SendGuideRate Lib "EQCONTRL" (ByVal motor_id As Long, ByVal trackrate As Long, ByVal guiderate As Long, ByVal guidedir As Long, ByVal hemisphere As Long, ByVal direction As Long) As Long
-      public int EQ_SendGuideRate(int motorId, int trackRate, int guideRate, int guideDirection, int hemisphere, int direction)
-      {
-         throw new NotImplementedException();
-      }
-
-
-      //
-      // Function name    : EQ_SendCustomTrackRate()
-      // Description      : Adjust the RA/DEC rotation trackrate based on a given speed adjustment offset
-      // Return type      : DOUBLE
-      //                     000 - Success
-      //                     001 - Comport Not available
-      //                     003 - COM Timeout Error
-      //                     004 - Motor still busy
-      //                     010 - Cannot Execute command at the current state
-      //                     011 - Motor not initialized
-      //                     999 - Invalid Parameter
-      //
-      // Argument         : DOUBLE motor_id
-      //                     00 - RA Motor
-      //                     01 - DEC Motor
-      // Argument         : DOUBLE trackrate
-      //                     00 - Sidreal
-      //                     01 - Lunar
-      //                     02 - Solar
-      // Argument         : DOUBLE trackoffset
-      //                     0 - 300
-      // Argument         : DOUBLE trackdir
-      //                     00 - Positive
-      //                     01 - Negative
-      // Argument         : DOUBLE hemisphere (used for DEC Motor)
-      //                     00 - North
-      //                     01 - South
-      // Argument         : DOUBLE direction (used for DEC Motor)
-      //                     00 - Forward(+)
-      //                     01 - Reverse(-)
-      //
-      // Public Declare Function EQ_SendCustomTrackRate Lib "EQCONTRL" (ByVal motor_id As Long, ByVal trackrate As Long, ByVal trackoffset As Long, ByVal trackdir As Long, ByVal hemisphere As Long, ByVal direction As Long) As Long
-      public int EQ_SendCustomTrackRate(int motorId, int trackRate, int trackOffset, int trackDirection, int hemisphere, int direction)
-      {
-         throw new NotImplementedException();
-      }
-
-
-
-      //
-      // Function name    : EQ_SetCustomTrackRate()
-      // Description      : Adjust the RA/DEC rotation trackrate based on a given speed adjustment offset
-      // Return type      : DOUBLE
-      //                     000 - Success
-      //                     001 - Comport Not available
-      //                     003 - COM Timeout Error
-      //                     004 - Motor still busy
-      //                     010 - Cannot Execute command at the current state
-      //                     011 - Motor not initialized
-      //                     999 - Invalid Parameter
-      //
-      // Argument         : DOUBLE motor_id
-      //                     00 - RA Motor
-      //                     01 - DEC Motor
-      // Argument         : DOUBLE trackmode
-      //                     01 - Initial
-      //                     00 - Update
-      // Argument         : DOUBLE trackoffset
-      // Argument         : DOUBLE trackbase
-      //                     00 - LowSpeed
-      // Argument         : DOUBLE hemisphere
-      //                     00 - North
-      //                     01 - South
-      // Argument         : DOUBLE direction
-      //                     00 - Forward(+)
-      //                     01 - Reverse(-)
-      //
-      // Public Declare Function EQ_SetCustomTrackRate Lib "EQCONTRL" (ByVal motor_id As Long, ByVal trackmode As Long, ByVal trackoffset As Long, ByVal trackbase As Long, ByVal hemisphere As Long, ByVal direction As Long) As Long
-      public int EQ_SetCustomTrackRate(int motorId, int trackMode, int trackOffset, int trackBase, int hemisphere, int direction)
-      {
-         throw new NotImplementedException();
-      }
-
-      //
-      // Function name    : EQ_MotorStop()
-      // Description      : Stop RA/DEC Motor
-      // Return type      : DOUBLE
-      //                     000 - Success
-      //                     001 - Comport Not available
-      //                     003 - COM Timeout Error
-      //                     010 - Cannot execute command at the current stepper controller state
-      //                     011 - Motor not initialized
-      //                     999 - Invalid Parameter
-      // Argument         : DOUBLE motor_id
-      //                     00 - RA Motor
-      //                     01 - DEC Motor
-      //                     02 - RA & DEC
-      //
-      // Public Declare Function EQ_MotorStop Lib "EQCONTRL" (ByVal value As Long) As Long
-      public int EQ_MotorStop(int motorId)
-      {
-         throw new NotImplementedException();
-      }
-
-
-      //
-      // Function name    : EQ_SetAutoguiderPortRate()
-      // Description      : Sets RA/DEC Autoguideport rate
-      // Return type      : DOUBLE - Stepper Counter Values
-      //                     000 - Success
-      //                     001 - Comport Not available
-      //                     003 - COM Timeout Error
-      //                     999 - Invalid Parameter
-      // Argument         : motor_id
-      //                       00 - RA Motor
-      //                       01 - DEC Motor
-      // Argument         : DOUBLE guideportrate
-      //                       00 - 0.25x
-      //                       01 - 0.50x
-      //                       02 - 0.75x
-      //                       03 - 1.00x
-      //
-      // Public Declare Function EQ_SetAutoguiderPortRate Lib "EQCONTRL" (ByVal motor_id As Long, ByVal guideportrate As Long) As Long
-      public int EQ_SetAutoguiderPortRate(int motorId, int guideportRate)
-      {
-         throw new NotImplementedException();
-      }
-
-
-
-      // Function name    : EQ_GetTotal360microstep()
-      // Description      : Get RA/DEC Motor Total 360 degree microstep counts
-      // Return type      : Double - Stepper Counter Values
-      //                     0 - 16777215  Valid Count Values
-      //                     0x1000000 - Mount Not available
-      //                     0x3000000 - Invalid Parameter
-      // Argument         : DOUBLE motor_id
-      //                     00 - RA Motor
-      //                     01 - DEC Motor
-      //
-      // Public Declare Function EQ_GetTotal360microstep Lib "EQCONTRL" (ByVal value As Long) As Long
-      public int EQ_GetTotal360microstep(int motorId)
-      {
-         throw new NotImplementedException();
-      }
-
-      // Function name    : EQ_GetMountVersion()
-      // Description      : Get Mount//s Firmware version
-      // Return type      : Double - Mount//s Firmware Version
-      //
-      //                     0x1000000 - Mount Not available
-      //
-      // Public Declare Function EQ_GetMountVersion Lib "EQCONTRL" () As Long
-      public int EQ_GetMountVersion()
-      {
-         throw new NotImplementedException();
-      }
-
-      // Function name    : EQ_GetMountStatus()
-      // Description      : Get Mount//s Firmware version
-      // Return type      : Double - Mount Status
-      //
-      //                     000 - Not Connected
-      //                     001 - Connected
-      //
-      // Public Declare Function EQ_GetMountStatus Lib "EQCONTRL" () As Long
-      public int EQ_GetMountStatus()
-      {
-         throw new NotImplementedException();
-      }
-
-      // Function name    : EQ_DriverVersion()
-      // Description      : Get Drivr Version
-      // Return type      : Double - Driver Version
-      //
-      // Public Declare Function EQ_DriverVersion Lib "EQCONTRL" () As Long
-      public int EQ_DriverVersion()
-      {
-         throw new NotImplementedException();
-      }
-
-
-      // Function name    : EQ_GP()
-      // Description      : Get Mount Parameters
-      // Return type      : Double - parameter value
-      // Public Declare Function EQ_GP Lib "EQCONTRL" (ByVal motor_id As Long, ByVal p_id As Long) As Long
-      public int EQ_GP(int motorId, int parameterId)
-      {
-         throw new NotImplementedException();
-      }
-
-      // Function name    : EQ_WP()
-      // Description      : write parameter
-      // Parameter        : value
-      // Return type      : error code
-      // Public Declare Function EQ_WP Lib "EQContrl.dll" (ByVal motor_id As Long, ByVal p_id As Long, ByVal value As Long) As Long
-      public int EQ_WP(int motorId, int parameterId, int value)
-      {
-         throw new NotImplementedException();
-      }
-
-
-      // Public Declare Function EQ_SetOffset Lib "EQCONTRL" (ByVal motor_id As Long, ByVal doffset As Long) As Long
-      public int EQ_SetOffset(int motorId, int offset)
-      {
-         throw new NotImplementedException();
-      }
-
-      // Function name    : EQ_SetMountType
-      // Description      : Sets Mount protocol tpye
-      // Return type      : 0
-      // Public Declare Function EQ_SetMountType Lib "EQCONTRL" (ByVal motor_type As Long) As Long
-      public int EQ_SetMountType(int motorType)
-      {
-         throw new NotImplementedException();
-      }
-
-
-      // Function name    : EQ_WriteByte
-      // Description      : write a byte out of the serial port
-      // Return type      : error code
-      // Public Declare Function EQ_WriteByte Lib "EQContrl.dll" (ByVal bData As Byte) As Long
-      public int EQ_WriteByte(byte data)
-      {
-         throw new NotImplementedException();
-      }
-
-      // Function name    : EQ_SendMountCommand
-      // Description      : send a mount command
-      // Return type      : error code
-      // Public Declare Function EQ_SendMountCommand Lib "EQContrl.dll" (ByVal motor_id As Long, ByVal command As Byte, ByVal params As Long, ByVal Count As Long) As Long
-      public int EQ_SendMountCommand(int motorId, byte command, int parameters, int count)
-      {
-         throw new NotImplementedException();
-      }
-
-
-      // Function name    : EQ_QueryMount
-      // Description      : send a string to the mount and get respnse back
-      // Return type      : error code
-      // Public Declare Function EQ_QueryMount Lib "EQCONTRL" (ByVal ptx As Long, ByVal prx As Long, ByVal sz As Long) As Long
-      public int EQ_QueryMount(int ptx, int prx, int sz)
-      {
-         throw new NotImplementedException();
-      }
-
-      // Function name    : EQCom::EQ_DebugLog
-      // Description      : Control of debug logging to file
-      // param  BYTE*     : pointer to file name
-      // param  BYTE*     : pointer to comment
-      // param  DWORD     : Operation (stop=0; start=1; append=2)
-      // return DWORD     : DLL Return Code
-      // - DLL_SUCCESS       000      Success
-      // - DLL_GENERALERROR  012      Error
-      // - DLL_BADPARAM      999      bad parmComport timeout
-      // Public Declare Function EQ_DebugLog Lib "EQCONTRL" (ByVal FileName As String, ByVal comment As String, ByVal operation As Long) As Long
-      public int EQ_DebugLog(string filename, string comment, int operation)
-      {
-         throw new NotImplementedException();
-      }
-
-      ///////////////////////////////////////////////////////////////////////////////////////
-      ///** \brief  Function name       : EQCom::EQ_SetCustomTrackRate()
-      //  * \brief  Description         : Guiderate activate
-      //  * \param  DWORD               : motor_id      (0 RA, 1 DEC)
-      //  * \param  DOUBLE              : rate arcsec/sec
-      //  * \param  DWORD               : hemisphere    (0 NORTHERN, 1 SOUTHERN)
-      //  * \param  DWORD               : direction     (0 FORWARD,  1 REVERSE)
-      //  * \return DWORD               : DLL Return Code
-      //  *
-      //  * - DLL_SUCCESS       000      Success
-      //  * - DLL_NOCOMPORT     001      Comport Not available
-      //  * - DLL_COMERROR      003      COM Timeout Error
-      //  * - DLL_MOTORBUSY     004      Motor still busy
-      //  * - DLL_NONSTANDARD   005      Mount Initialized on non-standard parameters
-      //  * - DLL_MOUNTBUSY     010      Cannot execute command at the current state
-      //  * - DLL_MOTORERROR    011      Motor not initialized
-      //  * - DLL_MOTORINACTIVE 200      Motor coils not active
-      //  * - DLL_BADPARAM      999      Invalid parameter
-      //  */
-      // Public Declare Function EQ_SetAxisRate Lib "EQCONTRL" (ByVal motor_id As Long, ByVal rate As Double, hemisphere As Long, direction As Long) As Long
-      public int EQ_SetAxisRate(int motorId, double rate, int hemisphere, int direction)
-      {
-         throw new NotImplementedException();
-      }
-
-
-      //Public Function EQ_GetMountFeatures() As Long
-      //    Dim res As Long
-      //    res = EQ_GP(0, 10009)
-      //    If res<> 999 Then
-      //        EQ_GetMountFeatures = res
-      //    Else
-      //        EQ_GetMountFeatures = 0
-      //    End If
-      //End Function
-
-      public int EQ_GetMountFeatures()
-      {
-         int res = EQ_GP(0, 10009);
-         if (res != 999) {
-            return res;
-         }
-         else {
-            return 0;
-         }
-      }
-
-      #endregion
-
-      #region Skywatcher_Open code ...
-
-      /// ************ Motion control related **********************
-      /// They are variables represent the mount's status, but not grantee always updated.        
-      /// 1) The Positions are updated with MCGetAxisPosition and MCSetAxisPosition
-      /// 2) The TargetPositions are updated with MCAxisSlewTo        
-      /// 3) The SlewingSpeed are updated with MCAxisSlew
-      /// 4) The AxesStatus are updated updated with MCGetAxisStatus, MCAxisSlewTo, MCAxisSlew
-      /// Notes:
-      /// 1. Positions may not represent the mount's position while it is slewing, or user manually update by hand
-      public double[] Positions = new double[2] { 0, 0 };            // The axis coordinate position of the carriage, in radians
-      public double[] TargetPositions = new double[2] { 0, 0 };      // The target position, in radians
-      public double[] SlewingSpeed = new double[2] { 0, 0 };         // The speed in radians per second                
-      private AxisStatus[] AxesStatus = new AxisStatus[2];           // The two-axis status of the carriage should pass AxesStatus[AXIS1] and AxesStatus[AXIS2] by Reference
-
-      // Converting an arc angle to a step
-      private double[] FactorRadToStep = new double[] { 0, 0 };      // Multiply the radian value by the coefficient to get the motor position value (24-bit number can be discarded the highest byte)
-      private long AngleToStep(AxisId Axis, double AngleInRad)
-      {
-         return (long)(AngleInRad * FactorRadToStep[(int)Axis]);
-      }
-
-      // Converts Step to Radian
-      private double[] FactorStepToRad = new double[] { 0, 0 };                 // The value of the motor board position (need to deal with the problem after the symbol) multiplied by the coefficient can be a radian value
-      private double StepToAngle(AxisId Axis, long Steps)
-      {
-         return Steps * FactorStepToRad[(int)Axis];
-      }
-
-      // Converts the speed in radians per second to an integer used to set the speed
-      private double[] FactorRadRateToInt = new double[] { 0, 0 };           // Multiply the radians per second by this factor to obtain a 32-bit integer that sets the speed used by the motor board
-      private long RadSpeedToInt(AxisId Axis, double RateInRad)
-      {
-         return (long)(RateInRad * FactorRadRateToInt[(int)Axis]);
-      }
+      /////////////////////////////////////////////////////////////////////////////////////
+      /** \brief	Function name		: MCInit
+        * \brief  Originally			: CONTRL EQCom::EQ_Init()
+        * \brief	Description			: Initialize EQ Mount
+        * \param	STRING				: COMPORT Name
+        * \param	DOUBLE				: baud - Baud Rate
+        * \param	DOUBLE				: timeout - COMPORT Timeout (1 - 50000)
+        * \param	DOUBLE				: retry - COMPORT Retry (0 - 100)
+        * \return	DWORD				: DLL Error Code
+        *
+        *	- DLL_SUCCESS		000		 Success
+        *	- DLL_NOCOMPORT		001		 COM port not available
+        *	- DLL_COMCONNECTED	003		 Mount already connected
+        *	- DLL_COMERROR		003		 COM Timeout Error
+        *	- DLL_MOTORBUSY		004		 Motor still busy
+        *	- DLL_NONSTANDARD	005		 Mount Initialized on non-standard parameters
+        *	- DLL_MOUNTBUSY		010		 Cannot execute command at the current state
+        *	- DLL_MOTORERROR	011		 Motor not initialized
+        *	- DLL_MOTORINACTIVE	200		 Motor coils not active
+        *	- DLL_BADPARAM		999		 Invalid parameter
+        *
+        */
 
       public void MCInit()
       {
+         EQ_InitAll();
+
+         // Get Mount Firmware Version & Mount ID (e)
          try {
+            
             InquireMotorBoardVersion(AxisId.Axis1_RA);
          }
          catch {
@@ -861,34 +310,42 @@ namespace Lunatic.SyntaController
 
          //// NOTE: Simulator settings, Mount dependent Settings
 
-         // Inquire Gear Rate
+         // Inquire Gear Rate (a)
          InquireGridPerRevolution(AxisId.Axis1_RA);
          InquireGridPerRevolution(AxisId.Axis2_DEC);
 
-         // Inquire motor timer interrup frequency
+         // Inquire motor timer interrup frequency (b)
          InquireTimerInterruptFreq(AxisId.Axis1_RA);
          InquireTimerInterruptFreq(AxisId.Axis2_DEC);
 
-         // Inquire motor high speed ratio
+         // Inquire motor high speed ratio (g)
          InquireHighSpeedRatio(AxisId.Axis1_RA);
          InquireHighSpeedRatio(AxisId.Axis2_DEC);
 
-         // Inquire PEC period
-         // DC motor controller does not support PEC
-         if (!IsDCMotor) {
-            //InquirePECPeriod(AXISID.AXIS1);
-            //InquirePECPeriod(AXISID.AXIS2);
-         }
+         // Inquire PEC period (s)
+         InquirePECPeriod(AxisId.Axis1_RA);
+         InquirePECPeriod(AxisId.Axis2_DEC);
 
-         // Inquire Axis Position
+         // Inquire Polarscope LED (V)
+         InquirePolarScopeLED();
+
+         // Inquire mount parameters (q)
+         InquireMountParameters();
+
+         // InquireSnapPorts (O)
+         InquireSnapPorts();
+
+         // 
+         // Inquire Axis Position (j)
          Positions[(int)AxisId.Axis1_RA] = MCGetAxisPosition(AxisId.Axis1_RA);
          Positions[(int)AxisId.Axis2_DEC] = MCGetAxisPosition(AxisId.Axis2_DEC);
 
+         // Initialise the motors (F)
          InitializeMC();
 
          // These two LowSpeedGotoMargin are calculate from slewing for 5 seconds in 128x sidereal rate
-         LowSpeedGotoMargin[(int)AxisId.Axis1_RA] = (long)(640 * Constants.SIDEREAL_RATE_ARCSECS * FactorRadToStep[(int)AxisId.Axis1_RA]);
-         LowSpeedGotoMargin[(int)AxisId.Axis2_DEC] = (long)(640 * Constants.SIDEREAL_RATE_ARCSECS * FactorRadToStep[(int)AxisId.Axis2_DEC]);
+         LowSpeedGotoMargin[(int)AxisId.Axis1_RA] = (int)(640 * Constants.SIDEREAL_RATE_ARCSECS * FactorRadToStep[(int)AxisId.Axis1_RA]);
+         LowSpeedGotoMargin[(int)AxisId.Axis2_DEC] = (int)(640 * Constants.SIDEREAL_RATE_ARCSECS * FactorRadToStep[(int)AxisId.Axis2_DEC]);
 
          // Default break steps
          BreakSteps[(int)AxisId.Axis1_RA] = 3500;
@@ -940,7 +397,7 @@ namespace Lunatic.SyntaController
          //   highspeed = true;
          //}
          InternalSpeed = 1 / InternalSpeed;                    // For using function RadSpeedToInt(), change to unit Senonds/Rad.
-         long SpeedInt = RadSpeedToInt(Axis, InternalSpeed);
+         int SpeedInt = RadSpeedToInt(Axis, InternalSpeed);
          if ((MCVersion == 0x010600) || (MCVersion == 0x010601))  // For special MC version.
             SpeedInt -= 3;
          if (SpeedInt < 6) SpeedInt = 6;
@@ -986,7 +443,7 @@ namespace Lunatic.SyntaController
 
          // Might need to check whether motor has stopped.
 
-         // Check if the distance is long enough to trigger a high speed GOTO.
+         // Check if the distance is int enough to trigger a high speed GOTO.
          if (MovingSteps > LowSpeedGotoMargin[(int)Axis]) {
             SetMotionMode(Axis, '0', dir);      // high speed GOTO slewing 
             highspeed = true;
@@ -1017,10 +474,10 @@ namespace Lunatic.SyntaController
 
       public void MCSetAxisPosition(AxisId Axis, double NewValue)
       {
-         long NewStepIndex = AngleToStep(Axis, NewValue);
+         int NewStepIndex = AngleToStep(Axis, NewValue);
          NewStepIndex += 0x800000;
 
-         string szCmd = longTo6BitHEX(NewStepIndex);
+         string szCmd = intTo6BitHEX(NewStepIndex);
          TalkWithAxis(Axis, 'E', szCmd);
 
          Positions[(int)Axis] = NewValue;
@@ -1030,7 +487,7 @@ namespace Lunatic.SyntaController
       {
          string response = TalkWithAxis(Axis, 'j', null);
 
-         long iPosition = BCDstr2long(response);
+         int iPosition = BCDstr2int(response);
          iPosition -= 0x00800000;
          Positions[(int)Axis] = StepToAngle(Axis, iPosition);
 
@@ -1098,19 +555,19 @@ namespace Lunatic.SyntaController
          sb.Append(cmd);                         // 1: Length of command( Source, distination, command char, data )
 
          // Target Device
-         sb.Append(((int)axis+1).ToString());    // 2: Target Axis
-                                               // Copy command data to buffer
+         sb.Append(((int)axis + 1).ToString());    // 2: Target Axis
+                                                   // Copy command data to buffer
          sb.Append(cmdDataStr);
 
          sb.Append(cEndChar);    // CR Character            
 
          string cmdString = sb.ToString();
-            //string.Format("{0}{1}{2}{3}{4}",
-            //cStartChar_Out,
-            //command,
-            //(int)axis,
-            //(cmdDataStr ?? "."),
-            //cEndChar);
+         //string.Format("{0}{1}{2}{3}{4}",
+         //cStartChar_Out,
+         //command,
+         //(int)axis,
+         //(cmdDataStr ?? "."),
+         //cEndChar);
 
          var cmdTransaction = new EQTransaction(cmdString) { Timeout = TimeSpan.FromSeconds(TimeOut) };
 
@@ -1166,29 +623,32 @@ namespace Lunatic.SyntaController
       {
          string response = TalkWithAxis(Axis, 'e', null);
 
-         long tmpMCVersion = BCDstr2long(response);
+         int tmpMCVersion = BCDstr2int(response);
 
          MCVersion = ((tmpMCVersion & 0xFF) << 16) | ((tmpMCVersion & 0xFF00)) | ((tmpMCVersion & 0xFF0000) >> 16);
 
       }
+      
       // Inquire Grid Per Revolution ":a(*2)", where *2: '1'= CH1, '2' = CH2.
       private void InquireGridPerRevolution(AxisId Axis)
       {
+         int axisId = (int)Axis;
          string response = TalkWithAxis(Axis, 'a', null);
 
-         long GearRatio = BCDstr2long(response);
-
+         int gearRatio = BCDstr2int(response);
          // There is a bug in the earlier version firmware(Before 2.00) of motor controller MC001.
          // Overwrite the GearRatio reported by the MC for 80GT mount and 114GT mount.
          if ((MCVersion & 0x0000FF) == 0x80) {
-            GearRatio = 0x162B97;      // for 80GT mount
+            gearRatio = 0x162B97;      // for 80GT mount
          }
          if ((MCVersion & 0x0000FF) == 0x82) {
-            GearRatio = 0x205318;      // for 114GT mount
+            gearRatio = 0x205318;      // for 114GT mount
          }
-
-         FactorRadToStep[(int)Axis] = GearRatio / (2 * Math.PI);
-         FactorStepToRad[(int)Axis] = 2 * Math.PI / GearRatio;
+         // Final check taken from original EQCONTRL code
+         if (gearRatio == 0) { gearRatio++; }   // Avoid DIV 0 Errors
+         GridPerRevolution[axisId] = gearRatio;       // Save setting
+         FactorRadToStep[axisId] = gearRatio / (2 * Math.PI);
+         FactorStepToRad[axisId] = 2 * Math.PI / gearRatio;
       }
 
       // Inquire Timer Interrupt Freq ":b1".
@@ -1196,9 +656,10 @@ namespace Lunatic.SyntaController
       {
          string response = TalkWithAxis(Axis, 'b', null);
 
-         long TimeFreq = BCDstr2long(response);
-         StepTimerFreq[(int)Axis] = TimeFreq;
-
+         int timeFreq = BCDstr2int(response);
+         // Check taken from original EQCONTRL code to prevent DIV 0 errors
+         if (timeFreq == 0) { timeFreq++; }
+         StepTimerFreq[(int)Axis] = timeFreq;
          FactorRadRateToInt[(int)Axis] = (double)(StepTimerFreq[(int)Axis]) / FactorRadToStep[(int)Axis];
       }
 
@@ -1207,7 +668,7 @@ namespace Lunatic.SyntaController
       {
          string response = TalkWithAxis(Axis, 'g', null);
 
-         long highSpeedRatio = BCDstr2long(response);
+         int highSpeedRatio = BCDstr2int(response);
          HighSpeedRatio[(int)Axis] = highSpeedRatio;
       }
 
@@ -1216,9 +677,55 @@ namespace Lunatic.SyntaController
       {
          string response = TalkWithAxis(Axis, 's', null);
 
-         long PECPeriod = BCDstr2long(response);
+         int PECPeriod = BCDstr2int(response);
          PESteps[(int)Axis] = PECPeriod;
       }
+
+      // Inquire the mount parameters.  "q"
+      private void InquireMountParameters()
+      {
+         int response = EQ_SendCommand(AxisId.Axis1_RA, 'q', 1, 6);
+         if ((response & EQ_ERROR) != EQ_ERROR) {
+            // its a later mount
+            int axis = (int)AxisId.Axis1_RA;
+            MountParameters[axis] = response;
+            HasHalfCurrent[axis] = ((response & 0x00004000) == 0x00004000);
+            HasEncoder[axis] = ((response & 0x00000001) == 0x00000001);
+            HasPPEC[axis] = ((response & 0x00000002) == 0x00000002);
+            HasPolarscopeLED = ((response & 0x00001000) == 0x00001000);
+            HasHomeSensor = ((response & 0x00000004) == 0x00000004);
+            // since the q: message is being supported read DEC axis as well
+            response = EQ_SendCommand(AxisId.Axis2_DEC, 'q', 1, 6);
+            if ((response & EQ_ERROR) != EQ_ERROR) {
+               axis = (int)AxisId.Axis2_DEC;
+               MountParameters[axis] = response;
+               HasHalfCurrent[axis] = ((response & 0x00004000) == 0x00004000);
+               HasEncoder[axis] = ((response & 0x00000001) == 0x00000001);
+               HasPPEC[axis] = ((response & 0x00000002) == 0x00000002);
+            }
+         }
+      }
+
+      // Inquire the snap ports "O"
+      private void InquireSnapPorts()
+      {
+         for (int i = 0; i < 2; i++) {
+            int response = EQ_SendCommand(i, 'O', 0, 1);
+            HasSnap[i] = ((response & EQ_ERROR) != EQ_ERROR);
+         }
+      }
+
+      // Inquire Polar scope LED
+      private void InquirePolarScopeLED()
+      {
+         try {
+            string response = TalkWithAxis(AxisId.Axis2_DEC, 'V', null);
+            // If no error so mount MAY have  polarscope LED
+            HasPolarscopeLED = true;
+         }
+         catch { }
+      }
+
       // Set initialization done ":F3", where '3'= Both CH1 and CH2.
       private void InitializeMC()
       {
@@ -1230,27 +737,27 @@ namespace Lunatic.SyntaController
          string szCmd = "" + func + direction;
          TalkWithAxis(Axis, 'G', szCmd);
       }
-      private void SetGotoTargetIncrement(AxisId Axis, long StepsCount)
+      private void SetGotoTargetIncrement(AxisId Axis, int StepsCount)
       {
-         string cmd = longTo6BitHEX(StepsCount);
+         string cmd = intTo6BitHEX(StepsCount);
 
          TalkWithAxis(Axis, 'H', cmd);
       }
-      private void SetBreakPointIncrement(AxisId Axis, long StepsCount)
+      private void SetBreakPointIncrement(AxisId Axis, int StepsCount)
       {
-         string szCmd = longTo6BitHEX(StepsCount);
+         string szCmd = intTo6BitHEX(StepsCount);
 
          TalkWithAxis(Axis, 'M', szCmd);
       }
-      private void SetBreakSteps(AxisId Axis, long NewBrakeSteps)
+      private void SetBreakSteps(AxisId Axis, int NewBrakeSteps)
       {
-         string szCmd = longTo6BitHEX(NewBrakeSteps);
+         string szCmd = intTo6BitHEX(NewBrakeSteps);
          TalkWithAxis(Axis, 'U', szCmd);
       }
-      private void SetStepPeriod(AxisId Axis, long StepsCount)
+      private void SetStepPeriod(AxisId Axis, int StepsCount)
       {
          System.Diagnostics.Debug.WriteLine(String.Format("SetStepPeriod({0}, {1})", Axis, StepsCount));
-         string szCmd = longTo6BitHEX(StepsCount);
+         string szCmd = intTo6BitHEX(StepsCount);
          TalkWithAxis(Axis, 'I', szCmd);
       }
       private void StartMotion(AxisId Axis)
@@ -1264,25 +771,25 @@ namespace Lunatic.SyntaController
       {
          return ((tmpChar >= '0') && (tmpChar <= '9')) || ((tmpChar >= 'A') && (tmpChar <= 'F'));
       }
-      private long HEX2Int(char HEX)
+      private int HEX2Int(char HEX)
       {
-         long tmp;
+         int tmp;
          tmp = HEX - 0x30;
          if (tmp > 9)
             tmp -= 7;
          return tmp;
       }
-      private long BCDstr2long(string str)
+      private int BCDstr2int(string str)
       {
          // =020782 => 8521474
          try {
-            long value = 0;
+            int value = 0;
             for (int i = 1; i + 1 < str.Length; i += 2) {
-               value += (long)(int.Parse(str.Substring(i, 2), System.Globalization.NumberStyles.AllowHexSpecifier) * Math.Pow(16, i - 1));
+               value += (int)(int.Parse(str.Substring(i, 2), System.Globalization.NumberStyles.AllowHexSpecifier) * Math.Pow(16, i - 1));
             }
 
             // if(D)
-            // Log.d(TAG,"BCDstr2long " + response + ","+value);
+            // Log.d(TAG,"BCDstr2int " + response + ","+value);
             return value;
          }
          catch (FormatException e) {
@@ -1293,7 +800,7 @@ namespace Lunatic.SyntaController
          // + Integer.parseInt(response.substring(2, 4), 16) * 256
          // + Integer.parseInt(response.substring(4, 6), 16) * 256 * 256;
       }
-      private string longTo6BitHEX(long number)
+      private string intTo6BitHEX(int number)
       {
          // 31 -> 0F0000
          String A = ((int)number & 0xFF).ToString("X").ToUpper();
@@ -1308,7 +815,7 @@ namespace Lunatic.SyntaController
             C = "0" + C;
 
          // if (D)
-         // Log.d(TAG, "longTo6BitHex " + number + "," + A + "," + B + "," + C);
+         // Log.d(TAG, "intTo6BitHex " + number + "," + A + "," + B + "," + C);
 
          return A + B + C;
       }
@@ -1317,7 +824,7 @@ namespace Lunatic.SyntaController
       {
          char cDirection;
 
-         var axesstatus = MCGetAxisStatus(Axis);   
+         var axesstatus = MCGetAxisStatus(Axis);
          if (!axesstatus.FullStop) {
             if ((axesstatus.SlewingTo) ||                               // GOTO in action
                  (axesstatus.HighSpeed) ||                              // Currently high speed slewing

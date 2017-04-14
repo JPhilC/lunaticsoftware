@@ -120,7 +120,7 @@ namespace ASCOM.Lunatic.Telescope
                _Logger.LogMessage("Connected", "Set - Connecting to port " + Settings.COMPort);
                int connectionResult = _Mount.Connect(Settings.COMPort, (int)Settings.BaudRate, (int)Settings.Timeout, (int)Settings.Retry);
                if (connectionResult == 0) {
-                  // Need to send current axis position
+                  // Need to send current axis position (E)
                   _Mount.MCSetAxisPosition(AxisId.Axis1_RA, Settings.RAAxisPosition);
                   _Mount.MCSetAxisPosition(AxisId.Axis2_DEC, Settings.DECAxisPosition);
 
