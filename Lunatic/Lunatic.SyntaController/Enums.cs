@@ -96,4 +96,25 @@ namespace Lunatic.SyntaController
       Lunar,
       Custom
    }
+
+   public enum TrackMode
+   {
+      Update,
+      Initial
+   }
+
+   public enum AutoguiderPortRate
+   {
+
+      [Description("1.00x")]
+      OneTimesX,
+      [Description("0.75x")]
+      Point75Times,
+      [Description("0.50x")]
+      Point50Times,
+      [Description("0.25x")]
+      Point25Times,
+      [Description("0.125x")]
+      Point125Times
+   }
 }

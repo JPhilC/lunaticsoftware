@@ -89,7 +89,7 @@ namespace Lunatic.SyntaController
       private int[] FastTarget = new int[2];
       private int[] FinalTarget = new int[2];
       private int[] CurrentPosition = new int[2];
-      private int[] Offset = new int[2];
+      private int[] GuideRateOffset = new int[2];
 
       private bool IsDCMotor;                // Ture: The motor controller is a DC motor controller. It uses TX/RX line is bus topology.
                                              // False: The motor controller is a stepper motor controller. TX/RX lines are seperated.

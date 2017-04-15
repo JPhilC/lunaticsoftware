@@ -101,7 +101,7 @@ namespace Lunatic.SyntaController
       private const double MAX_RATE = (800 * SID_RATE);
 
       private const int SecondsPerSiderealDay = 86164;
-      private const int EQDRIVERVERSION = 0x206;
+      private const int DriverVersion = 0x206;
 
       private const int EQMOUNT = 1;         // EQG Protocol 
       private const int AUTO_DETECT = 0;     // Detected Current Mount
@@ -188,148 +188,16 @@ namespace Lunatic.SyntaController
 
       private bool MountActive;
 
-      //float eq_s1;
-      //float eq_s2;
-      //float eq_s3;
-      //float eq_s4;
+      //double eq_s1;
+      //double eq_s2;
+      //double eq_s3;
+      //double eq_s4;
       //int eq_of1;
       //int eq_of2;
 
       #endregion
 
 
-      /// <summary>
-      /// Send the command to the correct mount
-      /// </summary>
-      /// <param name="axisId">The Axis Id enum value</param>
-      /// <param name="command">command (ASCII command to send to mount)</param>
-      /// <param name="parameters">parameter (Binary parameter or 0)</param>
-      /// <param name="count">count (# parameter bytes)</param>
-      /// <returns>Driver Return Value
-      ///   -	EQ_OK			0x2000000 - Success with no return values
-      ///   -	EQ_COMTIMEOUT	0x1000005 - COM TIMEOUT
-      ///   -	EQ_INVALID		0x3000000 - Invalid Parameter</returns>
-      /// <remarks></remarks>
-      public int EQ_SendCommand(AxisId axisId, char command, int parameters, short count)
-      {
-         return EQ_SendCommand((int)axisId, command, parameters, count);
-      }
-
-      /// <summary>
-      /// Send the command to the correct mount
-      /// </summary>
-      /// <param name="motorId">motor_id (0 RA, 1 DEC)</param>
-      /// <param name="command">command (ASCII command to send to mount)</param>
-      /// <param name="parameters">parameter (Binary parameter or 0)</param>
-      /// <param name="count">count (# parameter bytes)</param>
-      /// <returns>Driver Return Value
-      ///   -	EQ_OK			0x2000000 - Success with no return values
-      ///   -	EQ_COMTIMEOUT	0x1000005 - COM TIMEOUT
-      ///   -	EQ_INVALID		0x3000000 - Invalid Parameter</returns>
-      /// <remarks></remarks>
-      public int EQ_SendCommand(int motorId, char command, int parameters, short count)
-      {
-         if (motorId == (int)AxisId.Both_Axes) {
-            return MOUNT_BADPARAM;
-         }
-         int response = EQ_OK;
-         char[] hex_str = "0123456789ABCDEF     ".ToCharArray();   // Hexadecimal translation
-         const int BufferSize = 20;
-         StringBuilder sb = new StringBuilder(BufferSize);
-         sb.Append(cStartChar_Out);
-         sb.Append(command);
-         sb.Append((motorId + 1).ToString());
-         switch (count) {
-            case 1:
-               // nibble 1
-               sb.Append(hex_str[(parameters & 0x00000f)]);
-               break;
-            case 2:
-               // Byte 1
-               sb.Append(hex_str[(parameters & 0x0000f0) >> 4]);
-               sb.Append(hex_str[(parameters & 0x00000f)]);
-               break;
-            case 3:
-               // Byte 1
-               sb.Append(hex_str[(parameters & 0x0000f0) >> 4]);
-               sb.Append(hex_str[(parameters & 0x00000f)]);
-               // Nibble 3
-               sb.Append(hex_str[(parameters & 0x000f00) >> 8]);
-               break;
-            case 4:
-               // Byte 1
-               sb.Append(hex_str[(parameters & 0x0000f0) >> 4]);
-               sb.Append(hex_str[(parameters & 0x00000f)]);
-               // Byte 2
-               sb.Append(hex_str[(parameters & 0x00f000) >> 12]);
-               sb.Append(hex_str[(parameters & 0x000f00) >> 8]);
-               break;
-            case 5:
-               // Byte 1
-               sb.Append(hex_str[(parameters & 0x0000f0) >> 4]);
-               sb.Append(hex_str[(parameters & 0x00000f)]);
-               // Byte 2
-               sb.Append(hex_str[(parameters & 0x00f000) >> 12]);
-               sb.Append(hex_str[(parameters & 0x000f00) >> 8]);
-               // nibble
-               sb.Append(hex_str[(parameters & 0x0f0000) >> 16]);
-               break;
-            case 6:
-               // Byte 1
-               sb.Append(hex_str[(parameters & 0x0000f0) >> 4]);
-               sb.Append(hex_str[(parameters & 0x00000f)]);
-               // Byte 2
-               sb.Append(hex_str[(parameters & 0x00f000) >> 12]);
-               sb.Append(hex_str[(parameters & 0x000f00) >> 8]);
-               // Byte 3
-               sb.Append(hex_str[(parameters & 0xf00000) >> 20]);
-               sb.Append(hex_str[(parameters & 0x0f0000) >> 16]);
-               break;
-            default:
-               return EQ_INVALID;
-         }
-         sb.Append(cEndChar);
-         string cmdString = sb.ToString();
-         var cmdTransaction = new EQContrlTransaction(cmdString) { Timeout = TimeSpan.FromSeconds(TimeOut) };
-
-
-         using (ICommunicationChannel channel = new SerialCommunicationChannel(EndPoint)) {
-            var transactionObserver = new TransactionObserver(channel);
-            var processor = new ReactiveTransactionProcessor();
-            processor.SubscribeTransactionObserver(transactionObserver);
-            try {
-               channel.Open();
-
-               // prepare to communicate
-               for (int i = 0; i < Retry; i++) {
-
-                  Task.Run(() => processor.CommitTransaction(cmdTransaction));
-                  cmdTransaction.WaitForCompletionOrTimeout();
-                  if (!cmdTransaction.Failed) {
-                     response = cmdTransaction.Value;
-                     break;
-                  }
-                  else {
-                     Trace.TraceError(cmdTransaction.ErrorMessage.Single());
-                  }
-               }
-            }
-            catch (Exception ex) {
-               Trace.TraceError("Connnection Lost");
-               throw new MountControllerException(ErrorCode.ERR_NOT_CONNECTED, ex.Message);
-            }
-            finally {
-               // To clean up, we just need to dispose the TransactionObserver and the channel is closed automatically.
-               // Not strictly necessary, but good practice.
-               transactionObserver.OnCompleted(); // There will be no more transactions.
-               transactionObserver = null; // not necessary, but good practice.
-            }
-
-         }
-
-         System.Diagnostics.Debug.WriteLine(" -> Response: " + response);
-         return response;
-      }
 
       /// <summary>
       /// Translates the internal comms error to the dll error
@@ -484,8 +352,8 @@ namespace Lunatic.SyntaController
          MountCode = 0;        // Mount Id
          PESteps[0] = 50133;        // RA  Worm Period
          PESteps[1] = 50133;        // DEC Worm Period
-         Offset[0] = 0;            // RA Offset
-         Offset[1] = 0;            // DEC Offset
+         GuideRateOffset[0] = 0;            // RA Offset
+         GuideRateOffset[1] = 0;            // DEC Offset
 
          MountType = MountType.EqMount;         // EQG ..
          // qPort.eqnMountMotor = RAMotor;        // RA, DEC
@@ -668,8 +536,8 @@ namespace Lunatic.SyntaController
 
                   LowSpeedSlewRate[RAMotor] = ((double)StepTimerFreq[RAMotor] / ((double)GridPerRevolution[RAMotor] / SecondsPerSiderealDay));
                   LowSpeedSlewRate[DECMotor] = ((double)StepTimerFreq[DECMotor] / ((double)GridPerRevolution[DECMotor] / SecondsPerSiderealDay));
-                  HighSpeedSlewRate[RAMotor] = ((double)HighSpeedRatio[RAMotor] * ((float)StepTimerFreq[RAMotor] / ((double)GridPerRevolution[RAMotor] / SecondsPerSiderealDay)));
-                  HighSpeedSlewRate[DECMotor] = ((double)HighSpeedRatio[DECMotor] * ((float)StepTimerFreq[DECMotor] / ((double)GridPerRevolution[DECMotor] / SecondsPerSiderealDay)));
+                  HighSpeedSlewRate[RAMotor] = ((double)HighSpeedRatio[RAMotor] * ((double)StepTimerFreq[RAMotor] / ((double)GridPerRevolution[RAMotor] / SecondsPerSiderealDay)));
+                  HighSpeedSlewRate[DECMotor] = ((double)HighSpeedRatio[DECMotor] * ((double)StepTimerFreq[DECMotor] / ((double)GridPerRevolution[DECMotor] / SecondsPerSiderealDay)));
 
                   MountRate = LowSpeedSlewRate[0];    // Default to SIDEREAL
 
@@ -765,13 +633,13 @@ namespace Lunatic.SyntaController
                // stop RA motor
                i = EQ_SendCommand(AxisId.Axis1_RA, 'K', 0, NO_PARAMS);
                if ((i & EQ_ERROR) == EQ_ERROR) {
-                  return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
+                  return EQ_GetMountError(i);               // Check errors, return "dll_error" value
                }
 
                // stop DEC motor
                i = EQ_SendCommand(AxisId.Axis2_DEC, 'K', 0, NO_PARAMS);
                if ((i & EQ_ERROR) == EQ_ERROR) {
-                  return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
+                  return EQ_GetMountError(i);               // Check errors, return "dll_error" value
                }
 
                // now wait for motor to stop
@@ -779,7 +647,7 @@ namespace Lunatic.SyntaController
                   // Send Command
                   i = EQ_SendCommand(AxisId.Axis1_RA, 'f', 0, NO_PARAMS);
                   if ((i & EQ_ERROR) == EQ_ERROR) {
-                     return (EQ_GetMountError(i));                  // Check errors, return "dll_error" value
+                     return EQ_GetMountError(i);                  // Check errors, return "dll_error" value
                   }
 
                   // Return extended status
@@ -793,7 +661,7 @@ namespace Lunatic.SyntaController
                   // Send Command
                   i = EQ_SendCommand(AxisId.Axis2_DEC, 'f', 0, NO_PARAMS);
                   if ((i & EQ_ERROR) == EQ_ERROR) {
-                     return (EQ_GetMountError(i));                  // Check errors, return "dll_error" value
+                     return EQ_GetMountError(i);                  // Check errors, return "dll_error" value
                   }
 
                   // Return extended status
@@ -923,13 +791,13 @@ namespace Lunatic.SyntaController
          // Set the motor hemisphere, mode, direction and speed
          i = EQ_SendGCode(axisId, hemisphere, MountMode.Goto, direction, MountSpeed.HighSpeed);
          if ((i & EQ_ERROR) == EQ_ERROR) {
-            return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
+            return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
          // Set the mount relative target
          i = EQ_SendCommand(axisId, 'H', steps, 6);
          if ((i & EQ_ERROR) == EQ_ERROR) {
-            return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
+            return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
          // Set the mount deceleration point
@@ -937,13 +805,13 @@ namespace Lunatic.SyntaController
          j = stepSlowDown;                      // Stepper Motor Deceleration point
          i = EQ_SendCommand(axisId, 'M', j, 6);
          if ((i & EQ_ERROR) == EQ_ERROR) {
-            return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
+            return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
          // Start the motor
          i = EQ_SendCommand(axisId, 'J', 0, NO_PARAMS);
          if ((i & EQ_ERROR) == EQ_ERROR) {
-            return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
+            return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
          return MOUNT_SUCCESS;
@@ -1056,7 +924,7 @@ namespace Lunatic.SyntaController
 
          // Check Mount
          if (!MountActive) {
-            return EQ_ERROR;  // can't return DLL_NOCOMPORT as 001 is a potentially valide motor value
+            return EQ_ERROR;  // can't return MOUNT_NOCOMPORT as 001 is a potentially valide motor value
          }
 
          switch (axisId) {
@@ -1094,7 +962,7 @@ namespace Lunatic.SyntaController
                }
                return i;
          }
-         return EQ_INVALID; // can't return DLL_BADPARAM as 999 is a potentially valide motor value
+         return EQ_INVALID; // can't return MOUNT_BADPARAM as 999 is a potentially valide motor value
       }
 
 
@@ -1123,7 +991,7 @@ namespace Lunatic.SyntaController
          }
 
          // Check parameters
-         if (!((axisId== AxisId.Axis1_RA) || (axisId== AxisId.Axis2_DEC))) {
+         if (!((axisId == AxisId.Axis1_RA) || (axisId == AxisId.Axis2_DEC))) {
             return MOUNT_BADPARAM;
          }
 
@@ -1131,7 +999,7 @@ namespace Lunatic.SyntaController
          // Send Set Reference Mount position 
          i = EQ_SendCommand(axisId, 'E', motorValue, 6);
          if ((i & EQ_ERROR) == EQ_ERROR) {
-            return (EQ_GetMountError(i));         // Check errors, return "dll_error" value
+            return EQ_GetMountError(i);         // Check errors, return "dll_error" value
          }
 
          return MOUNT_SUCCESS;
@@ -1218,7 +1086,7 @@ namespace Lunatic.SyntaController
          if (rate < threshold) {
             i = EQ_SendGCode(axisId, hemisphere, MountMode.Slew, direction, MountSpeed.LowSpeed);
             if ((i & EQ_ERROR) == EQ_ERROR) {
-               return (EQ_GetMountError(i));         // Check errors, return "dll_error" value
+               return EQ_GetMountError(i);         // Check errors, return "dll_error" value
             }
 
             if (axisId == AxisId.Axis1_RA) {
@@ -1233,24 +1101,24 @@ namespace Lunatic.SyntaController
          else {
             i = EQ_SendGCode(axisId, hemisphere, MountMode.Slew, direction, MountSpeed.HighSpeed);
             if ((i & EQ_ERROR) == EQ_ERROR) {
-               return (EQ_GetMountError(i));         // Check errors, return "dll_error" value
+               return EQ_GetMountError(i);         // Check errors, return "dll_error" value
             }
 
             if (axisId == AxisId.Axis1_RA) {
-               k = HighSpeedSlewRate[0] / (float)rate;
+               k = HighSpeedSlewRate[0] / (double)rate;
                j = (int)k;                 // Round to nearest integer - Ignore compile warning
                if (rate < 20) {
-                  j = ((j + Offset[0]) & 0xffffff);
+                  j = ((j + GuideRateOffset[0]) & 0xffffff);
                }
                else {
                   j = j & 0xffffff;
                }
             }
             else {
-               k = HighSpeedSlewRate[1] / (float)rate;
+               k = HighSpeedSlewRate[1] / (double)rate;
                j = (int)k;           // Round to nearest integer - Ignore compile warning
                if (rate < 20) {
-                  j = ((j + Offset[1]) & 0xffffff);
+                  j = ((j + GuideRateOffset[1]) & 0xffffff);
                }
                else {
                   j = j & 0xffffff;
@@ -1262,13 +1130,13 @@ namespace Lunatic.SyntaController
          // Send Speed Command
          i = EQ_SendCommand(axisId, 'I', j, 6);
          if ((i & EQ_ERROR) == EQ_ERROR) {
-            return (EQ_GetMountError(i));         // Check errors, return "dll_error" value
+            return EQ_GetMountError(i);         // Check errors, return "dll_error" value
          }
 
          // Send Go Command
          i = EQ_SendCommand(axisId, 'J', 0, NO_PARAMS);
          if ((i & EQ_ERROR) == EQ_ERROR) {
-            return (EQ_GetMountError(i));         // Check errors, return "dll_error" value
+            return EQ_GetMountError(i);         // Check errors, return "dll_error" value
          }
 
          return MOUNT_SUCCESS;
@@ -1321,7 +1189,7 @@ namespace Lunatic.SyntaController
          }
 
          // Adjust for offset
-         j = (j + Offset[0]) & 0xffffff;
+         j = (j + GuideRateOffset[0]) & 0xffffff;
 
          i = EQ_MotorStop(AxisId.Axis1_RA);
          if (i != 0) {
@@ -1331,106 +1199,285 @@ namespace Lunatic.SyntaController
          // Set the motor hemisphere, mode, direction and speed
          i = EQ_SendGCode(RAMotor, hemisphere, MountMode.Slew, direction, MountSpeed.LowSpeed);
          if ((i & EQ_ERROR) == EQ_ERROR) {
-            return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
+            return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
          // Send I Command
          i = EQ_SendCommand(RAMotor, 'I', j, 6);
          if ((i & EQ_ERROR) == EQ_ERROR) {
-            return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
+            return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
          // Start RA Motor
          i = EQ_SendCommand(RAMotor, 'J', 0, NO_PARAMS);
          if ((i & EQ_ERROR) == EQ_ERROR) {
-            return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
+            return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
          return MOUNT_SUCCESS;
       }
 
-      //
-      // Function name    : EQ_SendGuideRate()
-      // Description      : Adjust the RA/DEC rotation trackrate based on a given speed adjustment rate
-      // Return type      : int
-      //                     000 - Success
-      //                     001 - Comport Not available
-      //                     003 - COM Timeout Error
-      //                     004 - Motor still busy
-      //                     010 - Cannot execute command at the current stepper controller state
-      //                     011 - Motor not initialized
-      //                     999 - Invalid Parameter
-      //
-      // Argument         : DOUBLE motor_id
-      //                     00 - RA Motor
-      //                     01 - DEC Motor
-      // Argument         : DOUBLE trackrate
-      //                     00 - Sidreal
-      //                     01 - Lunar
-      //                     02 - Solar
-      // Argument         : DOUBLE guiderate
-      //                     00 - No Change
-      //                     01 - 10%
-      //                     02 - 20%
-      //                     03 - 30%
-      //                     04 - 40%
-      //                     05 - 50%
-      //                     06 - 60%
-      //                     07 - 70%
-      //                     08 - 80%
-      //                     09 - 90%
-      // Argument         : DOUBLE guidedir
-      //                     00 - Positive
-      //                     01 - Negative
-      // Argument         : DOUBLE hemisphere (used for DEC Motor control)
-      //                     00 - North
-      //                     01 - South
-      // Argument         : DOUBLE direction (used for DEC Motor control)
-      //                     00 - Forward(+)
-      //                     01 - Reverse(-)
-      //
-      // Public Declare Function EQ_SendGuideRate Lib "EQCONTRL" (ByVal motor_id As Long, ByVal trackrate As Long, ByVal guiderate As Long, ByVal guidedir As Long, ByVal hemisphere As Long, ByVal direction As Long) As Long
-      public int EQ_SendGuideRate(int motorId, int trackRate, int guideRate, int guideDirection, int hemisphere, int direction)
+
+      /// <summary>
+      /// Adjust the RA/DEC rotation trackrate based on a given speed adjustment rate
+      /// </summary>
+      /// <param name="axisId"></param>
+      /// <param name="trackRate"></param>
+      /// <param name="guideRate">Guide rate
+      ///                     00 - No Change
+      ///                     01 - 10%
+      ///                     02 - 20%
+      ///                     03 - 30%
+      ///                     04 - 40%
+      ///                     05 - 50%
+      ///                     06 - 60%
+      ///                     07 - 70%
+      ///                     08 - 80%
+      ///                     09 - 90%</param>
+      /// <param name="guideDirection">Guide dirextion</param>
+      /// <param name="hemisphere">Hemisphere (used for DEC Motor control)</param>
+      /// <param name="direction">Direction (used for DEC Motor control)</param>
+      /// <returns>000 - Success
+      ///                     001 - Comport Not available
+      ///                     003 - COM Timeout Error
+      ///                     004 - Motor still busy
+      ///                     010 - Cannot execute command at the current stepper controller state
+      ///                     011 - Motor not initialized
+      ///                     999 - Invalid Parameter</returns>
+      public int EQ_SendGuideRate(AxisId axisId, MountTracking trackRate, int guideRate, AxisDirection guideDirection, HemisphereOption hemisphere, AxisDirection direction)
       {
-         throw new NotImplementedException();
+         int i, newrate;
+         double k, j;
+
+         // Check mount	
+         if (!MountActive) {
+            return MOUNT_NOCOMPORT;
+         }
+
+         // Check parameters
+         if (!((axisId == AxisId.Axis1_RA) || (axisId == AxisId.Axis2_DEC))) {
+            return MOUNT_BADPARAM;
+         }
+         if ((guideRate < 0) || (guideRate > 9)) {
+            return MOUNT_BADPARAM;
+         }
+
+         // Update Tracking Rate
+         switch (trackRate) {
+            case MountTracking.Solar:  // Solar
+               MountTracking = trackRate;
+               k = (double)(LowSpeedSlewRate[0] * 1.0016129032258064516129032258065);
+               break;
+
+            case MountTracking.Lunar:  // Lunar
+               MountTracking = trackRate;
+               k = (double)(LowSpeedSlewRate[0] * 1.0370967741935483870967741935484);
+               break;
+
+            case MountTracking.Sidereal: // Sidereal
+               MountTracking = trackRate;
+               k = LowSpeedSlewRate[0];
+               break;
+
+            default:
+               return MOUNT_BADPARAM;
+         }
+
+         // Update GUIDING Rate
+         if (guideRate > 0) {
+            MountTracking = MountTracking.Custom;   // For the other mounts
+
+            j = (double)(0.1 * guideRate);
+            if (axisId == AxisId.Axis1_RA) {
+               if (guideDirection == AxisDirection.Forward) {
+                  newrate = (int)(k / (1 + j));
+               }
+               else {
+                  newrate = (int)(k / (1 - j));
+               }
+            }
+            else {
+               newrate = (int)(k / j);
+            }
+         }
+         else {
+            newrate = (int)(k);
+         }
+
+         if (axisId == RAMotor) {
+            newrate = ((newrate + GuideRateOffset[0]) & 0xffffff);
+         }
+         else {
+            newrate = ((newrate + GuideRateOffset[1]) & 0xffffff);
+         }
+
+         if (newrate != 0) {
+            MountRate = newrate;      // As long as it is not zero!
+         }
+
+         // Send Command
+         if (axisId == AxisId.Axis1_RA) {
+            // RA  Motor
+            i = EQ_SendCommand(axisId, 'I', newrate, 6);
+            if ((i & EQ_ERROR) == EQ_ERROR) {
+               return EQ_GetMountError(i);   // Check errors, return "dll_error" value
+            }
+         }
+         else {
+            // DEC Motor
+            // Stop DEC motor
+            i = EQ_MotorStop(AxisId.Axis2_DEC);
+            if (i != 0) {
+               return i;
+            }
+
+            // Set the direction
+            AxisDirection decDirection = direction;          // surely this is where this belongs!
+            if (guideDirection == AxisDirection.Reverse) {
+               // i = direction;		// and surely this was wrong!
+               if (decDirection == AxisDirection.Reverse) {
+                  decDirection = AxisDirection.Forward;
+               }
+               else {
+                  decDirection = AxisDirection.Reverse;
+               }
+            }
+
+            // Set the motor hemisphere, mode, direction and speed
+            i = EQ_SendGCode(AxisId.Axis2_DEC, hemisphere, MountMode.Slew, decDirection, MountSpeed.LowSpeed);
+            if ((i & EQ_ERROR) == EQ_ERROR) {
+               return EQ_GetMountError(i);               // Check errors, return "dll_error" value
+            }
+
+            // Set the DEC motor speed
+            i = EQ_SendCommand(AxisId.Axis2_DEC, 'I', newrate, 6);
+            if ((i & EQ_ERROR) == EQ_ERROR) {
+               return EQ_GetMountError(i);   // Check errors, return "dll_error" value
+            }
+
+            // Start the DEC motor
+            i = EQ_SendCommand(AxisId.Axis2_DEC, 'J', 0, NO_PARAMS);
+            if ((i & EQ_ERROR) == EQ_ERROR) {
+               return EQ_GetMountError(i);   // Check errors, return "dll_error" value
+            }
+         }
+         return MOUNT_SUCCESS;
       }
 
 
-      //
-      // Function name    : EQ_SendCustomTrackRate()
-      // Description      : Adjust the RA/DEC rotation trackrate based on a given speed adjustment offset
-      // Return type      : DOUBLE
-      //                     000 - Success
-      //                     001 - Comport Not available
-      //                     003 - COM Timeout Error
-      //                     004 - Motor still busy
-      //                     010 - Cannot Execute command at the current state
-      //                     011 - Motor not initialized
-      //                     999 - Invalid Parameter
-      //
-      // Argument         : DOUBLE motor_id
-      //                     00 - RA Motor
-      //                     01 - DEC Motor
-      // Argument         : DOUBLE trackrate
-      //                     00 - Sidreal
-      //                     01 - Lunar
-      //                     02 - Solar
-      // Argument         : DOUBLE trackoffset
-      //                     0 - 300
-      // Argument         : DOUBLE trackdir
-      //                     00 - Positive
-      //                     01 - Negative
-      // Argument         : DOUBLE hemisphere (used for DEC Motor)
-      //                     00 - North
-      //                     01 - South
-      // Argument         : DOUBLE direction (used for DEC Motor)
-      //                     00 - Forward(+)
-      //                     01 - Reverse(-)
-      //
-      // Public Declare Function EQ_SendCustomTrackRate Lib "EQCONTRL" (ByVal motor_id As Long, ByVal trackrate As Long, ByVal trackoffset As Long, ByVal trackdir As Long, ByVal hemisphere As Long, ByVal direction As Long) As Long
-      public int EQ_SendCustomTrackRate(int motorId, int trackRate, int trackOffset, int trackDirection, int hemisphere, int direction)
+      /// <summary>
+      /// Adjust the RA/DEC rotation trackrate based on a given speed adjustment offset
+      /// </summary>
+      /// <param name="axisId"></param>
+      /// <param name="trackRate">Siderial, Lunar or Solar</param>
+      /// <param name="trackOffset">0 - 400</param>
+      /// <param name="trackDirection"></param>
+      /// <param name="hemisphere">Hemisphere (used for DEC Motor)</param>
+      /// <param name="direction">Direction (used for DEC Motor)</param>
+      /// <returns>
+      ///                     000 - Success
+      ///                     001 - Comport Not available
+      ///                     003 - COM Timeout Error
+      ///                     004 - Motor still busy
+      ///                     010 - Cannot Execute command at the current state
+      ///                     011 - Motor not initialized
+      ///                     999 - Invalid Parameter
+      /// </returns>
+      public int EQ_SendCustomTrackRate(AxisId axisId, MountTracking trackRate, int trackOffset, AxisDirection trackDirection, HemisphereOption hemisphere, AxisDirection direction)
       {
-         throw new NotImplementedException();
+         int i, j, newrate;
+
+         // Check Mount	
+         if (!MountActive) {
+            return MOUNT_NOCOMPORT;
+         }
+
+         // Check Parameters	
+         if (!((axisId == AxisId.Axis1_RA) || (axisId == AxisId.Axis2_DEC))) {
+            return MOUNT_BADPARAM;
+         }
+         if ((trackOffset < 0) || (trackOffset > 400)) {
+            return MOUNT_BADPARAM;
+         }
+
+         switch (trackRate) {
+            case MountTracking.Solar:
+               MountTracking = trackRate;
+               j = (int)(LowSpeedSlewRate[0] * 1.0016129032258064516129032258065);
+               break;
+
+            case MountTracking.Lunar:
+               MountTracking = trackRate;
+               j = (int)(LowSpeedSlewRate[0] * 1.0370967741935483870967741935484);
+               break;
+            case MountTracking.Sidereal:
+               MountTracking = trackRate;
+               j = (int)(LowSpeedSlewRate[0]);
+               break;
+            default:
+               return MOUNT_BADPARAM;
+         }
+
+         if (trackOffset != 0) {
+            MountTracking = MountTracking.Custom;
+            if (trackDirection == AxisDirection.Forward) {
+               newrate = j - trackOffset;
+            }
+            else {
+               newrate = j + trackOffset;
+            }
+         }
+         else {
+            newrate = j;
+         }
+         if (axisId == RAMotor) {
+            newrate = ((newrate + GuideRateOffset[0]) & 0xffffff);
+         }
+         else {
+            newrate = ((newrate + GuideRateOffset[1]) & 0xffffff);
+         }
+         if (newrate != 0) {
+            MountRate = newrate;      // As long as it is not zero!
+         }
+
+         // Set the direction
+         AxisDirection axisDirection = direction;
+         if (trackDirection == AxisDirection.Reverse) {
+            if (direction == AxisDirection.Reverse) {
+               axisDirection = AxisDirection.Forward;
+            }
+            else {
+               axisDirection = AxisDirection.Reverse;
+            }
+         }
+
+         // Stop the motors if new custom rate
+         if (MountTracking == MountTracking.Custom) {
+            i = EQ_MotorStop(axisId);
+            if (i != 0) {
+               return i;
+            }
+         }
+
+         // Set the motor hemisphere, mode, direction and speed
+         i = EQ_SendGCode(axisId, hemisphere, MountMode.Slew, axisDirection, MountSpeed.LowSpeed);
+         if ((i & EQ_ERROR) == EQ_ERROR) {
+            return EQ_GetMountError(i);               // Check errors, return "dll_error" value
+         }
+
+         // Set the motor speed
+         i = EQ_SendCommand(axisId, 'I', newrate, 6);
+         if ((i & EQ_ERROR) == EQ_ERROR) {
+            return EQ_GetMountError(i);               // Check errors, return "dll_error" value
+         }
+
+         // Start the motor
+         i = EQ_SendCommand(axisId, 'J', 0, NO_PARAMS);
+         if ((i & EQ_ERROR) == EQ_ERROR) {
+            return EQ_GetMountError(i);               // Check errors, return "dll_error" value// Start the motor
+         }
+
+         return MOUNT_SUCCESS;
       }
 
 
@@ -1464,86 +1511,253 @@ namespace Lunatic.SyntaController
       //                     01 - Reverse(-)
       //
       // Public Declare Function EQ_SetCustomTrackRate Lib "EQCONTRL" (ByVal motor_id As Long, ByVal trackmode As Long, ByVal trackoffset As Long, ByVal trackbase As Long, ByVal hemisphere As Long, ByVal direction As Long) As Long
-      public int EQ_SetCustomTrackRate(int motorId, int trackMode, int trackOffset, int trackBase, int hemisphere, int direction)
+      public int EQ_SetCustomTrackRate(AxisId axisId, TrackMode trackMode, int trackOffset, MountSpeed trackBase, HemisphereOption hemisphere, AxisDirection direction)
       {
-         throw new NotImplementedException();
+         int i, newrate;
+
+         // Check Mount
+         // Check Mount	
+         if (!MountActive) {
+            return MOUNT_NOCOMPORT;
+         }
+
+         // Check Parameters	
+         if (!((axisId == AxisId.Axis1_RA) || (axisId == AxisId.Axis2_DEC))) {
+            return EQ_INVALID;
+         }
+
+         if (trackOffset < 30000) {
+            return MOUNT_BADPARAM;
+         }
+
+         newrate = trackOffset - 30000;
+         if (newrate != 0) {
+            MountRate = newrate;      // As long as it is not zero!
+         }
+         else {
+            MountRate = 1;
+         }
+
+         if (trackBase == MountSpeed.LowSpeed) {
+            if (axisId == AxisId.Axis1_RA) {
+               newrate = newrate + GuideRateOffset[0];
+            }
+            else {
+               newrate = newrate + GuideRateOffset[1];
+            }
+         }
+
+         newrate = newrate & 0xffffff;
+
+         MountTracking = MountTracking.Custom;
+
+         if (trackMode == TrackMode.Initial) {
+
+            // Stop the motor
+            i = EQ_MotorStop(axisId);
+            if (i != 0) {
+               return i;
+            }
+
+            // Set the motor hemisphere, mode, direction and speed	
+            i = EQ_SendGCode(axisId, hemisphere, MountMode.Slew, direction, trackBase);
+            if ((i & EQ_ERROR) == EQ_ERROR) {
+               return EQ_GetMountError(i);   // Check errors, return "MOUNT_error" value
+            }
+         }
+
+         // Set the motor speed
+         i = EQ_SendCommand(axisId, 'I', newrate, 6);
+         if ((i & EQ_ERROR) == EQ_ERROR) {
+            return EQ_GetMountError(i);   // Check errors, return "MOUNT_error" value
+         }
+
+         if (trackMode == TrackMode.Initial) {
+
+            // Start the motor
+            i = EQ_SendCommand(axisId, 'J', 0, NO_PARAMS);
+            if ((i & EQ_ERROR) == EQ_ERROR) {
+               return EQ_GetMountError(i);   // Check errors, return "MOUNT_error" value
+            }
+         }
+         return MOUNT_SUCCESS;
       }
 
 
-      //
-      // Function name    : EQ_SetAutoguiderPortRate()
-      // Description      : Sets RA/DEC Autoguideport rate
-      // Return type      : DOUBLE - Stepper Counter Values
-      //                     000 - Success
-      //                     001 - Comport Not available
-      //                     003 - COM Timeout Error
-      //                     999 - Invalid Parameter
-      // Argument         : motor_id
-      //                       00 - RA Motor
-      //                       01 - DEC Motor
-      // Argument         : DOUBLE guideportrate
-      //                       00 - 0.25x
-      //                       01 - 0.50x
-      //                       02 - 0.75x
-      //                       03 - 1.00x
-      //
-      // Public Declare Function EQ_SetAutoguiderPortRate Lib "EQCONTRL" (ByVal motor_id As Long, ByVal guideportrate As Long) As Long
-      public int EQ_SetAutoguiderPortRate(int motorId, int guideportRate)
+      /// <summary>
+      /// Get microstep count to complete a 360 degree revolution
+      /// </summary>
+      /// <param name="axisId"></param>
+      /// <returns>
+      ///	- EQ_ERROR				0x1000000	Mount Not Available
+      ///	- EQ_INVALID			0x3000000	Invalid Motor ID
+      ///	- 0 -   16777215		Valid Count Values
+      ///	- 0 - 0x00FFFFFF		Valid Count Values
+      /// </returns>
+      public int EQ_GetTotal360microstep(AxisId axisId)
       {
-         throw new NotImplementedException();
+         if (!MountActive) {
+            return EQ_ERROR;
+         }
+
+         switch (axisId) {
+            case AxisId.Axis1_RA:
+            case AxisId.Axis2_DEC:
+               return GridPerRevolution[(int)axisId];
+            default:
+               return EQ_INVALID;
+         }
+      }
+
+      /// <summary>
+      /// Attempts to detect a mount by sending version commands
+      /// </summary>
+      /// <returns>
+      ///		301 - EQG Series mount
+      ///		302 - Nexstar Series mount
+      ///		998 - No valid mount detected
+      /// </returns>
+      public int EQ_GetMountType()
+      {
+         int i;
+
+         if (!MountActive) {
+            return MOUNT_NOCOMPORT;
+         }
+
+
+         // Set default value
+         MountType = MountType.EqMount;
+
+         // Check EQMOUNT
+         i = EQ_SendCommand(AxisId.Axis1_RA, 'e', 0, NO_PARAMS);
+         if ((i & EQ_ERROR) != EQ_ERROR)       // No errors so mount returned firmware version OK
+         {
+            MountType = MountType.EqMount;     // So its an EQG mount
+            return MOUNT_EQMOUNT;
+         }
+
+         // Else bad mount
+         return MOUNT_BADMOUNT;
       }
 
 
 
-      // Function name    : EQ_GetTotal360microstep()
-      // Description      : Get RA/DEC Motor Total 360 degree microstep counts
-      // Return type      : Double - Stepper Counter Values
-      //                     0 - 16777215  Valid Count Values
-      //                     0x1000000 - Mount Not available
-      //                     0x3000000 - Invalid Parameter
-      // Argument         : DOUBLE motor_id
-      //                     00 - RA Motor
-      //                     01 - DEC Motor
-      //
-      // Public Declare Function EQ_GetTotal360microstep Lib "EQCONTRL" (ByVal value As Long) As Long
-      public int EQ_GetTotal360microstep(int motorId)
-      {
-         throw new NotImplementedException();
-      }
-
-      // Function name    : EQ_GetMountVersion()
-      // Description      : Get Mount//s Firmware version
-      // Return type      : Double - Mount//s Firmware Version
-      //
-      //                     0x1000000 - Mount Not available
-      //
-      // Public Declare Function EQ_GetMountVersion Lib "EQCONTRL" () As Long
+      /// <summary>
+      /// Get Mount//s Firmware version
+      /// </summary>
+      /// <returns>
+      ///   - Mount//s Firmware Version
+      ///   - 0x1000000 - Mount Not available
+      /// </returns>
       public int EQ_GetMountVersion()
       {
-         throw new NotImplementedException();
+         if (!MountActive) {
+            return EQ_ERROR;
+         }
+         return MCVersion;
       }
 
-      // Function name    : EQ_GetMountStatus()
-      // Description      : Get Mount//s Firmware version
-      // Return type      : Double - Mount Status
-      //
-      //                     000 - Not Connected
-      //                     001 - Connected
-      //
-      // Public Declare Function EQ_GetMountStatus Lib "EQCONTRL" () As Long
+
+      /// <summary>
+      /// Get Mount's Status
+      /// </summary>
+      /// <returns>
+      ///      000 - Not Connected
+      ///      001 - Connected
+      /// </returns>
       public int EQ_GetMountStatus()
       {
-         throw new NotImplementedException();
+         if (MountActive) {
+            return MOUNT_CONNECTED;
+         }
+         else {
+            return MOUNT_NOTCONNECTED;
+         }
       }
 
-      // Function name    : EQ_DriverVersion()
-      // Description      : Get Drivr Version
-      // Return type      : Double - Driver Version
-      //
-      // Public Declare Function EQ_DriverVersion Lib "EQCONTRL" () As Long
+
+      /// <summary>
+      /// Get Driver Version
+      /// </summary>
+      /// <returns>Driver Version</returns>
       public int EQ_DriverVersion()
       {
-         throw new NotImplementedException();
+         return DriverVersion;
+      }
+
+
+      /// <summary>
+      /// Set the mount's autoguiderport rate
+      /// </summary>
+      /// <param name="axisId">RA or DEC</param>
+      /// <param name="guideportRate">Guide port rate</param>
+      /// <returns>
+      ///     000 - Success
+      ///     001 - Comport Not available
+      ///     003 - COM Timeout Error
+      ///     999 - Invalid Parameter
+      /// </returns>
+      public int EQ_SetAutoguiderPortRate(AxisId axisId, AutoguiderPortRate guideportRate)
+      {
+         int i;
+         int r;
+
+         // Check Mount
+         if (!MountActive) {
+            return MOUNT_NOCOMPORT;
+         }
+
+         // Check Parameters	
+         if (!((axisId == AxisId.Axis1_RA) || (axisId == AxisId.Axis2_DEC))) {
+            return MOUNT_BADPARAM;
+         }
+
+
+         switch (guideportRate) {
+            case AutoguiderPortRate.OneTimesX:                 // 1x
+            case AutoguiderPortRate.Point75Times:              //0.75x
+            case AutoguiderPortRate.Point50Times:              //0.5x
+            case AutoguiderPortRate.Point25Times:              //0.25x
+            case AutoguiderPortRate.Point125Times:             //0.125x
+               r = (int)guideportRate;
+               break;
+            default:
+               return MOUNT_BADPARAM;
+         }
+         i = EQ_SendCommand(axisId, 'P', r, 1);
+         if ((i & EQ_ERROR) == EQ_ERROR) {
+            return EQ_GetMountError(i);         // Check errors, return "dll_error" value
+         }
+
+         return MOUNT_SUCCESS;
+      }
+
+
+      /// <summary>
+      /// Set the mount's offset
+      /// </summary>
+      /// <param name="axisId">RA/DEC</param>
+      /// <param name="offset">Guiderate offset</param>
+      /// <returns>
+      ///	- MOUNT_SUCCESS		000		 Success
+      ///	- MOUNT_NOCOMPORT   001		 Comport Not available
+      ///	- MOUNT_BADPARAM		999		 Invalid parameter
+      /// </returns>
+      public int EQ_SetOffset(AxisId axisId, AutoguiderPortRate offset)
+      {
+         if (!MountActive) {
+            return MOUNT_NOCOMPORT;
+         }
+         switch (axisId) {
+            case AxisId.Axis1_RA:
+            case AxisId.Axis2_DEC:
+               GuideRateOffset[(int)axisId] = (int)offset;
+               break;
+            default:
+               return MOUNT_BADPARAM;
+         }
+         return MOUNT_SUCCESS;
       }
 
 
@@ -1551,120 +1765,789 @@ namespace Lunatic.SyntaController
       // Description      : Get Mount Parameters
       // Return type      : Double - parameter value
       // Public Declare Function EQ_GP Lib "EQCONTRL" (ByVal motor_id As Long, ByVal p_id As Long) As Long
-      public int EQ_GP(int motorId, int parameterId)
+
+      /// <summary>
+      /// Get Mount Parameters
+      /// </summary>
+      /// <param name="axisId">Axis Id (RA/DEC or using Aux_RA_Encoder for MountActive</param>
+      /// <param name="parameterId">Parameter index	(base 10000)
+      ///		0 - Firmware Version
+      ///		1 - Motor Steps per full revolution
+      ///		2 - Sidereal rate factor
+      ///		3 - Motor High Speed slew scale factor
+      ///		4 - Low speed slew rate
+      ///		5 - High speed slew rate
+      ///		6 - Steps per worm turn
+      ///		7 - Track rate offset
+      /// </param>
+      /// <returns>Values stored in parameter or MOUNT_BADPARAM</returns>
+      public int EQ_GetMountParameter(AxisId axisId, int parameterId)
       {
-         throw new NotImplementedException();
-      }
+         int i, tmp;
+         int axis;
 
-      // Function name    : EQ_WP()
-      // Description      : write parameter
-      // Parameter        : value
-      // Return type      : error code
-      // Public Declare Function EQ_WP Lib "EQContrl.dll" (ByVal motor_id As Long, ByVal p_id As Long, ByVal value As Long) As Long
-      public int EQ_WP(int motorId, int parameterId, int value)
-      {
-         throw new NotImplementedException();
-      }
+         // Check Parameters	
+         if (parameterId < 10000) {
+            return MOUNT_BADPARAM;
+         }
+         axis = (int)axisId;
 
+         i = parameterId - 10000;
 
-      // Public Declare Function EQ_SetOffset Lib "EQCONTRL" (ByVal motor_id As Long, ByVal doffset As Long) As Long
-      public int EQ_SetOffset(int motorId, int offset)
-      {
-         throw new NotImplementedException();
-      }
+         if (axisId == AxisId.Axis1_RA || axisId == AxisId.Axis2_DEC) {
+            switch (i) {
+               case 1:
+                  return GridPerRevolution[axis];
+               case 2:
+                  return StepTimerFreq[axis];
+               case 3:
+                  return HighSpeedRatio[axis];
+               case 4:
+                  return (int)(LowSpeedSlewRate[axis]);
+               case 5:
+                  return (int)(HighSpeedSlewRate[axis]);
+               case 6:
+                  return PESteps[axis];
+               case 7:
+                  return GuideRateOffset[axis];
+               case 8:
+                  return MountParameters[axis];
+               case 9:
+                  if (axisId == AxisId.Axis1_RA) {
+                     tmp = 0;
+                     if (HasSnap[0]) { tmp |= 0x01; }
+                     if (HasSnap[1]) { tmp |= 0x02; }
+                     if (HasPPEC[0]) { tmp |= 0x04; }
+                     if (HasPPEC[1]) { tmp |= 0x08; }
+                     if (HasEncoder[0]) { tmp |= 0x10; }
+                     if (HasEncoder[1]) { tmp |= 0x20; }
+                     if (HasHalfCurrent[0]) { tmp |= 0x40; }
+                     if (HasHalfCurrent[1]) { tmp |= 0x80; }
+                     if (HasPolarscopeLED) { tmp |= 0x010000; }
+                     if (HasHomeSensor) { tmp |= 0x020000; }
+                     return tmp;
+                  }
+                  else {
+                     return MOUNT_BADPARAM;
+                  }
+               case 10:
+                  // get home position index data
+                  tmp = EQ_SendCommand(axisId, 'q', 0, 6);
+                  if ((tmp & EQ_ERROR) == EQ_ERROR) {
+                     return EQ_GetMountError(tmp);
+                  }
+                  return tmp;
 
-      // Function name    : EQ_SetMountType
-      // Description      : Sets Mount protocol tpye
-      // Return type      : 0
-      // Public Declare Function EQ_SetMountType Lib "EQCONTRL" (ByVal motor_type As Long) As Long
-      public int EQ_SetMountType(int motorType)
-      {
-         throw new NotImplementedException();
-      }
-
-
-      // Function name    : EQ_WriteByte
-      // Description      : write a byte out of the serial port
-      // Return type      : error code
-      // Public Declare Function EQ_WriteByte Lib "EQContrl.dll" (ByVal bData As Byte) As Long
-      public int EQ_WriteByte(byte data)
-      {
-         throw new NotImplementedException();
-      }
-
-
-
-
-      // Function name    : EQ_QueryMount
-      // Description      : send a string to the mount and get respnse back
-      // Return type      : error code
-      // Public Declare Function EQ_QueryMount Lib "EQCONTRL" (ByVal ptx As Long, ByVal prx As Long, ByVal sz As Long) As Long
-      public int EQ_QueryMount(int ptx, int prx, int sz)
-      {
-         throw new NotImplementedException();
-      }
-
-      // Function name    : EQCom::EQ_DebugLog
-      // Description      : Control of debug logging to file
-      // param  BYTE*     : pointer to file name
-      // param  BYTE*     : pointer to comment
-      // param  uint     : Operation (stop=0; start=1; append=2)
-      // return uint     : DLL Return Code
-      // - MOUNT_SUCCESS       000      Success
-      // - MOUNT_GENERALERROR  012      Error
-      // - MOUNT_BADPARAM      999      bad parmComport timeout
-      // Public Declare Function EQ_DebugLog Lib "EQCONTRL" (ByVal FileName As String, ByVal comment As String, ByVal operation As Long) As Long
-      public int EQ_DebugLog(string filename, string comment, int operation)
-      {
-         throw new NotImplementedException();
-      }
-
-      ///////////////////////////////////////////////////////////////////////////////////////
-      ///** \brief  Function name       : EQCom::EQ_SetCustomTrackRate()
-      //  * \brief  Description         : Guiderate activate
-      //  * \param  uint               : motor_id      (0 RA, 1 DEC)
-      //  * \param  DOUBLE              : rate arcsec/sec
-      //  * \param  uint               : hemisphere    (0 NORTHERN, 1 SOUTHERN)
-      //  * \param  uint               : direction     (0 FORWARD,  1 REVERSE)
-      //  * \return uint               : DLL Return Code
-      //  *
-      //  * - MOUNT_SUCCESS       000      Success
-      //  * - MOUNT_NOCOMPORT     001      Comport Not available
-      //  * - MOUNT_COMERROR      003      COM Timeout Error
-      //  * - MOUNT_MOTORBUSY     004      Motor still busy
-      //  * - MOUNT_NONSTANDARD   005      Mount Initialized on non-standard parameters
-      //  * - MOUNT_MOUNTBUSY     010      Cannot execute command at the current state
-      //  * - MOUNT_MOTORERROR    011      Motor not initialized
-      //  * - MOUNT_MOTORINACTIVE 200      Motor coils not active
-      //  * - MOUNT_BADPARAM      999      Invalid parameter
-      //  */
-      // Public Declare Function EQ_SetAxisRate Lib "EQCONTRL" (ByVal motor_id As Long, ByVal rate As Double, hemisphere As Long, direction As Long) As Long
-      public int EQ_SetAxisRate(int motorId, double rate, int hemisphere, int direction)
-      {
-         throw new NotImplementedException();
-      }
+               case 11:
+                  tmp = EQ_SendCommand(axisId, 'q', 1, 6);
+                  if ((tmp & EQ_ERROR) == EQ_ERROR) {
+                     return EQ_GetMountError(tmp);
+                  }
+                  // assume pec is off and not training
+                  i = 0x00000000;
+                  if ((tmp & 0x00000020) == 0x00000020) {
+                     //	PEC on						= 0x00000020
+                     i = 0x00000002;
+                  }
+                  else {
+                     // PPEC is off
+                     if ((tmp & 0x00000010) == 0x00000010) {
+                        //	PEC training in progress	= 0x00000010
+                        i = 0x00000001;
+                     }
+                  }
+                  return i;
 
 
-      //Public Function EQ_GetMountFeatures() As Long
-      //    Dim res As Long
-      //    res = EQ_GP(0, 10009)
-      //    If res<> 999 Then
-      //        EQ_GetMountFeatures = res
-      //    Else
-      //        EQ_GetMountFeatures = 0
-      //    End If
-      //End Function
-
-      public int EQ_GetMountFeatures()
-      {
-         int res = EQ_GP(0, 10009);
-         if (res != 999) {
-            return res;
+               default:
+                  return MCVersion;
+            }
+         }
+         else if (axisId == AxisId.Aux_RA_Encoder) {
+            return (MountActive ? 1 : 0);
          }
          else {
-            return 0;
+            return MOUNT_BADPARAM;
          }
       }
+
+      /// <summary>
+      /// Set a mount parameter
+      /// </summary>
+      /// <param name="motorId">Axis ID (RA/DEC or both)</param>
+      /// <param name="parameterId">Parameter index (base 10000)
+      /// 			1 - SNAP Port
+      ///  			2 - PPEC Train
+      ///  			3 - PPEC
+      ///  			4 - Auxillary Encoder
+      ///  			5 - Reset Encoder Dataum
+      ///  			6 - Polar Scope LED Brightness
+      ///	   	7 - Slew Rate threshold
+      /// </param>
+      /// <param name="value"></param>
+      /// <returns></returns>
+      public int EQ_SetMountParameter(AxisId axisId, int parameterId, int value)
+      {
+         int result;
+
+         // Check Parameter id
+         if (parameterId < 10000) {
+            return MOUNT_BADPARAM;
+         }
+
+         parameterId -= 10000;
+
+         switch (parameterId) {
+
+            case 1:
+               // snap port
+               switch (axisId) {
+                  case AxisId.Axis1_RA:
+                     if (!HasSnap[0]) {
+                        return MOUNT_GENERALERROR;
+                     }
+                     break;
+                  case AxisId.Axis2_DEC:
+                     if (!HasSnap[1]) {
+                        return MOUNT_GENERALERROR;
+                     }
+                     break;
+                  case AxisId.Both_Axes:
+                     if ((!HasSnap[0]) || (!HasSnap[1])) {
+                        return MOUNT_GENERALERROR;
+                     }
+                     break;
+                  default:
+                     return MOUNT_BADPARAM;
+               }
+
+               if ((value < 0) || (value > 1)) {
+                  return MOUNT_BADPARAM;
+               }
+
+               switch (axisId) {
+                  case AxisId.Axis1_RA:
+                  case AxisId.Axis2_DEC:
+                     result = EQ_SendCommand(axisId, 'O', value, 1);
+                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                        return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+                     }
+                     break;
+                  case AxisId.Both_Axes:
+                     result = EQ_SendCommand(AxisId.Axis1_RA, 'O', value, 1);
+                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                        return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+                     }
+                     result = EQ_SendCommand(AxisId.Axis2_DEC, 'O', value, 1);
+                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                        return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+                     }
+                     break;
+               }
+               break;
+
+            case 2:
+               // Start/Stop PPEC Train
+               switch (axisId) {
+                  case AxisId.Axis1_RA:
+                     if (!HasPPEC[0]) {
+                        return MOUNT_GENERALERROR;
+                     }
+                     break;
+                  case AxisId.Axis2_DEC:
+                     if (!HasPPEC[1]) {
+                        return MOUNT_GENERALERROR;
+                     }
+                     break;
+                  case AxisId.Both_Axes:
+                     if ((!HasPPEC[0]) || (!HasPPEC[1])) {
+                        return MOUNT_GENERALERROR;
+                     }
+                     break;
+                  default:
+                     return MOUNT_BADPARAM;
+               }
+               switch (value) {
+                  case 0:
+                     value = 1;
+                     break;
+                  case 1:
+                     value = 0;
+                     break;
+                  default:
+                     return MOUNT_BADPARAM;
+               }
+               switch (axisId) {
+                  case AxisId.Axis1_RA:
+                  case AxisId.Axis2_DEC:
+                     // Start/stop PPEC train
+                     result = EQ_SendCommand(axisId, 'W', value, 6);
+                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                        return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+                     }
+                     break;
+                  case AxisId.Both_Axes:
+                     result = EQ_SendCommand(RAMotor, 'W', value, 6);
+                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                        return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+                     }
+                     result = EQ_SendCommand(AxisId.Axis2_DEC, 'W', value, 6);
+                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                        return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+                     }
+                     break;
+               }
+               break;
+
+            case 3:
+               // Start/Stop PPEC
+               switch (axisId) {
+                  case AxisId.Axis1_RA:
+                     if (!HasPPEC[0]) {
+                        return MOUNT_GENERALERROR;
+                     }
+                     break;
+                  case AxisId.Axis2_DEC:
+                     if (!HasPPEC[1]) {
+                        return MOUNT_GENERALERROR;
+                     }
+                     break;
+                  case AxisId.Both_Axes:
+                     if ((!HasPPEC[0]) || (!HasPPEC[1])) {
+                        return MOUNT_GENERALERROR;
+                     }
+                     break;
+                  default:
+                     return MOUNT_BADPARAM;
+                     break;
+               }
+               switch (value) {
+                  case 0:
+                     value = 3;
+                     break;
+                  case 1:
+                     value = 2;
+                     break;
+                  default:
+                     return MOUNT_BADPARAM;
+               }
+
+               switch (axisId) {
+                  case AxisId.Axis1_RA:
+                  case AxisId.Axis2_DEC:
+                     result = EQ_SendCommand(axisId, 'W', value, 6);
+                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                        return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+                     }
+                     break;
+                  case AxisId.Both_Axes:
+                     result = EQ_SendCommand(RAMotor, 'W', value, 6);
+                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                        return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+                     }
+                     result = EQ_SendCommand(AxisId.Axis2_DEC, 'W', value, 6);
+                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                        return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+                     }
+                     break;
+               }
+               break;
+
+            case 4:
+               // Enable/Disable Encoder
+               switch (axisId) {
+                  case AxisId.Axis1_RA:
+                     if (!HasEncoder[0]) {
+                        return MOUNT_GENERALERROR;
+                     }
+                     break;
+                  case AxisId.Axis2_DEC:
+                     if (!HasEncoder[1]) {
+                        return MOUNT_GENERALERROR;
+                     }
+                     break;
+                  case AxisId.Both_Axes:
+                     if ((!HasEncoder[0]) || (!HasEncoder[1])) {
+                        return MOUNT_GENERALERROR;
+                     }
+                     break;
+                  default:
+                     return MOUNT_BADPARAM;
+               }
+
+               if (value < 0 || value > 1) {
+                  return MOUNT_BADPARAM;
+               }
+               if (value == 0) {
+                  value = 4;
+               }
+               else {
+                  value = 5;
+               }
+               switch (axisId) {
+                  case AxisId.Axis1_RA:
+                  case AxisId.Axis2_DEC:
+                     result = EQ_SendCommand(axisId, 'W', value, 6);
+                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                        return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+                     }
+                     break;
+
+                  case AxisId.Both_Axes:
+                     result = EQ_SendCommand(RAMotor, 'W', value, 6);
+                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                        return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+                     }
+                     result = EQ_SendCommand(AxisId.Axis2_DEC, 'W', value, 6);
+                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                        return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+                     }
+                     break;
+               }
+               break;
+
+            case 10:
+               // Encoder reset datum
+               if (!HasHomeSensor) {
+                  return MOUNT_GENERALERROR;
+               }
+
+               result = EQ_SendCommand(axisId, 'W', 8, 6);
+               if ((result & EQ_ERROR) == EQ_ERROR) {
+                  return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+               }
+               break;
+
+            case 6:
+               // Polar Scope LED brightness
+               if (!HasPolarscopeLED) {
+                  return MOUNT_GENERALERROR;
+               }
+
+               if ((value < 0) || (value > 255)) {
+                  return MOUNT_BADPARAM;
+               }
+               result = EQ_SendCommand(AxisId.Axis2_DEC, 'V', value, 2);
+               if ((result & EQ_ERROR) == EQ_ERROR) {
+                  return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
+               }
+               break;
+
+            case 7:
+               // Slew rate - Highspeed/Lowspeed threshold
+               if ((value < 20) || (value > 800)) {
+                  return MOUNT_BADPARAM;
+               }
+               switch (axisId) {
+                  case AxisId.Axis1_RA:
+                     LowSpeedGotoMargin[0] = value;
+                     break;
+                  case AxisId.Axis2_DEC:
+                     LowSpeedGotoMargin[1] = value;
+                     break;
+                  case AxisId.Both_Axes:
+                     LowSpeedGotoMargin[0] = value;
+                     LowSpeedGotoMargin[1] = value;
+                     break;
+                  default:
+                     return MOUNT_BADPARAM;
+               }
+               break;
+
+            default:
+               return MOUNT_BADPARAM;
+
+         }
+         return MOUNT_SUCCESS;
+      }
+
+
+
+      /// <summary>
+      /// Send the command to the correct mount
+      /// </summary>
+      /// <param name="axisId">The Axis Id enum value</param>
+      /// <param name="command">command (ASCII command to send to mount)</param>
+      /// <param name="parameters">parameter (Binary parameter or 0)</param>
+      /// <param name="count">count (# parameter bytes)</param>
+      /// <returns>Driver Return Value
+      ///   -	EQ_OK			0x2000000 - Success with no return values
+      ///   -	EQ_COMTIMEOUT	0x1000005 - COM TIMEOUT
+      ///   -	EQ_INVALID		0x3000000 - Invalid Parameter</returns>
+      /// <remarks></remarks>
+      public int EQ_SendCommand(AxisId axisId, char command, int parameters, short count)
+      {
+         return EQ_SendCommand((int)axisId, command, parameters, count);
+      }
+
+      /// <summary>
+      /// Send the command to the correct mount
+      /// </summary>
+      /// <param name="motorId">motor_id (0 RA, 1 DEC)</param>
+      /// <param name="command">command (ASCII command to send to mount)</param>
+      /// <param name="parameters">parameter (Binary parameter or 0)</param>
+      /// <param name="count">count (# parameter bytes)</param>
+      /// <returns>Driver Return Value
+      ///   -	EQ_OK			0x2000000 - Success with no return values
+      ///   -	EQ_COMTIMEOUT	0x1000005 - COM TIMEOUT
+      ///   -	EQ_INVALID		0x3000000 - Invalid Parameter</returns>
+      /// <remarks></remarks>
+      public int EQ_SendCommand(int motorId, char command, int parameters, short count)
+      {
+         if (motorId == (int)AxisId.Both_Axes) {
+            return MOUNT_BADPARAM;
+         }
+         int response = EQ_OK;
+         char[] hex_str = "0123456789ABCDEF     ".ToCharArray();   // Hexadecimal translation
+         const int BufferSize = 20;
+         StringBuilder sb = new StringBuilder(BufferSize);
+         sb.Append(cStartChar_Out);
+         sb.Append(command);
+         sb.Append((motorId + 1).ToString());
+         switch (count) {
+            case 1:
+               // nibble 1
+               sb.Append(hex_str[(parameters & 0x00000f)]);
+               break;
+            case 2:
+               // Byte 1
+               sb.Append(hex_str[(parameters & 0x0000f0) >> 4]);
+               sb.Append(hex_str[(parameters & 0x00000f)]);
+               break;
+            case 3:
+               // Byte 1
+               sb.Append(hex_str[(parameters & 0x0000f0) >> 4]);
+               sb.Append(hex_str[(parameters & 0x00000f)]);
+               // Nibble 3
+               sb.Append(hex_str[(parameters & 0x000f00) >> 8]);
+               break;
+            case 4:
+               // Byte 1
+               sb.Append(hex_str[(parameters & 0x0000f0) >> 4]);
+               sb.Append(hex_str[(parameters & 0x00000f)]);
+               // Byte 2
+               sb.Append(hex_str[(parameters & 0x00f000) >> 12]);
+               sb.Append(hex_str[(parameters & 0x000f00) >> 8]);
+               break;
+            case 5:
+               // Byte 1
+               sb.Append(hex_str[(parameters & 0x0000f0) >> 4]);
+               sb.Append(hex_str[(parameters & 0x00000f)]);
+               // Byte 2
+               sb.Append(hex_str[(parameters & 0x00f000) >> 12]);
+               sb.Append(hex_str[(parameters & 0x000f00) >> 8]);
+               // nibble
+               sb.Append(hex_str[(parameters & 0x0f0000) >> 16]);
+               break;
+            case 6:
+               // Byte 1
+               sb.Append(hex_str[(parameters & 0x0000f0) >> 4]);
+               sb.Append(hex_str[(parameters & 0x00000f)]);
+               // Byte 2
+               sb.Append(hex_str[(parameters & 0x00f000) >> 12]);
+               sb.Append(hex_str[(parameters & 0x000f00) >> 8]);
+               // Byte 3
+               sb.Append(hex_str[(parameters & 0xf00000) >> 20]);
+               sb.Append(hex_str[(parameters & 0x0f0000) >> 16]);
+               break;
+            default:
+               return EQ_INVALID;
+         }
+         sb.Append(cEndChar);
+         string cmdString = sb.ToString();
+         var cmdTransaction = new EQContrlTransaction(cmdString) { Timeout = TimeSpan.FromSeconds(TimeOut) };
+
+
+         using (ICommunicationChannel channel = new SerialCommunicationChannel(EndPoint)) {
+            var transactionObserver = new TransactionObserver(channel);
+            var processor = new ReactiveTransactionProcessor();
+            processor.SubscribeTransactionObserver(transactionObserver);
+            try {
+               channel.Open();
+
+               // prepare to communicate
+               for (int i = 0; i < Retry; i++) {
+
+                  Task.Run(() => processor.CommitTransaction(cmdTransaction));
+                  cmdTransaction.WaitForCompletionOrTimeout();
+                  if (!cmdTransaction.Failed) {
+                     response = cmdTransaction.Value;
+                     break;
+                  }
+                  else {
+                     Trace.TraceError(cmdTransaction.ErrorMessage.Single());
+                  }
+               }
+            }
+            catch (Exception ex) {
+               Trace.TraceError("Connnection Lost");
+               throw new MountControllerException(ErrorCode.ERR_NOT_CONNECTED, ex.Message);
+            }
+            finally {
+               // To clean up, we just need to dispose the TransactionObserver and the channel is closed automatically.
+               // Not strictly necessary, but good practice.
+               transactionObserver.OnCompleted(); // There will be no more transactions.
+               transactionObserver = null; // not necessary, but good practice.
+            }
+
+         }
+
+         System.Diagnostics.Debug.WriteLine(" -> Response: " + response);
+         return response;
+      }
+
+      /// <summary>
+      /// Guiderate activate
+      /// </summary>
+      /// <param name="axisId">RA/DEC</param>
+      /// <param name="rate">rate arcsec/sec (0 to 12032.8536 arcsec/sec)</param>
+      /// <param name="hemisphere"></param>
+      /// <param name="direction"></param>
+      /// <returns>
+      ///	- DLL_SUCCESS		   000		 Success
+      ///	- DLL_NOCOMPORT		001		 Comport Not available
+      ///	- DLL_COMERROR		   003		 COM Timeout Error
+      ///	- DLL_MOTORBUSY		004		 Motor still busy
+      ///	- DLL_NONSTANDARD	   005		 Mount Initialized on non-standard parameters
+      ///	- DLL_MOUNTBUSY		010		 Cannot execute command at the current state
+      ///	- DLL_MOTORERROR	   011		 Motor not initialized
+      ///	- DLL_MOTORINACTIVE	200		 Motor coils not active
+      ///	- DLL_BADPARAM		   999		 Invalid parameter
+      /// </returns>
+      public int EQ_SetAxisRate(AxisId axisId, double rate, HemisphereOption hemisphere, AxisDirection direction)
+      {
+         int i;
+         bool highspeed = false;
+         bool trackmode = false;
+         int SpeedInt;
+
+         // Check Mount
+         if (!MountActive) {
+            return MOUNT_NOCOMPORT;
+         }
+
+         // Check Parameters	
+         if (axisId > AxisId.Axis2_DEC) {
+            return MOUNT_BADPARAM;
+         }
+
+
+         if ((rate > MAX_RATE) || (rate < 0)) {
+            return MOUNT_BADPARAM - 3;
+         }
+
+
+         if (rate > -0.015 && rate < 0.015) {
+            // stop motor
+            i = EQ_MotorStop(axisId);
+            return (i);
+         }
+
+
+         switch (axisId) {
+            case AxisId.Axis1_RA:
+               if (rate > (double)LowSpeedGotoMargin[0] * 15.041067) {
+                  highspeed = true;
+                  rate /= (double)HighSpeedRatio[0];
+               }
+               break;
+            case AxisId.Axis2_DEC:
+               if (rate > (double)LowSpeedGotoMargin[1] * 15.041067) {
+                  highspeed = true;
+                  rate /= (double)HighSpeedRatio[1];
+               }
+               break;
+         }
+
+         MountTracking = MountTracking.Custom;
+
+
+         if (axisId == AxisId.Axis1_RA) {
+            SpeedInt = (int)(15.041067 * (double)LowSpeedSlewRate[0] / rate);
+            SpeedInt += GuideRateOffset[0];
+         }
+         else {
+            SpeedInt = (int)(15.041067 * (double)LowSpeedSlewRate[1] / rate);
+            SpeedInt += GuideRateOffset[1];
+         }
+         if (highspeed) {
+            trackmode = true;
+         }
+         else {
+            // if dirction has change or last speed was high
+            trackmode = true;
+
+
+            // Check Motor Status
+            // Send Command
+            i = EQ_SendCommand(axisId, 'f', 0, NO_PARAMS);
+            if ((i & EQ_ERROR) == EQ_ERROR) {
+               return EQ_GetMountError(i);                  // Check errors, return "dll_error" value
+            }
+
+            // :fx=ABC[0D]  is actually returned from GetReply as an integer as #x0CAB
+            //              "is energised" is given by C  ie  ( i & x100 )
+            //              "is moving"    is given by B  ie  ( i & x001 )
+            //              "direction"    is given by A  ie  ( i & x020 )
+            //              "Goto/Slew"                       ( i & x010 )
+            //              "Curr Rate"                       ( i & x040 )
+
+            if ((i & 0x0100) == 0) {
+               //motor not initialised
+               return MOUNT_MOTORINACTIVE;
+            }
+            else {
+               if ((i & 0x01) == 0x01) {
+                  // motor is moving
+                  if (direction == AxisDirection.Forward) {
+                     if ((i & 0x20) == 0x20) {
+                        trackmode = true;
+                     }
+                  }
+                  else {
+                     if ((i & 0x20) == 0x20) {
+                        trackmode = true;
+                     }
+                  }
+                  if ((i & 0x40) == 0x40) {
+                     // currently moving at high speed
+                     trackmode = true;
+                  }
+               }
+               else {
+                  // motor is stopped
+                  trackmode = true;
+               }
+            }
+         }
+
+
+         if (trackmode) {
+
+            // Stop the motor
+            i = EQ_MotorStop(axisId);
+            if (i != 0) {
+               return i;
+            }
+
+            MountSpeed trackbase = MountSpeed.LowSpeed;
+            if (highspeed) {
+               trackbase = MountSpeed.HighSpeed;
+            }
+
+            // Set the motor hemisphere, mode, direction and speed	
+            i = EQ_SendGCode(axisId, hemisphere, MountMode.Slew, direction, trackbase);
+            if ((i & EQ_ERROR) == EQ_ERROR) {
+               return EQ_GetMountError(i);   // Check errors, return "dll_error" value
+            }
+         }
+
+
+         // Set the motor speed
+         i = EQ_SendCommand(axisId, 'I', SpeedInt, 6);
+         if ((i & EQ_ERROR) == EQ_ERROR) {
+            return EQ_GetMountError(i);   // Check errors, return "dll_error" value
+         }
+
+         if (trackmode) {
+
+            // Start the motor
+            i = EQ_SendCommand(axisId, 'J', 0, NO_PARAMS);
+            if ((i & EQ_ERROR) == EQ_ERROR) {
+               return EQ_GetMountError(i);   // Check errors, return "dll_error" value
+            }
+         }
+         return MOUNT_SUCCESS;
+      }
+
+
+
+      /// <summary>
+      /// Slew RA/DEC Motor
+      /// </summary>
+      /// <param name="axisId"></param>
+      /// <param name="hemisphere"></param>
+      /// <param name="direction"></param>
+      /// <param name="angle"></param>
+      /// <returns>
+      ///	- DLL_SUCCESS		000		 Success
+      ///	- DLL_NOCOMPORT		001		 Comport Not available
+      ///	- DLL_COMERROR		003		 COM Timeout Error
+      ///	- DLL_MOTORBUSY		004		 Motor still busy
+      ///	- DLL_NONSTANDARD	005		 Mount Initialized on non-standard parameters
+      ///	- DLL_MOUNTBUSY		010		 Cannot execute command at the current state
+      ///	- DLL_MOTORERROR	011		 Motor not initialized
+      ///	- DLL_MOTORINACTIVE	200		 Motor coils not active
+      ///	- DLL_BADPARAM		999		 Invalid parameter
+      /// </returns>
+      public int EQ_MoveMotorAngle(AxisId axisId, HemisphereOption hemisphere, AxisDirection direction, double angle)
+      {
+         int i, steps;
+
+         // Check Mount
+         if (!MountActive) {
+            return MOUNT_NOCOMPORT;
+         }
+
+         // Check Parameters
+         if (axisId > AxisId.Axis2_DEC) {
+            return MOUNT_BADPARAM;
+         }
+         if ((angle < 0) || (angle > 648000)) {
+            return MOUNT_BADPARAM;
+         }
+
+
+         // Check Motor Status first
+         i = EQ_GetMotorStatus(axisId);
+         if ((i >= MOUNT_MOTORINACTIVE) || (i < 0x80)) {
+            //we have an error code 
+            return i;
+         }
+         else {
+            if ((i & 0x90) != 0x80) {
+               // motor is moving already - can't do a goto if one is in progress.
+               return MOUNT_MOTORBUSY;
+            }
+         }
+
+         steps = 0;
+         switch (axisId) {
+            case AxisId.Axis1_RA:
+               steps = (int)(LowSpeedSlewRate[0] * angle / (360 * 60 * 60));
+               break;
+            case AxisId.Axis2_DEC:
+               steps = (int)(LowSpeedSlewRate[1] * angle / (360 * 60 * 60));
+               break;
+         }
+         if (steps <= 0.0) {
+            // nothing to do;
+            return MOUNT_SUCCESS;
+         }
+
+
+         // Set the motor hemisphere, mode, direction and speed
+         i = EQ_SendGCode(axisId, hemisphere, MountMode.Goto, direction, MountSpeed.LowSpeed);
+         if ((i & EQ_ERROR) == EQ_ERROR) {
+            return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
+         }
+
+
+         // Set the mount relative target
+         i = EQ_SendCommand(axisId, 'H', steps, 6);
+         if ((i & EQ_ERROR) == EQ_ERROR) {
+            return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
+         }
+
+         // Start the motor
+         i = EQ_SendCommand(axisId, 'J', 0, NO_PARAMS);
+         if ((i & EQ_ERROR) == EQ_ERROR) {
+            return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
+         }
+
+         return MOUNT_SUCCESS;
+      }
+
 
       #endregion
 
