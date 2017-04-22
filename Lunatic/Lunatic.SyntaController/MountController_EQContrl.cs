@@ -1020,7 +1020,7 @@ namespace Lunatic.SyntaController
 
          // Stop motor
          i = EQ_MotorStop(axisId);
-         if (i != 0) {
+         if (i != Core.Constants.MOUNT_SUCCESS) {
             return i;
          }
 
@@ -1143,7 +1143,7 @@ namespace Lunatic.SyntaController
          j = (j + GuideRateOffset[0]) & 0xffffff;
 
          i = EQ_MotorStop(AxisId.Axis1_RA);
-         if (i != 0) {
+         if (i != Core.Constants.MOUNT_SUCCESS) {
             return i;
          }
 
@@ -1278,7 +1278,7 @@ namespace Lunatic.SyntaController
             // DEC Motor
             // Stop DEC motor
             i = EQ_MotorStop(AxisId.Axis2_DEC);
-            if (i != 0) {
+            if (i != Core.Constants.MOUNT_SUCCESS) {
                return i;
             }
 
@@ -1405,7 +1405,7 @@ namespace Lunatic.SyntaController
          // Stop the motors if new custom rate
          if (MountTracking == MountTracking.Custom) {
             i = EQ_MotorStop(axisId);
-            if (i != 0) {
+            if (i != Core.Constants.MOUNT_SUCCESS) {
                return i;
             }
          }
@@ -1507,7 +1507,7 @@ namespace Lunatic.SyntaController
 
             // Stop the motor
             i = EQ_MotorStop(axisId);
-            if (i != 0) {
+            if (i != Core.Constants.MOUNT_SUCCESS) {
                return i;
             }
 
@@ -2382,7 +2382,7 @@ namespace Lunatic.SyntaController
 
             // Stop the motor
             i = EQ_MotorStop(axisId);
-            if (i != 0) {
+            if (i != Core.Constants.MOUNT_SUCCESS) {
                return i;
             }
 

@@ -173,6 +173,9 @@
     <Compile Include="Classes\Driver_CustomActions.cs">
       <DependentUpon>Driver.cs</DependentUpon>
     </Compile>
+    <Compile Include="Classes\Driver_Tracking.cs" >
+      <DependentUpon>Driver.cs</DependentUpon>
+    </Compile>
     <Compile Include="Classes\SettingsProvider.cs" />
     <Compile Include="Classes\SyntaMountBase.cs" />
     <Compile Include="Classes\Driver_ASCOM_ITelescopeV3.cs">
