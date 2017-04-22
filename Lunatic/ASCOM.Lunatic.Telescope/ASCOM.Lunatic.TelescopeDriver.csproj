@@ -173,7 +173,8 @@
     <Compile Include="Classes\Driver_CustomActions.cs">
       <DependentUpon>Driver.cs</DependentUpon>
     </Compile>
-    <Compile Include="Classes\Driver_Tracking.cs" >
+    <Compile Include="Classes\Driver_PEC.cs" />
+    <Compile Include="Classes\Driver_Tracking.cs">
       <DependentUpon>Driver.cs</DependentUpon>
     </Compile>
     <Compile Include="Classes\SettingsProvider.cs" />

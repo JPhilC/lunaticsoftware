@@ -35,7 +35,7 @@ namespace ASCOM.Lunatic.Telescope
 
          if (axis == AxisId.Axis1_RA) {
 
-            if (rate == 0 && DeclinationRate == 0) {
+            if (rate == 0 && _DeclinationRate == 0) {
                // HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(178)
             }
 
@@ -43,10 +43,10 @@ namespace ASCOM.Lunatic.Telescope
 
             if (Hemisphere == HemisphereOption.Southern) {
                j = -1 * j;
-               currentRate = RightAscensionRate * -1;
+               currentRate = _RightAscensionRate * -1;
             }
             else {
-               currentRate = RightAscensionRate;
+               currentRate = _RightAscensionRate;
             }
 
 
@@ -59,7 +59,7 @@ namespace ASCOM.Lunatic.Telescope
             }
 
 
-            RightAscensionRate = j;
+            _RightAscensionRate = j;
 
 
 
@@ -75,13 +75,13 @@ namespace ASCOM.Lunatic.Telescope
 
          if (axis == AxisId.Axis2_DEC) {
 
-            if (rate == 0 && RightAscensionRate == 0) {
+            if (rate == 0 && _RightAscensionRate == 0) {
                // HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(178)
             }
 
 
             // check for change of direction
-            if ((DeclinationRate * j) <= 0) {
+            if ((_DeclinationRate * j) <= 0) {
                StartDECByRate(j);
             }
             else {
@@ -89,7 +89,7 @@ namespace ASCOM.Lunatic.Telescope
             }
 
 
-            DeclinationRate = j;
+            _DeclinationRate = j;
             if (rate == 0) {
                moveDecAxisSlewing = false;
             }
@@ -424,6 +424,202 @@ namespace ASCOM.Lunatic.Telescope
 
       }
 
+      #endregion
+
+      #region Tracking stuff ...
+
+      private void StopTracking() {
+         /*
+         gSlewStatus = False
+
+      If gEQparkstatus = 2 Then
+        ' we were slewing to park position
+        ' well its not happening now!
+        gEQparkstatus = 0
+        HC.ParkTimer.Enabled = False
+        HC.Frame15.Caption = oLangDll.GetLangString(146) & " " & oLangDll.GetLangString(179)
+        Call SetParkCaption
+    End If
+
+
+    If gPEC_Enabled Then
+       PEC_StopTracking
+    End If
+
+
+'    eqres = EQ_MotorStop(0)
+'    eqres = EQ_MotorStop(1)
+    eqres = EQ_MotorStop(2)
+
+
+    gRA_LastRate = 0
+'    Do
+'        eqres = EQ_GetMotorStatus(0)
+'        If (eqres = EQ_NOTINITIALIZED) Or (eqres = EQ_COMNOTOPEN) Or (eqres = EQ_COMTIMEOUT) Then GoTo STOPEND1
+'    Loop While (eqres And EQ_MOTORBUSY) <> 0
+'
+'STOPEND1:
+'    Do
+'        eqres = EQ_GetMotorStatus(1)
+'        If (eqres = EQ_NOTINITIALIZED) Or (eqres = EQ_COMNOTOPEN) Or (eqres = EQ_COMTIMEOUT) Then GoTo STOPEND2
+'    Loop While (eqres And EQ_MOTORBUSY) <> 0
+'
+'STOPEND2:
+    ' clear an active flips
+    HC.ChkForceFlip.Value = 0
+    gCWUP = False
+    gGotoParams.SuperSafeMode = 0
+
+
+    gRAStatus_slew = False
+    gTrackingStatus = 0
+    gDeclinationRate = 0
+    gRightAscensionRate = 0
+    HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(178)
+    HC.Add_Message(oLangDll.GetLangString(5130))
+
+
+    gEmulNudge = False               ' Enable Emulation
+    gEmulOneShot = True              ' Get One shot cap
+
+
+    EQ_Beep(7)
+*/
+}
+
+      private void StartSiderealTracking(bool mute)
+      {
+         LastPECRate = 0;
+
+
+         if (ParkStatus != ParkStatus.Unparked) {
+            //  no tracking if parked!
+            // HC.Add_Message(oLangDll.GetLangString(5013))
+            return;
+         }
+         else {
+            //  Stop DEC motor
+            _Mount.EQ_MotorStop(AxisId.Axis2_DEC);
+            _DeclinationRate = 0;
+
+
+            //  start RA motor at sidereal
+
+            _Mount.EQ_StartRATrack(MountTracking.Sidereal, Hemisphere, (Hemisphere == HemisphereOption.Northern ? AxisDirection.Forward : AxisDirection.Reverse));
+            MoveAxisRate[0] = MountSpeed.LowSpeed;
+            TrackingState = TrackingStatus.Sidereal;
+            _TrackingRate = DriveRates.driveSidereal;    // ASCOM TrackingRate backing variable
+            _RightAscensionRate = Core.Constants.SIDEREAL_RATE_ARCSECS;
+
+
+            if (Settings.TrackUsingPEC) {
+               //  track using PEC
+               PECStartTracking();
+               if (!mute) {
+                  // EQ_Beep(??)
+               }
+            }
+            else {
+               //  Set Caption
+               // HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(122)
+               // HC.Add_Message(oLangDll.GetLangString(5014))
+               if (!mute) {
+                  // EQ_Beep(10)
+               }
+            }
+         }
+      }
+
+      private void StartLunarTracking(bool mute)
+      {
+         LastPECRate = 0;
+         if (ParkStatus != ParkStatus.Unparked) {
+            // HC.Add_Message(oLangDll.GetLangString(5013))
+            return;
+         }
+
+
+         if (PECEnabled) {
+            PECStopTracking();
+         }
+
+
+         _Mount.EQ_StartRATrack(MountTracking.Lunar, Hemisphere, (Hemisphere == HemisphereOption.Northern ? AxisDirection.Forward : AxisDirection.Reverse));
+         _Mount.EQ_MotorStop(AxisId.Axis2_DEC);
+         TrackingState = TrackingStatus.Lunar;                 // Lunar rate tracking'
+         _TrackingRate = DriveRates.driveLunar;                // Backing variable for ASCOM TrackingRate member.
+         _DeclinationRate = 0;
+         _RightAscensionRate = Core.Constants.LUNAR_RATE;
+
+         //HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(123)
+         //HC.Add_Message(oLangDll.GetLangString(5015))
+         EmulatorNudge = false;               //  Enable Emulation
+         if (!mute) {
+            // EQ_Beep(11)
+         }
+
+      }
+
+
+      private void StartSolarTracking(bool mute)
+      {
+         LastPECRate = 0;
+         if (ParkStatus != ParkStatus.Unparked) {
+            // HC.Add_Message(oLangDll.GetLangString(5013))
+            return;
+         }
+
+
+         if (PECEnabled) {
+            PECStopTracking();
+         }
+
+
+         _Mount.EQ_StartRATrack(MountTracking.Solar, Hemisphere, (Hemisphere == HemisphereOption.Northern ? AxisDirection.Forward : AxisDirection.Reverse));
+         _Mount.EQ_MotorStop(AxisId.Axis2_DEC);
+         TrackingState = TrackingStatus.Solar;                 // Lunar rate tracking'
+         _TrackingRate = DriveRates.driveSolar;                // Backing variable for ASCOM TrackingRate member.
+         _DeclinationRate = 0;
+         _RightAscensionRate = Core.Constants.SOLAR_RATE;
+
+         //HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(123)
+         //HC.Add_Message(oLangDll.GetLangString(5015))
+         EmulatorNudge = false;               //  Enable Emulation
+         if (!mute) {
+            // EQ_Beep(12)
+         }
+
+      }
+
+      private void StartCustomTracking(bool mute)
+      {
+         LastPECRate = 0;
+         if (ParkStatus != ParkStatus.Unparked) {
+            // HC.Add_Message(oLangDll.GetLangString(5013))
+            return;
+         }
+
+
+         if (PECEnabled) {
+            PECStopTracking();
+         }
+
+
+         _Mount.EQ_StartRATrack(MountTracking.Solar, Hemisphere, (Hemisphere == HemisphereOption.Northern ? AxisDirection.Forward : AxisDirection.Reverse));
+         _Mount.EQ_MotorStop(AxisId.Axis2_DEC);
+         TrackingState = TrackingStatus.Solar;                 // Lunar rate tracking'
+         _TrackingRate = DriveRates.driveKing;                // Backing variable for ASCOM TrackingRate member.
+         _DeclinationRate = 0;
+         _RightAscensionRate = Core.Constants.SOLAR_RATE;
+
+         //HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(123)
+         //HC.Add_Message(oLangDll.GetLangString(5015))
+         EmulatorNudge = false;               //  Enable Emulation
+         if (!mute) {
+            // EQ_Beep(??)
+         }
+
+      }
       #endregion
 
    }

@@ -39,6 +39,10 @@ namespace ASCOM.Lunatic.Telescope
                Settings.DECEncoderParkPosition = Convert.ToInt32(values[1]);
                break;
 
+            case "Lunatic:SetTrackUsingPEC":
+               Settings.TrackUsingPEC = Convert.ToBoolean(actionParameters);
+               break;
+
             case "Lunatic:SetAutoGuiderPortRates":
                Settings.RAAutoGuiderPortRate = (AutoguiderPortRate)Convert.ToInt32(values[0]);
                Settings.DECAutoGuiderPortRate = (AutoguiderPortRate)Convert.ToInt32(values[1]);

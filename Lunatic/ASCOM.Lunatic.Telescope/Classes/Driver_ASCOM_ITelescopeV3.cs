@@ -23,9 +23,15 @@ namespace ASCOM.Lunatic.Telescope
       private double[] EncoderZeroPosition = new double[2] { 0x800000, 0x800000 };  // Constants for zero Encoder positions.
       private MountSpeed[] MoveAxisRate = new MountSpeed[2] { MountSpeed.LowSpeed, MountSpeed.LowSpeed };
       private int[] TotalStepsPer360 = new int[2];
+      private double[] RateAdjustment = new double[2] { 0.0, 0.0 };                 // Rate adjustment (RA and DEC)
       private double MeridianWest;
       private double MeridianEast;
       private double MaximumSyncDifference;
+
+      private int[] EmulatorEncoderPosition = new int[2] { 0, 0 };
+      private bool EmulatorOneShot;
+      private bool EmulatorNudge;
+
       #endregion
 
       #region PUBLIC COM INTERFACE ITelescopeV3 IMPLEMENTATION
@@ -1418,9 +1424,6 @@ namespace ASCOM.Lunatic.Telescope
       private double _RightAscensionRate;
 
       /// <summary>
-      /// 
-      /// </summary>
-      /// <summary>
       /// The right ascension tracking rate offset from sidereal (seconds per sidereal second, default = 0.0)
       /// </summary>
       /// <exception cref="PropertyNotImplementedException">If RightAscensionRate Write is not implemented.</exception>
@@ -2100,13 +2103,47 @@ namespace ASCOM.Lunatic.Telescope
       {
          get
          {
-            bool tracking = true;
+            bool tracking = (TrackingState != TrackingStatus.Off);
             _Logger.LogMessage("Tracking", "Get - " + tracking.ToString());
             return tracking;
          }
          set
          {
-            _Logger.LogMessage("Tracking Set", "Not implemented");
+            _Logger.LogMessage("Tracking", "Set - " + value.ToString());
+            if (ParkStatus == ParkStatus.Unparked || (ParkStatus == ParkStatus.Parked && value)) {
+               if (value) {
+                  if (RateAdjustment[0] == 0 && RateAdjustment[1] == 0) {
+                     // track at sidereal
+                     // Call EQStartSidereal2
+                     EmulatorOneShot = true;                 //  Get One shot cap
+                  }
+                  else {
+                     // track at custom rate
+                     LastPECRate = 0;
+                     _DeclinationRate = RateAdjustment[1];
+                     _RightAscensionRate = Core.Constants.SIDEREAL_RATE_ARCSECS + RateAdjustment[0];
+                     if (PECEnabled) {
+                        PECStopTracking();
+                     }
+                     // Call CustomMoveAxis(0, gRightAscensionRate, True, oLangDll.GetLangString(189))
+                     // Call CustomMoveAxis(1, gDeclinationRate, True, oLangDll.GetLangString(189))
+                  }
+               }
+               else {
+                  _Mount.EQ_MotorStop(AxisId.Both_Axes);
+                  // EQ_Beep(7)
+                  TrackingState = TrackingStatus.Off;
+                  // not sure that we should be clearing the rate offests ASCOM Spec is no help
+                  _DeclinationRate = 0;
+                  _RightAscensionRate = 0;
+                  // HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(178)
+               }
+            }
+            else {
+               // HC.Add_Message(oLangDll.GetLangString(5013))
+               throw new ASCOM.ParkedException("Tracking change not allowed when mount is parked.");
+            }
+
             throw new ASCOM.PropertyNotImplementedException("Tracking", true);
          }
       }
@@ -2141,8 +2178,29 @@ namespace ASCOM.Lunatic.Telescope
             if (value == _TrackingRate) {
                return;
             }
-            _TrackingRate = value;
-            RaisePropertyChanged();
+            bool isValidRate = false;
+            foreach (DriveRates rate in _TrackingRates) {
+               if (value == rate) {
+                  isValidRate = true;
+                  break;
+               }
+            }
+            if (!isValidRate) {
+               throw new ASCOM.InvalidValueException("TrackingRate");
+            }
+            switch (value) {
+               case DriveRates.driveSidereal:
+                  StartSiderealTracking(false);
+                  break;
+               case DriveRates.driveLunar:
+                  StartLunarTracking(false);
+                  break;
+               case DriveRates.driveSolar:
+                  StartSolarTracking(false);
+                  break;
+               default:
+                  throw new ASCOM.InvalidValueException("TrackingRate");
+            }
          }
       }
 

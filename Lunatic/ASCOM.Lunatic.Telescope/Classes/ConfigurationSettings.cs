@@ -227,6 +227,8 @@ namespace ASCOM.Lunatic.Telescope
       public int AlignmentProximity { get; set; }      // ProximityRA
 
 
+      public bool TrackUsingPEC { get; set; }            // Track using PEC (HC.CheckPEC.Value)
+
       public Settings()
       {
          this.AscomCompliance = new AscomCompliance();

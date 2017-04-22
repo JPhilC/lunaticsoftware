@@ -158,13 +158,13 @@ namespace ASCOM.Lunatic.Telescope
          _AlignmentMode = AlignmentModes.algGermanPolar;
          _TrackingRates = new TrackingRates();
 
+
          _Mount = SharedResources.Controller;
 
          _Logger.LogMessage("Telescope", "Completed initialisation");
 
          MaximumSyncDifference = (2 * Math.PI) / 8.0;    // Allow a 45.0 (360/8) but in degrees discrepancy in Radians.
       }
-
 
 
       private TrackingStatus TrackingState { get; set; }
