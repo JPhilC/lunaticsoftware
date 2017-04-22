@@ -9,6 +9,7 @@ using System.Windows.Threading;
 using System.ComponentModel;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 using Lunatic.TelescopeControl.Controls;
+using ASCOM.Lunatic.Telescope;
 
 namespace Lunatic.TelescopeControl.ViewModel
 {
@@ -127,6 +128,22 @@ namespace Lunatic.TelescopeControl.ViewModel
          get
          {
             return ((_Driver != null) && (_Driver.Connected == true));
+         }
+      }
+
+      public bool IsParked
+      {
+         get
+         {
+            return ((_Driver != null) && _Driver.AtPark);
+         }
+      }
+
+      public bool IsSlewing
+      {
+         get
+         {
+            return ((_Driver != null) && _Driver.Slewing);
          }
       }
 
@@ -534,6 +551,12 @@ End Property
             _ProcessingEncoderTimerTick = true;
             LocalSiderealTime = TimeSpan.FromHours(_Driver.SiderealTime);
 
+            if (_Driver.AtPark != IsParked) {
+               RaisePropertyChanged("IsParked");
+               UnparkCommand.RaiseCanExecuteChanged();
+               ParkCommand.RaiseCanExecuteChanged();
+            }
+
             _ProcessingEncoderTimerTick = false;
          }
 
@@ -568,7 +591,6 @@ End Property
          _DriverId = _Settings.DriverId;
          DisplayMode = _Settings.DisplayMode;
 
-         MountOption = _Settings.MountOption;
          // Sites are updated directly
          // _Settings.Sites.CurrentSiteChanged += Sites_CurrentSiteChanged;
          _Settings.Sites.PropertyChanged += Sites_PropertyChanged;
@@ -604,8 +626,6 @@ End Property
       {
          _Settings.DriverId = this.DriverId;
          _Settings.DisplayMode = this.DisplayMode;
-         _Settings.MountOption = MountOption;
-
       }
 
       public void SaveSettings()
@@ -730,6 +750,7 @@ End Property
                      Connect();
                   }
                   RaisePropertyChanged("IsConnected");
+                  RaisePropertyChanged("IsParked");
                   RaiseCanExecuteChanged();
                }, () => { return Driver != null; }));
          }
@@ -739,11 +760,18 @@ End Property
       private void Connect()
       {
          try {
-            // Check to see if the driver
+            // Check to see if the driver is already connected
+            bool initialiseNeeded = !Driver.CommandBool("Lunatic:IsInitialised", false);
             Driver.Connected = true;
             // Start the timer.  Note that this call can be made from any thread.
             _ProcessingEncoderTimerTick = false;
             _EncoderTimer.Start();
+            if (initialiseNeeded) {
+               // Transfer location any other initialisation needed.
+               Driver.SiteElevation = Settings.CurrentSite.Elevation;
+               Driver.SiteLatitude = Settings.CurrentSite.Latitude;
+               Driver.SiteLongitude = Settings.CurrentSite.Longitude;
+            }
          }
          catch (Exception ex) {
             StatusMessage = ex.Message;
@@ -774,6 +802,7 @@ End Property
 
       #endregion
 
+      #region Slewing commands ...
       private RelayCommand<SlewButton> _StartSlewCommand;
 
       public RelayCommand<SlewButton> StartSlewCommand
@@ -786,7 +815,7 @@ End Property
                   switch (button) {
                      case SlewButton.North:
                      case SlewButton.South:
-                        rate = Settings.SlewRatePreset.DecRate * Constants.SIDEREAL_RATE_RADIANS;
+                        rate = Settings.SlewRatePreset.DecRate * Core.Constants.SIDEREAL_RATE_DEGREES;
                         if (button == SlewButton.South) {
                            rate = -rate;
                         }
@@ -797,7 +826,7 @@ End Property
                         break;
                      case SlewButton.East:
                      case SlewButton.West:
-                        rate = Settings.SlewRatePreset.RARate * Constants.SIDEREAL_RATE_RADIANS;
+                        rate = Settings.SlewRatePreset.RARate * Core.Constants.SIDEREAL_RATE_DEGREES;
                         if (button == SlewButton.East) {
                            rate = -rate;
                         }
@@ -841,6 +870,37 @@ End Property
                }, (button) => { return (IsConnected); }));   // Check that we are connected
          }
       }
+      #endregion
+
+      #region Parking and unparking commands ...
+      private RelayCommand _ParkCommand;
+
+      public RelayCommand ParkCommand
+      {
+         get
+         {
+            return _ParkCommand
+               ?? (_ParkCommand = new RelayCommand(() => {
+                  Driver.Park();
+               }, () => { return (IsConnected && !IsParked && !IsSlewing); }));   // Check that we are connected
+         }
+      }
+
+
+      private RelayCommand _UnparkCommand;
+
+      public RelayCommand UnparkCommand
+      {
+         get
+         {
+            return _UnparkCommand
+               ?? (_UnparkCommand = new RelayCommand(() => {
+                  Driver.Unpark();
+               }, () => { return (IsConnected && IsParked); }));   // Check that we are connected
+         }
+      }
+      #endregion
+
       #endregion
 
 

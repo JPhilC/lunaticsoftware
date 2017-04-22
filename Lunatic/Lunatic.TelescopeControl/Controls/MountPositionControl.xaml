@@ -25,23 +25,24 @@
                 <RowDefinition Height="3" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <TextBlock Grid.Column="0" Grid.Row="0" Text="LST" Style="{StaticResource LEDLabelLarge}" />
-            <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding LocalSiderealTime}" Style="{StaticResource LEDValueLarge}"/>
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="LST" Style="{StaticResource RedLEDLabelLarge}" />
+            <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding LocalSiderealTime}" Style="{StaticResource RedLEDValueLarge}" Visibility="{Binding IsParked, Converter={StaticResource ReversedBooleanToVisiblityConverter}}"/>
+            <TextBlock Grid.Column="2" Grid.Row="0" Text="PARKED" Style="{StaticResource YellowLEDValueLarge}" Visibility="{Binding IsParked, Converter={StaticResource BooleanToVisiblityConverter}}" />
+            
+            <TextBlock Grid.Column="0" Grid.Row="2" Text="RA" Style="{StaticResource RedLEDLabelLarge}" />
+            <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding RightAscension}" Style="{StaticResource RedLEDValueLarge}"/>
 
-            <TextBlock Grid.Column="0" Grid.Row="2" Text="RA" Style="{StaticResource LEDLabelLarge}" />
-            <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding RightAscension}" Style="{StaticResource LEDValueLarge}"/>
+            <TextBlock Grid.Column="0" Grid.Row="4" Text="DEC" Style="{StaticResource RedLEDLabelLarge}"/>
+            <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding Declination}" Style="{StaticResource RedLEDValueLarge}"/>
 
-            <TextBlock Grid.Column="0" Grid.Row="4" Text="DEC" Style="{StaticResource LEDLabelLarge}"/>
-            <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding Declination}" Style="{StaticResource LEDValueLarge}"/>
+            <TextBlock Grid.Column="0" Grid.Row="6" Text="AZ" Style="{StaticResource RedLEDLabelLarge}"/>
+            <TextBlock Grid.Column="2" Grid.Row="6" Text="{Binding Azimuth}" Style="{StaticResource RedLEDValueLarge}"/>
 
-            <TextBlock Grid.Column="0" Grid.Row="6" Text="AZ" Style="{StaticResource LEDLabelLarge}"/>
-            <TextBlock Grid.Column="2" Grid.Row="6" Text="{Binding Azimuth}" Style="{StaticResource LEDValueLarge}"/>
+            <TextBlock Grid.Column="0" Grid.Row="8" Text="ALT" Style="{StaticResource RedLEDLabelLarge}"/>
+            <TextBlock Grid.Column="2" Grid.Row="8" Text="{Binding Altitude}" Style="{StaticResource RedLEDValueLarge}"/>
 
-            <TextBlock Grid.Column="0" Grid.Row="8" Text="ALT" Style="{StaticResource LEDLabelLarge}"/>
-            <TextBlock Grid.Column="2" Grid.Row="8" Text="{Binding Altitude}" Style="{StaticResource LEDValueLarge}"/>
-
-            <TextBlock Grid.Column="0" Grid.Row="10" Text="PierSide" Style="{StaticResource LEDLabelLarge}"/>
-            <TextBlock Grid.Column="2" Grid.Row="10" Text="{Binding PierSide}" Style="{StaticResource LEDValueLarge}"/>
+            <TextBlock Grid.Column="0" Grid.Row="10" Text="PierSide" Style="{StaticResource RedLEDLabelLarge}"/>
+            <TextBlock Grid.Column="2" Grid.Row="10" Text="{Binding PierSide}" Style="{StaticResource RedLEDValueLarge}"/>
 
         </Grid>
     </GroupBox>

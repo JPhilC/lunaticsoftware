@@ -17,6 +17,9 @@ namespace Lunatic.SyntaController
 
    public sealed partial class MountController
    {
+      public const double MAX_SLEW_SPEED = (800 * Constants.SIDEREAL_RATE_DEGREES);           //?
+      public const double LOW_SPEED_MARGIN = (128.0 * Constants.SIDEREAL_RATE_DEGREES);
+
       #region Singleton code ...
       private static MountController _Instance = null;
 
@@ -63,8 +66,6 @@ namespace Lunatic.SyntaController
       const char cStartChar_In = '=';        // Leading charactor of a NORMAL response.
       const char cErrChar = '!';              // Leading charactor of an ABNORMAL response.
       const char cEndChar = (char)13;         // Tailing charactor of command and response.
-      const double MAX_SPEED = (800 * Constants.SIDEREAL_RATE_RADIANS);           //?
-      const double LOW_SPEED_MARGIN = (128.0 * Constants.SIDEREAL_RATE_RADIANS);
 
       private char dir = '0'; // direction
                               // Mount code: 0x00=EQ6, 0x01=HEQ5, 0x02=EQ5, 0x03=EQ3
@@ -76,10 +77,11 @@ namespace Lunatic.SyntaController
       private int[] HighSpeedRatio = new int[2];       // High Speed Ratio (read from mount)
       //private int[] StepPosition = new int[2];       // Never Used
       private int[] BreakSteps = new int[2];           // Break steps from slewing to stop. (currently hard coded)
-      private int[] LowSpeedGotoMargin = new int[2];     // If slewing steps exceeds this LowSpeedGotoMargin, 
+      private int[] LowSpeedGotoMargin = new int[2];     // if ( slewing steps exceeds this LowSpeedGotoMargin, 
                                                          // GOTO is in high speed slewing.
       private double[] LowSpeedSlewRate = new double[2];    // Low speed slew rate
       private double[] HighSpeedSlewRate = new double[2];   // High speed slew rate
+
       private int[] MountParameters = new int[2];
       private bool[] HasHalfCurrent = new bool[2];
       private bool[] HasEncoder = new bool[2];
@@ -119,7 +121,6 @@ namespace Lunatic.SyntaController
       private double TimeOut = 2;
 
       private int Retry = 1;
-
 
       public bool IsConnected
       {
@@ -171,6 +172,7 @@ namespace Lunatic.SyntaController
       private AxisStatus[] AxesStatus = new AxisStatus[2];           // The two-axis status of the carriage should pass AxesStatus[AXIS1] and AxesStatus[AXIS2] by Reference
 
       private int[] GridPerRevolution = new int[2];                  // Number of steps for 360 degree
+
       // Converting an arc angle to a step
       private double[] FactorRadToStep = new double[] { 0, 0 };      // Multiply the radian value by the coefficient to get the motor position value (24-bit number can be discarded the highest byte)
       private int AngleToStep(AxisId Axis, double AngleInRad)
@@ -213,33 +215,16 @@ namespace Lunatic.SyntaController
       public int Connect(string ComPort, int baud, int timeout, int retry)
       {
          if ((timeout == 0) || (timeout > 50000)) {
-            return MOUNT_BADPARAM;
+            return Constants.MOUNT_BADPARAM;
          }
 
          if (retry > 100) {
-            return MOUNT_BADPARAM;
+            return Constants.MOUNT_BADPARAM;
          }
 
          lock (lockObject) {
-            int result = MOUNT_SUCCESS; ;
-            if (EndPoint == null) {
-               #region Capture connection parameters
-               // ConnectionString = string.Format("{0}:{1},None,8,One,DTR,RTS", ComPort, baud);
-               ConnectionString = string.Format("{0}:{1},None,8,One,NoDTR,NoRTS", ComPort, baud);
-               EndPoint = DeviceEndpoint.FromConnectionString(ConnectionString);
-               TimeOut = timeout * 0.001;  // Convert from milliseconds to seconds.
-               Retry = retry;
-               // Initialise the settings.
-               MCInit();
-
-            }
-            else {
-               result = 1;
-            }
-            #endregion
-
+            int result = EQ_Init(ComPort, baud, timeout, retry);
             Interlocked.Increment(ref openConnections);
-
             return result;
          }
       }
@@ -262,110 +247,28 @@ namespace Lunatic.SyntaController
             if (openConnections <= 0) {
                EndPoint = null;
                ConnectionString = string.Empty;
+               EQ_End();
             }
             return result;
          }
       }
 
 
-      /////////////////////////////////////////////////////////////////////////////////////
-      /** \brief	Function name		: MCInit
-        * \brief  Originally			: CONTRL EQCom::EQ_Init()
-        * \brief	Description			: Initialize EQ Mount
-        * \param	STRING				: COMPORT Name
-        * \param	DOUBLE				: baud - Baud Rate
-        * \param	DOUBLE				: timeout - COMPORT Timeout (1 - 50000)
-        * \param	DOUBLE				: retry - COMPORT Retry (0 - 100)
-        * \return	DWORD				: DLL Error Code
-        *
-        *	- DLL_SUCCESS		000		 Success
-        *	- DLL_NOCOMPORT		001		 COM port not available
-        *	- DLL_COMCONNECTED	003		 Mount already connected
-        *	- DLL_COMERROR		003		 COM Timeout Error
-        *	- DLL_MOTORBUSY		004		 Motor still busy
-        *	- DLL_NONSTANDARD	005		 Mount Initialized on non-standard parameters
-        *	- DLL_MOUNTBUSY		010		 Cannot execute command at the current state
-        *	- DLL_MOTORERROR	011		 Motor not initialized
-        *	- DLL_MOTORINACTIVE	200		 Motor coils not active
-        *	- DLL_BADPARAM		999		 Invalid parameter
-        *
-        */
-
-      public void MCInit()
-      {
-         EQ_InitAll();
-
-         // Get Mount Firmware Version & Mount ID (e)
-         try {
-            
-            InquireMotorBoardVersion(AxisId.Axis1_RA);
-         }
-         catch {
-            // try again
-            System.Threading.Thread.Sleep(200);
-            InquireMotorBoardVersion(AxisId.Axis1_RA);
-         }
-
-         MountCode = MCVersion & 0xFF;
-
-         //// NOTE: Simulator settings, Mount dependent Settings
-
-         // Inquire Gear Rate (a)
-         InquireGridPerRevolution(AxisId.Axis1_RA);
-         InquireGridPerRevolution(AxisId.Axis2_DEC);
-
-         // Inquire motor timer interrup frequency (b)
-         InquireTimerInterruptFreq(AxisId.Axis1_RA);
-         InquireTimerInterruptFreq(AxisId.Axis2_DEC);
-
-         // Inquire motor high speed ratio (g)
-         InquireHighSpeedRatio(AxisId.Axis1_RA);
-         InquireHighSpeedRatio(AxisId.Axis2_DEC);
-
-         // Inquire PEC period (s)
-         InquirePECPeriod(AxisId.Axis1_RA);
-         InquirePECPeriod(AxisId.Axis2_DEC);
-
-         // Inquire Polarscope LED (V)
-         InquirePolarScopeLED();
-
-         // Inquire mount parameters (q)
-         InquireMountParameters();
-
-         // InquireSnapPorts (O)
-         InquireSnapPorts();
-
-         // 
-         // Inquire Axis Position (j)
-         Positions[(int)AxisId.Axis1_RA] = MCGetAxisPosition(AxisId.Axis1_RA);
-         Positions[(int)AxisId.Axis2_DEC] = MCGetAxisPosition(AxisId.Axis2_DEC);
-
-         // Initialise the motors (F)
-         InitializeMC();
-
-         // These two LowSpeedGotoMargin are calculate from slewing for 5 seconds in 128x sidereal rate
-         LowSpeedGotoMargin[(int)AxisId.Axis1_RA] = (int)(640 * Constants.SIDEREAL_RATE_ARCSECS * FactorRadToStep[(int)AxisId.Axis1_RA]);
-         LowSpeedGotoMargin[(int)AxisId.Axis2_DEC] = (int)(640 * Constants.SIDEREAL_RATE_ARCSECS * FactorRadToStep[(int)AxisId.Axis2_DEC]);
-
-         // Default break steps
-         BreakSteps[(int)AxisId.Axis1_RA] = 3500;
-         BreakSteps[(int)AxisId.Axis2_DEC] = 3500;
-      }
 
       /// <summary>
       /// Slew about a given axis
       /// </summary>
-      /// <param name="Axis"></param>
-      /// <param name="Speed">Slew speed in Radians per second.</param>
+      /// <param name = "Axis" ></ param >
+      /// < param name="Speed">Slew speed in Radians per second.</param>
       public void MCAxisSlew(AxisId Axis, double Speed)
       {
          System.Diagnostics.Debug.WriteLine(string.Format("MCAxisSlew: ({0}, {1})", Axis, Speed));
          // Limit maximum speed
-         if (Speed > MAX_SPEED) {                  // 3.4 degrees/sec, 800X sidereal rate, is the highest speed.
-            Speed = MAX_SPEED;
+         if (Speed > MAX_SLEW_SPEED) {                  // 3.4 degrees/sec, 800X sidereal rate, is the highest speed.
+            Speed = MAX_SLEW_SPEED;
          }
-         else if (Speed < -MAX_SPEED) {
-            Speed = -MAX_SPEED;
+         else if (Speed < -MAX_SLEW_SPEED) {
+            Speed = -MAX_SLEW_SPEED;
          }
 
          double InternalSpeed = Speed;
@@ -411,55 +314,55 @@ namespace Lunatic.SyntaController
          SlewingSpeed[(int)Axis] = Speed;
       }
 
-      public void MCAxisSlewTo(AxisId Axis, double TargetPosition)
-      {
-         // Get current position of the axis.
-         var CurPosition = MCGetAxisPosition(Axis);
+      //public void MCAxisSlewTo(AxisId Axis, double TargetPosition)
+      //{
+      //   // Get current position of the axis.
+      //   var CurPosition = MCGetAxisPosition(Axis);
 
-         // Calculate slewing distance.
-         // Note: For EQ mount, Positions[AXIS1] is offset( -PI/2 ) adjusted in UpdateAxisPosition().
-         var MovingAngle = TargetPosition - CurPosition;
+      //   // Calculate slewing distance.
+      //   // Note: For EQ mount, Positions[AXIS1] is offset( -PI/2 ) adjusted in UpdateAxisPosition().
+      //   var MovingAngle = TargetPosition - CurPosition;
 
-         // Convert distance in radian into steps.
-         var MovingSteps = AngleToStep(Axis, MovingAngle);
+      //   // Convert distance in radian into steps.
+      //   var MovingSteps = AngleToStep(Axis, MovingAngle);
 
-         bool forward = false, highspeed = false;
+      //   bool forward = false, highspeed = false;
 
-         // If there is no increment, return directly.
-         if (MovingSteps == 0) {
-            return;
-         }
+      //   // if ( there is no increment, return directly.
+      //   if (MovingSteps == 0) {
+      //      return;
+      //   }
 
-         // Set moving direction
-         if (MovingSteps > 0) {
-            dir = '0';
-            forward = true;
-         }
-         else {
-            dir = '1';
-            MovingSteps = -MovingSteps;
-            forward = false;
-         }
+      //   // Set moving direction
+      //   if (MovingSteps > 0) {
+      //      dir = '0';
+      //      forward = true;
+      //   }
+      //   else {
+      //      dir = '1';
+      //      MovingSteps = -MovingSteps;
+      //      forward = false;
+      //   }
 
-         // Might need to check whether motor has stopped.
+      //   // Might need to check whether motor has stopped.
 
-         // Check if the distance is int enough to trigger a high speed GOTO.
-         if (MovingSteps > LowSpeedGotoMargin[(int)Axis]) {
-            SetMotionMode(Axis, '0', dir);      // high speed GOTO slewing 
-            highspeed = true;
-         }
-         else {
-            SetMotionMode(Axis, '2', dir);      // low speed GOTO slewing
-            highspeed = false;
-         }
+      //   // Check if the distance is int enough to trigger a high speed GOTO.
+      //   if (MovingSteps > LowSpeedGotoMargin[(int)Axis]) {
+      //      SetMotionMode(Axis, '0', dir);      // high speed GOTO slewing 
+      //      highspeed = true;
+      //   }
+      //   else {
+      //      SetMotionMode(Axis, '2', dir);      // low speed GOTO slewing
+      //      highspeed = false;
+      //   }
 
-         SetGotoTargetIncrement(Axis, MovingSteps);
-         SetBreakPointIncrement(Axis, BreakSteps[(int)Axis]);
-         StartMotion(Axis);
+      //   SetGotoTargetIncrement(Axis, MovingSteps);
+      //   SetBreakPointIncrement(Axis, BreakSteps[(int)Axis]);
+      //   StartMotion(Axis);
 
-         TargetPositions[(int)Axis] = TargetPosition;
-         AxesStatus[(int)Axis].SetSlewingTo(forward, highspeed);
-      }
+      //   TargetPositions[(int)Axis] = TargetPosition;
+      //   AxesStatus[(int)Axis].SetSlewingTo(forward, highspeed);
+      //}
 
       public void MCAxisStop(AxisId Axis)
       {
@@ -472,16 +375,16 @@ namespace Lunatic.SyntaController
          AxesStatus[(int)Axis].SetFullStop();
       }
 
-      public void MCSetAxisPosition(AxisId Axis, double NewValue)
-      {
-         int NewStepIndex = AngleToStep(Axis, NewValue);
-         NewStepIndex += 0x800000;
+      //public void MCSetAxisPosition(AxisId Axis, double NewValue)
+      //{
+      //   int NewStepIndex = AngleToStep(Axis, NewValue);
+      //   NewStepIndex += 0x800000;
 
-         string szCmd = intTo6BitHEX(NewStepIndex);
-         TalkWithAxis(Axis, 'E', szCmd);
+      //   string szCmd = intTo6BitHEX(NewStepIndex);
+      //   TalkWithAxis(Axis, 'E', szCmd);
 
-         Positions[(int)Axis] = NewValue;
-      }
+      //   Positions[(int)Axis] = NewValue;
+      //}
 
       public double MCGetAxisPosition(AxisId Axis)
       {
@@ -529,13 +432,13 @@ namespace Lunatic.SyntaController
          return AxesStatus[(int)Axis];
       }
 
-      public void MCSetSwitch(bool OnOff)
-      {
-         if (OnOff)
-            TalkWithAxis(AxisId.Axis1_RA, 'O', "1");
-         else
-            TalkWithAxis(AxisId.Axis1_RA, 'O', "0");
-      }
+      //public void MCSetSwitch(bool OnOff)
+      //{
+      //   if (OnOff)
+      //      TalkWithAxis(AxisId.Axis1_RA, 'O', "1");
+      //   else
+      //      TalkWithAxis(AxisId.Axis1_RA, 'O', "0");
+      //}
 
       /// <summary>
       /// One communication between mount and client
@@ -611,7 +514,7 @@ namespace Lunatic.SyntaController
          //   else
          //      throw new MountControllerException(ErrorCode.ERR_NORESPONSE_AXIS2);
          //}
-         System.Diagnostics.Debug.WriteLine(" -> Response: " + response);
+         System.Diagnostics.Debug.WriteLine(string.Format(" -> Response: {0} (0x{0:X})", response));
          return response;
       }
 
@@ -628,8 +531,8 @@ namespace Lunatic.SyntaController
          MCVersion = ((tmpMCVersion & 0xFF) << 16) | ((tmpMCVersion & 0xFF00)) | ((tmpMCVersion & 0xFF0000) >> 16);
 
       }
-      
-      // Inquire Grid Per Revolution ":a(*2)", where *2: '1'= CH1, '2' = CH2.
+
+      // Inquire Grid Per Revolution ":a(*2)", where *2: '1'= CH1, '2// = CH2.
       private void InquireGridPerRevolution(AxisId Axis)
       {
          int axisId = (int)Axis;
@@ -651,6 +554,7 @@ namespace Lunatic.SyntaController
          FactorStepToRad[axisId] = 2 * Math.PI / gearRatio;
       }
 
+
       // Inquire Timer Interrupt Freq ":b1".
       private void InquireTimerInterruptFreq(AxisId Axis)
       {
@@ -663,7 +567,7 @@ namespace Lunatic.SyntaController
          FactorRadRateToInt[(int)Axis] = (double)(StepTimerFreq[(int)Axis]) / FactorRadToStep[(int)Axis];
       }
 
-      // Inquire high speed ratio ":g(*2)", where *2: '1'= CH1, '2' = CH2.
+      // Inquire high speed ratio ":g(*2)", where *2: '1'= CH1, '2// = CH2.
       private void InquireHighSpeedRatio(AxisId Axis)
       {
          string response = TalkWithAxis(Axis, 'g', null);
@@ -685,7 +589,7 @@ namespace Lunatic.SyntaController
       private void InquireMountParameters()
       {
          int response = EQ_SendCommand(AxisId.Axis1_RA, 'q', 1, 6);
-         if ((response & EQ_ERROR) != EQ_ERROR) {
+         if ((response & Core.Constants.EQ_ERROR) != Core.Constants.EQ_ERROR) {
             // its a later mount
             int axis = (int)AxisId.Axis1_RA;
             MountParameters[axis] = response;
@@ -696,7 +600,7 @@ namespace Lunatic.SyntaController
             HasHomeSensor = ((response & 0x00000004) == 0x00000004);
             // since the q: message is being supported read DEC axis as well
             response = EQ_SendCommand(AxisId.Axis2_DEC, 'q', 1, 6);
-            if ((response & EQ_ERROR) != EQ_ERROR) {
+            if ((response & Core.Constants.EQ_ERROR) != Core.Constants.EQ_ERROR) {
                axis = (int)AxisId.Axis2_DEC;
                MountParameters[axis] = response;
                HasHalfCurrent[axis] = ((response & 0x00004000) == 0x00004000);
@@ -711,7 +615,7 @@ namespace Lunatic.SyntaController
       {
          for (int i = 0; i < 2; i++) {
             int response = EQ_SendCommand(i, 'O', 0, 1);
-            HasSnap[i] = ((response & EQ_ERROR) != EQ_ERROR);
+            HasSnap[i] = ((response & Core.Constants.EQ_ERROR) != Core.Constants.EQ_ERROR);
          }
       }
 
@@ -720,40 +624,40 @@ namespace Lunatic.SyntaController
       {
          try {
             string response = TalkWithAxis(AxisId.Axis2_DEC, 'V', null);
-            // If no error so mount MAY have  polarscope LED
+            // if ( no error so mount MAY have  polarscope LED
             HasPolarscopeLED = true;
          }
          catch { }
       }
 
-      // Set initialization done ":F3", where '3'= Both CH1 and CH2.
-      private void InitializeMC()
-      {
-         TalkWithAxis(AxisId.Axis1_RA, 'F', null);
-         TalkWithAxis(AxisId.Axis2_DEC, 'F', null);
-      }
+      //// Set initialization done ":F3", where '3'= Both CH1 and CH2.
+      //private void InitializeMC()
+      //{
+      //   TalkWithAxis(AxisId.Axis1_RA, 'F', null);
+      //   TalkWithAxis(AxisId.Axis2_DEC, 'F', null);
+      //}
       private void SetMotionMode(AxisId Axis, char func, char direction)
       {
          string szCmd = "" + func + direction;
          TalkWithAxis(Axis, 'G', szCmd);
       }
-      private void SetGotoTargetIncrement(AxisId Axis, int StepsCount)
-      {
-         string cmd = intTo6BitHEX(StepsCount);
+      //private void SetGotoTargetIncrement(AxisId Axis, int StepsCount)
+      //{
+      //   string cmd = intTo6BitHEX(StepsCount);
 
-         TalkWithAxis(Axis, 'H', cmd);
-      }
-      private void SetBreakPointIncrement(AxisId Axis, int StepsCount)
-      {
-         string szCmd = intTo6BitHEX(StepsCount);
+      //   TalkWithAxis(Axis, 'H', cmd);
+      //}
+      //private void SetBreakPointIncrement(AxisId Axis, int StepsCount)
+      //{
+      //   string szCmd = intTo6BitHEX(StepsCount);
 
-         TalkWithAxis(Axis, 'M', szCmd);
-      }
-      private void SetBreakSteps(AxisId Axis, int NewBrakeSteps)
-      {
-         string szCmd = intTo6BitHEX(NewBrakeSteps);
-         TalkWithAxis(Axis, 'U', szCmd);
-      }
+      //   TalkWithAxis(Axis, 'M', szCmd);
+      //}
+      //private void SetBreakSteps(AxisId Axis, int NewBrakeSteps)
+      //{
+      //   string szCmd = intTo6BitHEX(NewBrakeSteps);
+      //   TalkWithAxis(Axis, 'U', szCmd);
+      //}
       private void SetStepPeriod(AxisId Axis, int StepsCount)
       {
          System.Diagnostics.Debug.WriteLine(String.Format("SetStepPeriod({0}, {1})", Axis, StepsCount));
@@ -852,8 +756,8 @@ namespace Lunatic.SyntaController
 
                Thread.Sleep(100);
 
-               // If the axis is asked to stop.
-               // if ( (!AxesAskedToRun[Axis] && !(MountStatus & MOUNT_TRACKING_ON)) )		// If AXIS1 or AXIS2 is asked to stop or 
+               // if ( the axis is asked to stop.
+               // if ( (!AxesAskedToRun[Axis] && !(MountStatus & Constants.MOUNT_TRACKING_ON)) )		// if ( AXIS1 or AXIS2 is asked to stop or 
                //	return ERR_USER_INTERRUPT;
 
             }

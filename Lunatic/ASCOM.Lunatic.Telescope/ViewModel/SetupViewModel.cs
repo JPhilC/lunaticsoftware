@@ -259,27 +259,6 @@ namespace ASCOM.Lunatic.Telescope
          }
       }
 
-      private bool _AllowSiteWrites;
-      [Category("ASCOM Options")]
-      [DisplayName("Allow site writes")]
-      [Description("Put a tick in here to allow updates to site information to be saved.")]
-      [Browsable(true)]    // Need to allow this property to be hidden at runtime
-      public bool AllowSiteWrites
-      {
-         get
-         {
-            return _AllowSiteWrites;
-         }
-         set
-         {
-            if (value == _AllowSiteWrites) {
-               return;
-            }
-            _AllowSiteWrites = value;
-            RaisePropertyChanged();
-         }
-      }
-
       private bool _AllowExceptions;
       [Category("ASCOM Options")]
       [DisplayName("Allow exceptions")]
@@ -439,7 +418,6 @@ namespace ASCOM.Lunatic.Telescope
          AllowPulseGuide = _Settings.AscomCompliance.AllowPulseGuide;
          AllowPulseGuidingExceptions = _Settings.AscomCompliance.AllowPulseGuidingExceptions;
          UseSynchronousParking = _Settings.AscomCompliance.UseSynchronousParking;
-         AllowSiteWrites = _Settings.AscomCompliance.AllowSiteWrites;
          Epoch = _Settings.AscomCompliance.Epoch;
          SideOfPier = _Settings.AscomCompliance.SideOfPier;
          SwapPointingSideOfPier = _Settings.AscomCompliance.SwapPointingSideOfPier;
@@ -467,7 +445,6 @@ namespace ASCOM.Lunatic.Telescope
          _Settings.AscomCompliance.AllowPulseGuide = AllowPulseGuide;
          _Settings.AscomCompliance.AllowPulseGuidingExceptions = AllowPulseGuidingExceptions;
          _Settings.AscomCompliance.UseSynchronousParking = UseSynchronousParking;
-         _Settings.AscomCompliance.AllowSiteWrites = AllowSiteWrites;
          _Settings.AscomCompliance.Epoch = Epoch;
          _Settings.AscomCompliance.SideOfPier = SideOfPier;
          _Settings.AscomCompliance.SwapPointingSideOfPier = SwapPointingSideOfPier;

@@ -66,6 +66,7 @@ namespace Lunatic.SyntaController.Transactions
       {
          if (Response.Any()) {
             var responseString = Response.Single();
+            System.Diagnostics.Debug.WriteLine(string.Format("Raw response: {0}", responseString));
             Value = responseString.TrimStart(responseInitiator).TrimEnd(terminator);
             if (string.IsNullOrEmpty(Value)) {
                // Check if we have an error instead.
@@ -136,46 +137,10 @@ namespace Lunatic.SyntaController.Transactions
       {
          if (Response.Any()) {
             var responseString = Response.Single();
-            string response = responseString.TrimStart(responseInitiator).TrimEnd(terminator);
-            if (string.IsNullOrEmpty(response)) {
-               // Check if we have an error instead.
-               string error = responseString.TrimStart(errorInitiator).TrimEnd(terminator);
-               if (!string.IsNullOrEmpty(error)) {
-                  ErrorMessage = new Maybe<string>(error);
-                  char[] inpstring = error.ToCharArray();
-                  // Received '!' so next byte is error code
-                  switch (inpstring[0] & 0x0f) {
-                     case 1:
-                        // missing parameter or to many parameters
-                        Value = MountController.EQ_BADPACKET;
-                        break;
-                     case 2:
-                        // cannot eecute at this time
-                        Value = MountController.EQ_MOUNTBUSY;
-                        break;
-                     case 3:
-                        // non hex character sent 
-                        Value = MountController.EQ_BADVALUE;
-                        break;
-                     case 4:
-                        // motor coils inactive
-                        Value = MountController.EQ_NOMOUNT;
-                        break;
-                     case 8:
-                        // PPEC table invalid / not set
-                        Value = MountController.EQ_PPECERROR;
-                        break;
-                     default:
-                     case 0:
-                        // general error
-                        Value = MountController.EQ_ERROR;
-                        break;
-                  }
-                  Failed = true;
-               }
-            }
-            else {
-               char[] tmp = responseString.ToLower().ToCharArray();
+            System.Diagnostics.Debug.WriteLine(string.Format("    -> Raw response: {0}", responseString));
+            if (responseString[0] == responseInitiator) {
+               string response = responseString.TrimStart(responseInitiator).TrimEnd(terminator);
+               char[] tmp = response.ToLower().ToCharArray();
                switch (responseString.Length) {
                   case 8:
                      // Three bytes (6 nibbles) returned
@@ -203,13 +168,54 @@ namespace Lunatic.SyntaController.Transactions
                      break;
                   case 2:
                      // No return value
-                     Value = MountController.EQ_OK;
+                     Value = Core.Constants.EQ_OK;
                      break;
                   default:
                      // Return 'Bad command' error
-                     Value = MountController.EQ_BADPACKET;
+                     Value = Core.Constants.EQ_BADPACKET;
                      break;
                }
+            }
+            else if (responseString[0] == errorInitiator) {
+               string error = responseString.TrimStart(errorInitiator).TrimEnd(terminator);
+               if (!string.IsNullOrEmpty(error)) {
+                  ErrorMessage = new Maybe<string>(error);
+                  char[] inpstring = error.ToCharArray();
+                  // Received '!' so next byte is error code
+                  switch (inpstring[0] & 0x0f) {
+                     case 1:
+                        // missing parameter or to many parameters
+                        Value = Core.Constants.EQ_BADPACKET;
+                        break;
+                     case 2:
+                        // cannot eecute at this time
+                        Value = Core.Constants.EQ_MOUNTBUSY;
+                        break;
+                     case 3:
+                        // non hex character sent 
+                        Value = Core.Constants.EQ_BADVALUE;
+                        break;
+                     case 4:
+                        // motor coils inactive
+                        Value = Core.Constants.EQ_NOMOUNT;
+                        break;
+                     case 8:
+                        // PPEC table invalid / not set
+                        Value = Core.Constants.EQ_PPECERROR;
+                        break;
+                     default:
+                     case 0:
+                        // general error
+                        Value = Core.Constants.EQ_ERROR;
+                        break;
+                  }
+                  Failed = true;
+               }
+            }
+            else {
+               // general error
+               Value = Core.Constants.EQ_ERROR;
+               Failed = true;
             }
          }
          base.OnCompleted();

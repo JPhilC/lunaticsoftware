@@ -35,7 +35,6 @@
                      AllowExceptions,
                      AllowPulseGuidingExceptions,
                      UseSynchronousParking,
-                     AllowSiteWrites,
                      Epoch,
                      SideOfPier,
                      SwapPointingSideOfPier,

@@ -47,21 +47,6 @@ namespace Lunatic.TelescopeControl
 
    }
 
-   public class CustomMount : DataObjectBase
-   {
-      //CUSTOM_TRACKING_OFFSET_DEC=0
-      public int TrackingDecOffset { get; set; }
-      //CUSTOM_TRACKING_OFFSET_RA=0
-      public int TrackingRAOffset { get; set; }
-      //CUSTOM_DEC_STEPS_WORM=50133
-      public int DecWormSteps { get; set; }
-      //CUSTOM_RA_STEPS_WORM=50133
-      public int RAWorkSteps { get; set; }
-      //CUSTOM_DEC_STEPS_360=9024000
-      public int DecStepsPer360 { get; set; }
-      //CUSTOM_RA_STEPS_360=9024000
-      public int RAStepsPer360 { get; set; }
-   }
 
    public class SlewRatePreset : ObservableObject
    {
@@ -100,18 +85,6 @@ namespace Lunatic.TelescopeControl
          DecRate = decRate;
       }
    }
-
-   [TypeConverter(typeof(EnumTypeConverter))]
-   public enum MountOptions
-   {
-      [Description("Auto detect")]
-      AutoDetect,
-      [Description("Custom")]
-      Custom
-   }
-
-
-
 
 
    [TypeConverter(typeof(EnumTypeConverter))]
@@ -473,10 +446,6 @@ namespace Lunatic.TelescopeControl
       public ParkPosition DefaultPark { get; set; }
       public ObservableCollection<ParkPosition> ParkPositions { get; private set; }
 
-      //CUSTOM_MOUNT=0
-      public CustomMount CustomMount { get; set; }
-      public MountOptions MountOption { get; set; }
-
 
       //PULSEGUIDE_TIMER_INTERVAL=20
       public int PulseGuidingTimeInterval { get; set; }
@@ -634,7 +603,6 @@ namespace Lunatic.TelescopeControl
       {
          this.DriverId = string.Empty;
          this.DisplayMode = DisplayMode.MountPosition;
-         this.CustomMount = new CustomMount();
          this.ParkPositions = new ObservableCollection<ParkPosition>();
          this.UNParkPositions = new ObservableCollection<ParkPosition>();
          this.Sites = new SiteCollection();

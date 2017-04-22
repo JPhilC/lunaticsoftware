@@ -42,7 +42,6 @@ namespace Lunatic.Core
          public bool AllowPulseGuide { get; set; }
          public bool AllowPulseGuidingExceptions { get; set; }
          public bool UseSynchronousParking { get; set; }
-         public bool AllowSiteWrites { get; set; }
          public EpochOption Epoch { get; set; }
          public SideOfPierOption SideOfPier { get; set; }
          public bool SwapPointingSideOfPier { get; set; }

@@ -35,16 +35,16 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <!-- Textblock LED Label -->
-    <Style TargetType="{x:Type TextBlock}" x:Key="LEDLabel">
+    <!-- Textblock Red LED Label -->
+    <Style TargetType="{x:Type TextBlock}" x:Key="RedLEDLabel">
         <Setter Property="Foreground" Value="#FFFF0101" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Background" Value="#FF420101" />
         <Setter Property="Padding" Value="4,2" />
     </Style>
 
-    <!-- Textblock LED DataValue -->
-    <Style TargetType="{x:Type TextBlock}" x:Key="LEDValue">
+    <!-- Textblock Red LED DataValue -->
+    <Style TargetType="{x:Type TextBlock}" x:Key="RedLEDValue">
         <Setter Property="Foreground" Value="#FFFF0101" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Background" Value="#FF840101" />
@@ -52,15 +52,20 @@
         <Setter Property="MinWidth" Value="80" />
     </Style>
 
-    <!-- Textblock LED Label Large-->
-    <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource LEDLabel}" x:Key="LEDLabelLarge">
+    <!-- Textblock Red LED Label Large-->
+    <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource RedLEDLabel}" x:Key="RedLEDLabelLarge">
         <Setter Property="FontSize" Value="16" />
     </Style>
 
-    <!-- Textblock LED DataValue -->
-    <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource LEDValue}" x:Key="LEDValueLarge">
+    <!-- Textblock Red LED DataValue -->
+    <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource RedLEDValue}" x:Key="RedLEDValueLarge">
         <Setter Property="FontSize" Value="16" />
         <Setter Property="MinWidth" Value="120" />
+    </Style>
+
+    <!-- Textblock Yellow LED DataValue -->
+    <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource RedLEDValueLarge}" x:Key="YellowLEDValueLarge">
+        <Setter Property="Foreground" Value="#FFFFD104" />
     </Style>
 
     <!-- Textboxes -->

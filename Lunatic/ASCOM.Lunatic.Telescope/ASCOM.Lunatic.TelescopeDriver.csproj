@@ -170,6 +170,9 @@
     <Compile Include="Classes\ConfigurationSettings.cs" />
     <Compile Include="Classes\Constants.cs" />
     <Compile Include="Classes\COMPortBindingSourceExtension.cs" />
+    <Compile Include="Classes\Driver_CustomActions.cs">
+      <DependentUpon>Driver.cs</DependentUpon>
+    </Compile>
     <Compile Include="Classes\SettingsProvider.cs" />
     <Compile Include="Classes\SyntaMountBase.cs" />
     <Compile Include="Classes\Driver_ASCOM_ITelescopeV3.cs">
@@ -255,8 +258,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>ECHO Copying driver files ...
-xcopy "$(TargetDir)*.*" "$(SolutionDir)ASCOM.Lunatic.TelescopeServer\$(OutDir)" /s /y</PostBuildEvent>
+    <PostBuildEvent>
+      ECHO Copying driver files ...
+      xcopy "$(TargetDir)*.*" "$(SolutionDir)ASCOM.Lunatic.TelescopeServer\$(OutDir)" /s /y
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

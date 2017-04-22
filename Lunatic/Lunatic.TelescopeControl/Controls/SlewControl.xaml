@@ -36,7 +36,7 @@
                     <Slider Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Stretch" Orientation="Vertical" 
                             Minimum="1" Maximum="800" Value="{Binding Settings.SlewRatePreset.RARate}"/>
                     <TextBlock Grid.Row="2" Margin="0,2,0,0"
-                               Text="{Binding Settings.SlewRatePreset.RARate, Mode=OneWay}" Style="{StaticResource LEDValue}" MinWidth="30" Width="30" />
+                               Text="{Binding Settings.SlewRatePreset.RARate, Mode=OneWay}" Style="{StaticResource RedLEDValue}" MinWidth="30" Width="30" />
                 </Grid>
                 <ComboBox Grid.Column="1" VerticalAlignment="Center" Width="40"  Margin="-5,0,0,0" 
                           ItemsSource="{Binding Settings.SlewRatePresets}"
@@ -60,7 +60,7 @@
                     <Slider Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Stretch" Orientation="Vertical" 
                             Minimum ="1" Maximum="800" Value="{Binding Settings.SlewRatePreset.DecRate}"/>
                     <TextBlock Grid.Row="2" Margin="0,2,0,0"
-                               Text="{Binding Settings.SlewRatePreset.DecRate, Mode=OneWay}" Style="{StaticResource LEDValue}" MinWidth="30" Width="30" />
+                               Text="{Binding Settings.SlewRatePreset.DecRate, Mode=OneWay}" Style="{StaticResource RedLEDValue}" MinWidth="30" Width="30" />
                 </Grid>
             </Grid>
             <!-- Reverse check boxes -->

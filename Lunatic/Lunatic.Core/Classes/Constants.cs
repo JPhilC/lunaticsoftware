@@ -32,11 +32,15 @@ namespace Lunatic.Core
       /// <summary>
       /// Sidereal rate in Radians
       /// </summary>
-      public const double SIDEREAL_RATE_RADIANS = 7.29211584522E-5;        // TWO_PI / 86164.09065;
+      public const double SIDEREAL_RATE_RADIANS = 7.29211585531E-5;        // TWO_PI / 86164.090530833, taken from Wikipedia for Mean Sidereal day length in seconds;
       /// <summary>
       /// Sidereal rate in Arc Seconds.
       /// </summary>
-      public const double SIDEREAL_RATE_ARCSECS = 15.041067;               // arcsecs/sec  (60*60*360) / ((23*60*60)+(56*60)+4)
+      public const double SIDEREAL_RATE_DEGREES = 4.1780746223E-3;           // degrees/sec  (360) / 86164.090530833;
+      /// <summary>
+      /// Sidereal rate in Arc Seconds.
+      /// </summary>
+      public const double SIDEREAL_RATE_ARCSECS = 15.0410686403;               // arcsecs/sec  (60*60*360) / 86164.090530833;
       /// <summary>
       /// Solar rate in Arc Seconds.
       /// </summary>
@@ -82,6 +86,11 @@ namespace Lunatic.Core
 
       public const double ARCSECSTEP = 0.144;                  // .144 arcesconds / step
 
+      // public const double SID_RATE = 15.041067;             // use SIDEREAL_RATE_ARCSECS instead
+      public const double MAX_RATE = (800 * SIDEREAL_RATE_ARCSECS);
+
+      public const double SECONDS_PER_SIDERIAL_DAY = 86164.0905;
+
       // Iterative GOTO Constants
       //Public Const NUM_SLEW_RETRIES As Long = 5              // Iterative MAX retries
       public const double RA_Allowed_diff = 10;                // Iterative Slew minimum difference
@@ -89,9 +98,9 @@ namespace Lunatic.Core
 
       // Home Position of the mount (pointing at NCP/SCP)
 
-         /// <summary>
-         /// RA home position (radians)
-         /// </summary>
+      /// <summary>
+      /// RA home position (radians)
+      /// </summary>
       public const double RAEncoder_Home_pos = 0;
       /// <summary>
       /// DEC home position (radians) start at 90 deg
@@ -115,10 +124,57 @@ namespace Lunatic.Core
 
       // Public Const EQ_MAXSYNC_Const = &H88B80                 // Allow a 45 degree discrepancy
 
-      /// <summary>
-      /// Allow a 45 degree discrepancy (radians)
-      /// </summary>
-      public const double MaximumSyncDifference = (2 * Math.PI) / 8.0;    // Allow a 45.0 (360/8) but in degrees discrepancy in Radians.
+      #region Driver constants ...
+      public const int DRIVER_OK = 0x0;
+      public const int DRIVER_COMNOTOPEN = 0x1;
+      public const int DRIVER_COMTIMEOUT = 0x3;
+      public const int DRIVER_MOTORBUSY = 0x10;
+      public const int DRIVER_NOTINITIALIZED = 0xC8;
+      public const int DRIVER_INVALIDCOORDINATE = 0x1000000;
+      public const int DRIVER_INVALID = 0x3000000;
+      #endregion
+
+
+      #region Mount constants ...
+      public const int MOUNT_SUCCESS = 0;           // Success (or connected for the first time);
+      public const int MOUNT_NOCOMPORT = 1;         // Comport Not available
+      public const int MOUNT_COMCONNECTED = 2;      // Mount already connected
+      public const int MOUNT_COMERROR = 3;          // COM Timeout Error
+      public const int MOUNT_MOTORBUSY = 4;         // Motor still busy
+      public const int MOUNT_NONSTANDARD = 5;       // Mount Initialized on non-standard parameters
+      public const int MOUNT_RARUNNING = 6;         // RA Motor still running
+      public const int MOUNT_DECRUNNING = 7;        // DEC Motor still running 
+      public const int MOUNT_RAERROR = 8;           // Error Initializing RA Motor
+      public const int MOUNT_DECERROR = 9;          // Error Initilizing DEC Motor
+      public const int MOUNT_MOUNTBUSY = 10;        // Cannot execute command at the current state
+      public const int MOUNT_MOTORERROR = 11;       // Motor not initialized
+      public const int MOUNT_GENERALERROR = 12;     //
+      public const int MOUNT_MOTORINACTIVE = 200;   // Motor not initialized
+      public const int MOUNT_EQMOUNT = 301;         // EQG series mount
+      public const int MOUNT_NXMOUNT = 302;         // Nexstar series mount
+      public const int MOUNT_LXMOUNT = 303;         // LX200 series mount
+      public const int MOUNT_BADMOUNT = 998;        // Cant detect mount type
+      public const int MOUNT_BADPARAM = 999;        // Invalid parameter
+
+      public const int MOUNT_CONNECTED = 1;         // Connected to EQMOD
+      public const int MOUNT_NOTCONNECTED = 0;      // Not connected to EQMOD
+      #endregion
+
+      #region Low level error constants ...
+      public const int EQ_OK = 0x2000000;         // Success with no return values
+      public const int EQ_OKRETURN = 0x0000000;   // 0x0999999 - Success with Mount Return Values
+      public const int EQ_BADSTATE = 0x10000ff;   // Unexpected return value from mount
+      public const int EQ_ERROR = 0x1000000;      // Bad command to send to mount
+      public const int EQ_BADPACKET = 0x1000001;  // Missing or too many parameters
+      public const int EQ_MOUNTBUSY = 0x1000002;  // Cannot execute command in current state
+      public const int EQ_BADVALUE = 0x1000003;   // Bad Parameter Value
+      public const int EQ_NOMOUNT = 0x1000004;    // Mount not enabled
+      public const int EQ_COMTIMEOUT = 0x1000005; // Mount communications timeout
+      public const int EQ_CRCERROR = 0x1000006;   // Data Packet CRC error
+      public const int EQ_PPECERROR = 0x1000008;  // Data Packet CRC error
+      public const int EQ_INVALID = 0x3000000;    // Invalid Parameter
+      #endregion
 
    }
+
 }

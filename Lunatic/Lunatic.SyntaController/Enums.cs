@@ -53,24 +53,6 @@ namespace Lunatic.SyntaController
    //POLAR_RETICULE_START=1
 
 
-   [TypeConverter(typeof(EnumTypeConverter))]
-   public enum TimeOutOption
-   {
-      [Description("1000")]
-      TO1000 = 1000,
-      [Description("2000")]
-      TO2000 = 2000
-   }
-
-   [TypeConverter(typeof(EnumTypeConverter))]
-   public enum RetryOption
-   {
-      [Description("Once")]
-      Once = 1,
-      [Description("Twice")]
-      Twice = 2
-   }
-
    public enum MountType
    {
       Unknown,

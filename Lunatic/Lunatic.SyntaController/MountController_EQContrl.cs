@@ -97,11 +97,7 @@ namespace Lunatic.SyntaController
       private const int RAMotor = 0;
       private const int DECMotor = 1;
 
-      private const double SID_RATE = 15.041067;
-      private const double MAX_RATE = (800 * SID_RATE);
-
-      private const int SecondsPerSiderealDay = 86164;
-      private const int DriverVersion = 0x206;
+      private const int DRIVER_VERSION = 0x206;
 
       private const int EQMOUNT = 1;         // EQG Protocol 
       private const int AUTO_DETECT = 0;     // Detected Current Mount
@@ -121,42 +117,8 @@ namespace Lunatic.SyntaController
       //private const char CR = (char)0x0D;    // Command terminator
       //private const char LF = (char)0x0A;    // Command terminator
 
-      public const int MOUNT_SUCCESS = 0;            // Success
-      public const int MOUNT_NOCOMPORT = 1;         // Comport Not available
-      public const int MOUNT_COMCONNECTED = 2;      // Mount already connected
-      public const int MOUNT_COMERROR = 3;          // COM Timeout Error
-      public const int MOUNT_MOTORBUSY = 4;         // Motor still busy
-      public const int MOUNT_NONSTANDARD = 5;       // Mount Initialized on non-standard parameters
-      public const int MOUNT_RARUNNING = 6;         // RA Motor still running
-      public const int MOUNT_DECRUNNING = 7;        // DEC Motor still running 
-      public const int MOUNT_RAERROR = 8;           // Error Initializing RA Motor
-      public const int MOUNT_DECERROR = 9;          // Error Initilizing DEC Motor
-      public const int MOUNT_MOUNTBUSY = 10;        // Cannot execute command at the current state
-      public const int MOUNT_MOTORERROR = 11;       // Motor not initialized
-      public const int MOUNT_GENERALERROR = 12;     //
-      public const int MOUNT_MOTORINACTIVE = 200;   // Motor not initialized
-      public const int MOUNT_EQMOUNT = 301;         // EQG series mount
-      public const int MOUNT_NXMOUNT = 302;         // Nexstar series mount
-      public const int MOUNT_LXMOUNT = 303;         // LX200 series mount
-      public const int MOUNT_BADMOUNT = 998;        // Cant detect mount type
-      public const int MOUNT_BADPARAM = 999;        // Invalid parameter
-
-      public const int MOUNT_CONNECTED = 1;         // Connected to EQMOD
-      public const int MOUNT_NOTCONNECTED = 0;      // Not connected to EQMOD
 
 
-      public const int EQ_OK = 0x2000000;         // Success with no return values
-      public const int EQ_OKRETURN = 0x0000000;   // 0x0999999 - Success with Mount Return Values
-      public const int EQ_BADSTATE = 0x10000ff;   // Unexpected return value from mount
-      public const int EQ_ERROR = 0x1000000;      // Bad command to send to mount
-      public const int EQ_BADPACKET = 0x1000001;  // Missing or too many parameters
-      public const int EQ_MOUNTBUSY = 0x1000002;  // Cannot execute command in current state
-      public const int EQ_BADVALUE = 0x1000003;   // Bad Parameter Value
-      public const int EQ_NOMOUNT = 0x1000004;    // Mount not enabled
-      public const int EQ_COMTIMEOUT = 0x1000005; // Mount communications timeout
-      public const int EQ_CRCERROR = 0x1000006;   // Data Packet CRC error
-      public const int EQ_PPECERROR = 0x1000008;  // Data Packet CRC error
-      public const int EQ_INVALID = 0x3000000;    // Invalid Parameter
 
 
       #endregion
@@ -187,14 +149,6 @@ namespace Lunatic.SyntaController
       // EQ Mount Active State
 
       private bool MountActive;
-
-      //double eq_s1;
-      //double eq_s2;
-      //double eq_s3;
-      //double eq_s4;
-      //int eq_of1;
-      //int eq_of2;
-
       #endregion
 
 
@@ -208,28 +162,28 @@ namespace Lunatic.SyntaController
       {
          //todo case statement
          //todo The order is important here because the individual errors
-         //todo  change the return value of the overall error - MOUNT_COMERROR
+         //todo  change the return value of the overall error - Constants.MOUNT_COMERROR
 
          // Convert EQ Mount errors to dll error return value
-         if (commandError == EQ_COMTIMEOUT) {
-            return MOUNT_COMERROR;
+         if (commandError == Constants.EQ_COMTIMEOUT) {
+            return Constants.MOUNT_COMERROR;
          }
-         if ((commandError & EQ_ERROR) == EQ_ERROR) {
-            return MOUNT_COMERROR;
+         if ((commandError & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
+            return Constants.MOUNT_COMERROR;
          }
-         if (commandError == EQ_MOUNTBUSY) {
-            return MOUNT_MOUNTBUSY;
+         if (commandError == Constants.EQ_MOUNTBUSY) {
+            return Constants.MOUNT_MOUNTBUSY;
          }
-         if (commandError == EQ_NOMOUNT) {
-            return MOUNT_MOTORERROR;
+         if (commandError == Constants.EQ_NOMOUNT) {
+            return Constants.MOUNT_MOTORERROR;
          }
-         if (commandError == EQ_PPECERROR) {
-            return MOUNT_GENERALERROR;
+         if (commandError == Constants.EQ_PPECERROR) {
+            return Constants.MOUNT_GENERALERROR;
          }
-         if (commandError != EQ_OK) {
-            return MOUNT_COMERROR;
+         if (commandError != Constants.EQ_OK) {
+            return Constants.MOUNT_COMERROR;
          }
-         return EQ_OK;
+         return Constants.EQ_OK;
       }
 
 
@@ -255,6 +209,7 @@ namespace Lunatic.SyntaController
       /// </returns>
       private int EQ_SendGCode(AxisId axisId, HemisphereOption hemisphere, MountMode mode, AxisDirection direction, MountSpeed speed)
       {
+         System.Diagnostics.Debug.WriteLine(string.Format("EQ_SendGCode({0}, {1}, {2}, {3}, {4})", axisId, hemisphere, mode, direction, speed));
          byte ch;
          ch = 0;
 
@@ -304,11 +259,11 @@ namespace Lunatic.SyntaController
 
 
          // Send 'G' Command, with parameter
-         if (EQ_SendCommand(axisId, 'G', ch, 2) != EQ_OK) {
-            return (EQ_COMTIMEOUT);
+         if (EQ_SendCommand(axisId, 'G', ch, 2) != Constants.EQ_OK) {
+            return (Constants.EQ_COMTIMEOUT);
          }
 
-         return EQ_OK;
+         return Constants.EQ_OK;
 
          //               EQ6Pro ignores speed setting when in "Goto" mode, but AZEQ5 doesnt
          // A = '0' high speed GOTO slewing,      doesnt make "bitmapped" sense, but it is as coded by SkyWatcher????? ?????
@@ -393,6 +348,7 @@ namespace Lunatic.SyntaController
          LowSpeedGotoMargin[0] = 200;
          LowSpeedGotoMargin[1] = 200;
 
+         
       }
 
       /// <summary>
@@ -403,35 +359,35 @@ namespace Lunatic.SyntaController
       /// <param name="timeout">Timeout (1 - 50000)</param>
       /// <param name="retry">Retry (0 - 100)</param>
       /// <returns> Mount Error Code:
-      ///	- MOUNT_SUCCESS		     000		 Success (new connection)
-      ///	- MOUNT_NOCOMPORT		     001		 COM port not available
-      ///	- MOUNT_COMCONNECTED	     002		 Mount already connected (success)
-      ///	- MOUNT_COMERROR		     003		 COM Timeout Error
-      ///	- MOUNT_MOTORBUSY		     004		 Motor still busy
-      ///	- MOUNT_NONSTANDARD	     005		 Mount Initialized on non-standard parameters
-      ///	- MOUNT_MOUNTBUSY		     010		 Cannot execute command at the current state
-      ///	- MOUNT_MOTORERROR	     011		 Motor not initialized
-      ///	- MOUNT_MOTORINACTIVE	  200		 Motor coils not active
-      ///	- MOUNT_BADPARAM		     999		 Invalid parameter
+      ///	- Constants.MOUNT_SUCCESS		     000		 Success (new connection)
+      ///	- Constants.MOUNT_NOCOMPORT		     001		 COM port not available
+      ///	- Constants.MOUNT_COMCONNECTED	     002		 Mount already connected (success)
+      ///	- Constants.MOUNT_COMERROR		     003		 COM Timeout Error
+      ///	- Constants.MOUNT_MOTORBUSY		     004		 Motor still busy
+      ///	- Constants.MOUNT_NONSTANDARD	     005		 Mount Initialized on non-standard parameters
+      ///	- Constants.MOUNT_MOUNTBUSY		     010		 Cannot execute command at the current state
+      ///	- Constants.MOUNT_MOTORERROR	     011		 Motor not initialized
+      ///	- Constants.MOUNT_MOTORINACTIVE	  200		 Motor coils not active
+      ///	-  Constants.MOUNT_BADPARAM		     999		 Invalid parameter
       /// </returns>
       public int EQ_Init(string comportname, int baud, int timeout, int retry)
       {
          int result;
          if (MountActive) {
-            return MOUNT_COMCONNECTED;
+            return Constants.MOUNT_COMCONNECTED;
          }
 
          if ((timeout == 0) || (timeout > 50000)) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
 
          if (retry > 100) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
 
          lock (lockObject) {
             try {
-               result = MOUNT_SUCCESS; ;
+               result = Constants.MOUNT_SUCCESS; ;
                if (EndPoint == null) {
                   #region Capture connection parameters ...
                   // ConnectionString = string.Format("{0}:{1},None,8,One,DTR,RTS", ComPort, baud);
@@ -466,7 +422,6 @@ namespace Lunatic.SyntaController
                   // ===========================
                   InquireGridPerRevolution(AxisId.Axis1_RA);
                   InquireGridPerRevolution(AxisId.Axis2_DEC);
-
 
                   // Get Mount Tracking Scale (b)
                   // ============================
@@ -534,25 +489,25 @@ namespace Lunatic.SyntaController
 
                   // Compute for all GLOBAL Guiderates/Trackrates
 
-                  LowSpeedSlewRate[RAMotor] = ((double)StepTimerFreq[RAMotor] / ((double)GridPerRevolution[RAMotor] / SecondsPerSiderealDay));
-                  LowSpeedSlewRate[DECMotor] = ((double)StepTimerFreq[DECMotor] / ((double)GridPerRevolution[DECMotor] / SecondsPerSiderealDay));
-                  HighSpeedSlewRate[RAMotor] = ((double)HighSpeedRatio[RAMotor] * ((double)StepTimerFreq[RAMotor] / ((double)GridPerRevolution[RAMotor] / SecondsPerSiderealDay)));
-                  HighSpeedSlewRate[DECMotor] = ((double)HighSpeedRatio[DECMotor] * ((double)StepTimerFreq[DECMotor] / ((double)GridPerRevolution[DECMotor] / SecondsPerSiderealDay)));
+                  LowSpeedSlewRate[RAMotor] = ((double)StepTimerFreq[RAMotor] / ((double)GridPerRevolution[RAMotor] / Constants.SECONDS_PER_SIDERIAL_DAY));
+                  LowSpeedSlewRate[DECMotor] = ((double)StepTimerFreq[DECMotor] / ((double)GridPerRevolution[DECMotor] / Constants.SECONDS_PER_SIDERIAL_DAY));
+                  HighSpeedSlewRate[RAMotor] = ((double)HighSpeedRatio[RAMotor] * ((double)StepTimerFreq[RAMotor] / ((double)GridPerRevolution[RAMotor] / Constants.SECONDS_PER_SIDERIAL_DAY)));
+                  HighSpeedSlewRate[DECMotor] = ((double)HighSpeedRatio[DECMotor] * ((double)StepTimerFreq[DECMotor] / ((double)GridPerRevolution[DECMotor] / Constants.SECONDS_PER_SIDERIAL_DAY)));
 
                   MountRate = LowSpeedSlewRate[0];    // Default to SIDEREAL
 
-                  result = MOUNT_SUCCESS;
+                  result = Constants.MOUNT_SUCCESS;
 
                   #endregion
                }
                else {
-                  result = MOUNT_COMCONNECTED;
+                  result = Constants.MOUNT_COMCONNECTED;
                }
 
                Interlocked.Increment(ref openConnections);
             }
             catch {
-               result = MOUNT_COMERROR;
+               result = Constants.MOUNT_COMERROR;
             }
          }
          return result;
@@ -569,11 +524,11 @@ namespace Lunatic.SyntaController
       {
 
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
          MountActive = false;    //Set Mount to inactive state
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
 
 
@@ -602,7 +557,7 @@ namespace Lunatic.SyntaController
 
          // Check Mount
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
          switch (axisId) {
@@ -610,7 +565,7 @@ namespace Lunatic.SyntaController
             case AxisId.Axis2_DEC:
                // Stop Motor	
                i = EQ_SendCommand(axisId, 'K', 0, NO_PARAMS);
-               if ((i * EQ_ERROR) == EQ_ERROR) {
+               if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                   return EQ_GetMountError(i);
                }
 
@@ -618,13 +573,13 @@ namespace Lunatic.SyntaController
                do {
                   // Send Command
                   i = EQ_SendCommand(axisId, 'f', 0, NO_PARAMS);
-                  if ((i & EQ_ERROR) == EQ_ERROR) {
+                  if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                      return EQ_GetMountError(i);
                   }
 
                   // Return extended status
                   if ((i & 0x100) != 0x100) {
-                     return MOUNT_MOTORINACTIVE;                 // Motor not initialized
+                     return Constants.MOUNT_MOTORINACTIVE;                 // Motor not initialized
                   }
                }
                while ((i & 0x01) == 0x01);
@@ -632,13 +587,13 @@ namespace Lunatic.SyntaController
             case AxisId.Both_Axes:
                // stop RA motor
                i = EQ_SendCommand(AxisId.Axis1_RA, 'K', 0, NO_PARAMS);
-               if ((i & EQ_ERROR) == EQ_ERROR) {
+               if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                   return EQ_GetMountError(i);               // Check errors, return "dll_error" value
                }
 
                // stop DEC motor
                i = EQ_SendCommand(AxisId.Axis2_DEC, 'K', 0, NO_PARAMS);
-               if ((i & EQ_ERROR) == EQ_ERROR) {
+               if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                   return EQ_GetMountError(i);               // Check errors, return "dll_error" value
                }
 
@@ -646,13 +601,13 @@ namespace Lunatic.SyntaController
                do {
                   // Send Command
                   i = EQ_SendCommand(AxisId.Axis1_RA, 'f', 0, NO_PARAMS);
-                  if ((i & EQ_ERROR) == EQ_ERROR) {
+                  if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                      return EQ_GetMountError(i);                  // Check errors, return "dll_error" value
                   }
 
                   // Return extended status
                   if ((i & 0x100) != 0x100) {
-                     return MOUNT_MOTORINACTIVE;                 // Motor not initialized
+                     return Constants.MOUNT_MOTORINACTIVE;                 // Motor not initialized
                   }
                }
                while ((i & 0x01) == 0x01);
@@ -660,21 +615,21 @@ namespace Lunatic.SyntaController
                do {
                   // Send Command
                   i = EQ_SendCommand(AxisId.Axis2_DEC, 'f', 0, NO_PARAMS);
-                  if ((i & EQ_ERROR) == EQ_ERROR) {
+                  if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                      return EQ_GetMountError(i);                  // Check errors, return "dll_error" value
                   }
 
                   // Return extended status
                   if ((i & 0x100) != 0x100) {
-                     return MOUNT_MOTORINACTIVE;                 // Motor not initialized
+                     return Constants.MOUNT_MOTORINACTIVE;                 // Motor not initialized
                   }
                }
                while ((i & 0x01) == 0x01);
                break;
             default:
-               return MOUNT_BADPARAM;
+               return  Constants.MOUNT_BADPARAM;
          }
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
 
       }
 
@@ -698,18 +653,18 @@ namespace Lunatic.SyntaController
 
          // Check Port
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
          // Check Parameters
          if (!((axisId == AxisId.Axis1_RA) || (axisId == AxisId.Axis2_DEC))) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
 
 
          // Send Command
          response = EQ_SendCommand(axisId, 'f', 0, NO_PARAMS);
-         if ((response & EQ_ERROR) == EQ_ERROR) {
+         if ((response & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(response);
          }
 
@@ -723,7 +678,7 @@ namespace Lunatic.SyntaController
 
          // Return extended status
          if ((response & 0x100) != 0x100) {
-            return MOUNT_MOTORINACTIVE;  // Motor not initialized
+            return Constants.MOUNT_MOTORINACTIVE;  // Motor not initialized
          }
 
          // assume Motor not rotating, Teeth at front contact (forward)
@@ -760,43 +715,43 @@ namespace Lunatic.SyntaController
 
          // Check Mount
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
          // Check Parameters
          if (!((axisId == AxisId.Axis1_RA) || (axisId == AxisId.Axis2_DEC))) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
 
          // Check Motor Status first
          i = EQ_GetMotorStatus(axisId);
-         if ((i >= MOUNT_MOTORINACTIVE) || (i < 0x80)) {
+         if ((i >= Constants.MOUNT_MOTORINACTIVE) || (i < 0x80)) {
             //we have an error code 
             return i;
          }
          else {
             if ((i & 0x90) != 0x80) {
                // motor is moving already - can't do a goto if one is in progress.
-               return MOUNT_MOTORBUSY;
+               return Constants.MOUNT_MOTORBUSY;
             }
          }
 
 
          // Make sure motor is stopped
          i = EQ_MotorStop(axisId);
-         if (i != MOUNT_SUCCESS) {
+         if (i != Constants.MOUNT_SUCCESS) {
             return i;
          }
 
          // Set the motor hemisphere, mode, direction and speed
          i = EQ_SendGCode(axisId, hemisphere, MountMode.Goto, direction, MountSpeed.HighSpeed);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
          // Set the mount relative target
          i = EQ_SendCommand(axisId, 'H', steps, 6);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
@@ -804,17 +759,17 @@ namespace Lunatic.SyntaController
          // ### AJ  motor card doesnt use this????   
          j = stepSlowDown;                      // Stepper Motor Deceleration point
          i = EQ_SendCommand(axisId, 'M', j, 6);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
          // Start the motor
          i = EQ_SendCommand(axisId, 'J', 0, NO_PARAMS);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
 
 
@@ -839,7 +794,7 @@ namespace Lunatic.SyntaController
 
          // Check mount is active
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
          // Check if Both Motors are at rest
@@ -851,7 +806,7 @@ namespace Lunatic.SyntaController
          else {
             if ((response & 0x90) != 0x80) {
                // ra motor is apprently moving -don't reinitialise
-               return MOUNT_RARUNNING;
+               return Constants.MOUNT_RARUNNING;
             }
          }
 
@@ -863,47 +818,47 @@ namespace Lunatic.SyntaController
          else {
             if ((response & 0x90) != 0x80) {
                // dec motor is apprently moving - don't reiitialise
-               return MOUNT_DECRUNNING;
+               return Constants.MOUNT_DECRUNNING;
             }
          }
 
          // Set RA
          response = EQ_SendCommand(AxisId.Axis1_RA, 'E', RA_val, 6);
-         if ((response & EQ_ERROR) == EQ_ERROR) {
+         if ((response & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(response);
          }
 
          // Set DEC
          response = EQ_SendCommand(AxisId.Axis2_DEC, 'E', DEC_val, 6);
-         if ((response & EQ_ERROR) == EQ_ERROR) {
+         if ((response & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(response);
          }
 
          // Confirm RA
          response = EQ_SendCommand(AxisId.Axis1_RA, 'j', 0, NO_PARAMS);
-         if ((response & EQ_ERROR) == EQ_ERROR) {
+         if ((response & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(response);
          }
 
          // Confirm DEC
          response = EQ_SendCommand(AxisId.Axis2_DEC, 'j', 0, NO_PARAMS);
-         if ((response & EQ_ERROR) == EQ_ERROR) {
+         if ((response & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(response);
          }
 
          // Activate RA  Motor
          response = EQ_SendCommand(AxisId.Axis1_RA, 'F', 0, NO_PARAMS);
-         if ((response & EQ_ERROR) == EQ_ERROR) {
+         if ((response & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(response);
          }
 
          // Activate DEC Motor
          response = EQ_SendCommand(AxisId.Axis2_DEC, 'F', 0, NO_PARAMS);
-         if ((response & EQ_ERROR) == EQ_ERROR) {
+         if ((response & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(response);
          }
 
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
 
       /////// Motor Status Functions /////
@@ -924,7 +879,7 @@ namespace Lunatic.SyntaController
 
          // Check Mount
          if (!MountActive) {
-            return EQ_ERROR;  // can't return MOUNT_NOCOMPORT as 001 is a potentially valide motor value
+            return Constants.EQ_ERROR;  // can't return Constants.MOUNT_NOCOMPORT as 001 is a potentially valide motor value
          }
 
          switch (axisId) {
@@ -933,40 +888,37 @@ namespace Lunatic.SyntaController
                // Get mount position
                // Mount position returns EQ_COMTIMEOUT because MotorValues range to 0xFFFFFF (16,777,215)
                i = EQ_SendCommand(axisId, 'j', 0, NO_PARAMS);
-               if (i == EQ_COMTIMEOUT) {
-                  return EQ_COMTIMEOUT;
+               if (i == Constants.EQ_COMTIMEOUT) {
+                  return Constants.EQ_COMTIMEOUT;
                }
                return i;
             case AxisId.Aux_RA_Encoder:
                if (HasEncoder[0] == false) {
                   // mount doesn't have aux encoders
-                  return EQ_INVALID;
+                  return Constants.EQ_INVALID;
                }
                // Get mount position
                // Mount position returns EQ_COMTIMEOUT because MotorValues range to 0xFFFFFF (16,777,215)
                i = EQ_SendCommand(AxisId.Axis1_RA, 'd', 0, NO_PARAMS);
-               if (i == EQ_COMTIMEOUT) {
-                  return EQ_COMTIMEOUT;
+               if (i == Constants.EQ_COMTIMEOUT) {
+                  return Constants.EQ_COMTIMEOUT;
                }
                return i;
             case AxisId.Aux_DEC_Encoder:
                if (HasEncoder[1] == false) {
                   // mount doesn't have aux encoders
-                  return EQ_INVALID;
+                  return Constants.EQ_INVALID;
                }
                // Get mount position
                // Mount position returns EQ_COMTIMEOUT because MotorValues range to 0xFFFFFF (16,777,215)
                i = EQ_SendCommand(AxisId.Axis2_DEC, 'd', 0, NO_PARAMS);
-               if (i == EQ_COMTIMEOUT) {
-                  return EQ_COMTIMEOUT;
+               if (i == Constants.EQ_COMTIMEOUT) {
+                  return Constants.EQ_COMTIMEOUT;
                }
                return i;
          }
-         return EQ_INVALID; // can't return MOUNT_BADPARAM as 999 is a potentially valide motor value
+         return Constants.EQ_INVALID; // can't return  Constants.MOUNT_BADPARAM as 999 is a potentially valide motor value
       }
-
-
-
 
       /// <summary>
       /// Sets RA/DEC Motor microstep counters (pseudo encoder position)
@@ -987,24 +939,23 @@ namespace Lunatic.SyntaController
 
          // Check mount
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
          // Check parameters
          if (!((axisId == AxisId.Axis1_RA) || (axisId == AxisId.Axis2_DEC))) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
 
 
          // Send Set Reference Mount position 
          i = EQ_SendCommand(axisId, 'E', motorValue, 6);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);         // Check errors, return "dll_error" value
          }
 
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
-
 
 
 
@@ -1054,16 +1005,16 @@ namespace Lunatic.SyntaController
 
          // Check mount
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
 
          // Check parameters
          if (axisId == AxisId.Both_Axes) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
          if ((rate < 1) || (rate > 800)) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
 
 
@@ -1085,7 +1036,7 @@ namespace Lunatic.SyntaController
 
          if (rate < threshold) {
             i = EQ_SendGCode(axisId, hemisphere, MountMode.Slew, direction, MountSpeed.LowSpeed);
-            if ((i & EQ_ERROR) == EQ_ERROR) {
+            if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                return EQ_GetMountError(i);         // Check errors, return "dll_error" value
             }
 
@@ -1100,7 +1051,7 @@ namespace Lunatic.SyntaController
          }
          else {
             i = EQ_SendGCode(axisId, hemisphere, MountMode.Slew, direction, MountSpeed.HighSpeed);
-            if ((i & EQ_ERROR) == EQ_ERROR) {
+            if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                return EQ_GetMountError(i);         // Check errors, return "dll_error" value
             }
 
@@ -1129,17 +1080,17 @@ namespace Lunatic.SyntaController
 
          // Send Speed Command
          i = EQ_SendCommand(axisId, 'I', j, 6);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);         // Check errors, return "dll_error" value
          }
 
          // Send Go Command
          i = EQ_SendCommand(axisId, 'J', 0, NO_PARAMS);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);         // Check errors, return "dll_error" value
          }
 
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
 
 
@@ -1163,7 +1114,7 @@ namespace Lunatic.SyntaController
 
          // Check mount	
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
 
@@ -1184,7 +1135,7 @@ namespace Lunatic.SyntaController
                break;
 
             default:
-               return MOUNT_BADPARAM;
+               return  Constants.MOUNT_BADPARAM;
 
          }
 
@@ -1198,23 +1149,23 @@ namespace Lunatic.SyntaController
 
          // Set the motor hemisphere, mode, direction and speed
          i = EQ_SendGCode(RAMotor, hemisphere, MountMode.Slew, direction, MountSpeed.LowSpeed);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
          // Send I Command
          i = EQ_SendCommand(RAMotor, 'I', j, 6);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
          // Start RA Motor
          i = EQ_SendCommand(RAMotor, 'J', 0, NO_PARAMS);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
 
 
@@ -1251,15 +1202,15 @@ namespace Lunatic.SyntaController
 
          // Check mount	
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
          // Check parameters
          if (!((axisId == AxisId.Axis1_RA) || (axisId == AxisId.Axis2_DEC))) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
          if ((guideRate < 0) || (guideRate > 9)) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
 
          // Update Tracking Rate
@@ -1280,7 +1231,7 @@ namespace Lunatic.SyntaController
                break;
 
             default:
-               return MOUNT_BADPARAM;
+               return  Constants.MOUNT_BADPARAM;
          }
 
          // Update GUIDING Rate
@@ -1319,7 +1270,7 @@ namespace Lunatic.SyntaController
          if (axisId == AxisId.Axis1_RA) {
             // RA  Motor
             i = EQ_SendCommand(axisId, 'I', newrate, 6);
-            if ((i & EQ_ERROR) == EQ_ERROR) {
+            if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                return EQ_GetMountError(i);   // Check errors, return "dll_error" value
             }
          }
@@ -1345,23 +1296,23 @@ namespace Lunatic.SyntaController
 
             // Set the motor hemisphere, mode, direction and speed
             i = EQ_SendGCode(AxisId.Axis2_DEC, hemisphere, MountMode.Slew, decDirection, MountSpeed.LowSpeed);
-            if ((i & EQ_ERROR) == EQ_ERROR) {
+            if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                return EQ_GetMountError(i);               // Check errors, return "dll_error" value
             }
 
             // Set the DEC motor speed
             i = EQ_SendCommand(AxisId.Axis2_DEC, 'I', newrate, 6);
-            if ((i & EQ_ERROR) == EQ_ERROR) {
+            if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                return EQ_GetMountError(i);   // Check errors, return "dll_error" value
             }
 
             // Start the DEC motor
             i = EQ_SendCommand(AxisId.Axis2_DEC, 'J', 0, NO_PARAMS);
-            if ((i & EQ_ERROR) == EQ_ERROR) {
+            if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                return EQ_GetMountError(i);   // Check errors, return "dll_error" value
             }
          }
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
 
 
@@ -1389,15 +1340,15 @@ namespace Lunatic.SyntaController
 
          // Check Mount	
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
          // Check Parameters	
          if (!((axisId == AxisId.Axis1_RA) || (axisId == AxisId.Axis2_DEC))) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
          if ((trackOffset < 0) || (trackOffset > 400)) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
 
          switch (trackRate) {
@@ -1415,7 +1366,7 @@ namespace Lunatic.SyntaController
                j = (int)(LowSpeedSlewRate[0]);
                break;
             default:
-               return MOUNT_BADPARAM;
+               return  Constants.MOUNT_BADPARAM;
          }
 
          if (trackOffset != 0) {
@@ -1461,23 +1412,23 @@ namespace Lunatic.SyntaController
 
          // Set the motor hemisphere, mode, direction and speed
          i = EQ_SendGCode(axisId, hemisphere, MountMode.Slew, axisDirection, MountSpeed.LowSpeed);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
          // Set the motor speed
          i = EQ_SendCommand(axisId, 'I', newrate, 6);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);               // Check errors, return "dll_error" value
          }
 
          // Start the motor
          i = EQ_SendCommand(axisId, 'J', 0, NO_PARAMS);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);               // Check errors, return "dll_error" value// Start the motor
          }
 
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
 
 
@@ -1513,21 +1464,22 @@ namespace Lunatic.SyntaController
       // Public Declare Function EQ_SetCustomTrackRate Lib "EQCONTRL" (ByVal motor_id As Long, ByVal trackmode As Long, ByVal trackoffset As Long, ByVal trackbase As Long, ByVal hemisphere As Long, ByVal direction As Long) As Long
       public int EQ_SetCustomTrackRate(AxisId axisId, TrackMode trackMode, int trackOffset, MountSpeed trackBase, HemisphereOption hemisphere, AxisDirection direction)
       {
+         System.Diagnostics.Debug.WriteLine(string.Format("EQ_SetCustomTrackRate({0}, {1}, {2}, {3}, {4}, {5})", axisId, trackMode, trackOffset, trackBase, hemisphere, direction));
          int i, newrate;
 
          // Check Mount
          // Check Mount	
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
          // Check Parameters	
          if (!((axisId == AxisId.Axis1_RA) || (axisId == AxisId.Axis2_DEC))) {
-            return EQ_INVALID;
+            return Constants.EQ_INVALID;
          }
 
          if (trackOffset < 30000) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
 
          newrate = trackOffset - 30000;
@@ -1561,14 +1513,14 @@ namespace Lunatic.SyntaController
 
             // Set the motor hemisphere, mode, direction and speed	
             i = EQ_SendGCode(axisId, hemisphere, MountMode.Slew, direction, trackBase);
-            if ((i & EQ_ERROR) == EQ_ERROR) {
+            if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                return EQ_GetMountError(i);   // Check errors, return "MOUNT_error" value
             }
          }
 
          // Set the motor speed
          i = EQ_SendCommand(axisId, 'I', newrate, 6);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);   // Check errors, return "MOUNT_error" value
          }
 
@@ -1576,11 +1528,11 @@ namespace Lunatic.SyntaController
 
             // Start the motor
             i = EQ_SendCommand(axisId, 'J', 0, NO_PARAMS);
-            if ((i & EQ_ERROR) == EQ_ERROR) {
+            if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                return EQ_GetMountError(i);   // Check errors, return "MOUNT_error" value
             }
          }
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
 
 
@@ -1597,7 +1549,7 @@ namespace Lunatic.SyntaController
       public int EQ_GetTotal360microstep(AxisId axisId)
       {
          if (!MountActive) {
-            return EQ_ERROR;
+            return Constants.EQ_ERROR;
          }
 
          switch (axisId) {
@@ -1605,7 +1557,7 @@ namespace Lunatic.SyntaController
             case AxisId.Axis2_DEC:
                return GridPerRevolution[(int)axisId];
             default:
-               return EQ_INVALID;
+               return Constants.EQ_INVALID;
          }
       }
 
@@ -1622,7 +1574,7 @@ namespace Lunatic.SyntaController
          int i;
 
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
 
@@ -1631,14 +1583,14 @@ namespace Lunatic.SyntaController
 
          // Check EQMOUNT
          i = EQ_SendCommand(AxisId.Axis1_RA, 'e', 0, NO_PARAMS);
-         if ((i & EQ_ERROR) != EQ_ERROR)       // No errors so mount returned firmware version OK
+         if ((i & Constants.EQ_ERROR) != Constants.EQ_ERROR)       // No errors so mount returned firmware version OK
          {
             MountType = MountType.EqMount;     // So its an EQG mount
-            return MOUNT_EQMOUNT;
+            return Constants.MOUNT_EQMOUNT;
          }
 
          // Else bad mount
-         return MOUNT_BADMOUNT;
+         return Constants.MOUNT_BADMOUNT;
       }
 
 
@@ -1653,7 +1605,7 @@ namespace Lunatic.SyntaController
       public int EQ_GetMountVersion()
       {
          if (!MountActive) {
-            return EQ_ERROR;
+            return Constants.EQ_ERROR;
          }
          return MCVersion;
       }
@@ -1669,10 +1621,10 @@ namespace Lunatic.SyntaController
       public int EQ_GetMountStatus()
       {
          if (MountActive) {
-            return MOUNT_CONNECTED;
+            return Constants.MOUNT_CONNECTED;
          }
          else {
-            return MOUNT_NOTCONNECTED;
+            return Constants.MOUNT_NOTCONNECTED;
          }
       }
 
@@ -1683,7 +1635,7 @@ namespace Lunatic.SyntaController
       /// <returns>Driver Version</returns>
       public int EQ_DriverVersion()
       {
-         return DriverVersion;
+         return DRIVER_VERSION;
       }
 
 
@@ -1705,12 +1657,12 @@ namespace Lunatic.SyntaController
 
          // Check Mount
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
          // Check Parameters	
          if (!((axisId == AxisId.Axis1_RA) || (axisId == AxisId.Axis2_DEC))) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
 
 
@@ -1723,14 +1675,14 @@ namespace Lunatic.SyntaController
                r = (int)guideportRate;
                break;
             default:
-               return MOUNT_BADPARAM;
+               return  Constants.MOUNT_BADPARAM;
          }
          i = EQ_SendCommand(axisId, 'P', r, 1);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);         // Check errors, return "dll_error" value
          }
 
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
 
 
@@ -1740,14 +1692,14 @@ namespace Lunatic.SyntaController
       /// <param name="axisId">RA/DEC</param>
       /// <param name="offset">Guiderate offset</param>
       /// <returns>
-      ///	- MOUNT_SUCCESS		000		 Success
-      ///	- MOUNT_NOCOMPORT   001		 Comport Not available
-      ///	- MOUNT_BADPARAM		999		 Invalid parameter
+      ///	- Constants.MOUNT_SUCCESS		000		 Success
+      ///	- Constants.MOUNT_NOCOMPORT   001		 Comport Not available
+      ///	-  Constants.MOUNT_BADPARAM		999		 Invalid parameter
       /// </returns>
       public int EQ_SetOffset(AxisId axisId, AutoguiderPortRate offset)
       {
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
          switch (axisId) {
             case AxisId.Axis1_RA:
@@ -1755,9 +1707,9 @@ namespace Lunatic.SyntaController
                GuideRateOffset[(int)axisId] = (int)offset;
                break;
             default:
-               return MOUNT_BADPARAM;
+               return  Constants.MOUNT_BADPARAM;
          }
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
 
 
@@ -1780,7 +1732,7 @@ namespace Lunatic.SyntaController
       ///		6 - Steps per worm turn
       ///		7 - Track rate offset
       /// </param>
-      /// <returns>Values stored in parameter or MOUNT_BADPARAM</returns>
+      /// <returns>Values stored in parameter or  Constants.MOUNT_BADPARAM</returns>
       public int EQ_GetMountParameter(AxisId axisId, int parameterId)
       {
          int i, tmp;
@@ -1788,7 +1740,7 @@ namespace Lunatic.SyntaController
 
          // Check Parameters	
          if (parameterId < 10000) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
          axis = (int)axisId;
 
@@ -1828,19 +1780,19 @@ namespace Lunatic.SyntaController
                      return tmp;
                   }
                   else {
-                     return MOUNT_BADPARAM;
+                     return  Constants.MOUNT_BADPARAM;
                   }
                case 10:
                   // get home position index data
                   tmp = EQ_SendCommand(axisId, 'q', 0, 6);
-                  if ((tmp & EQ_ERROR) == EQ_ERROR) {
+                  if ((tmp & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                      return EQ_GetMountError(tmp);
                   }
                   return tmp;
 
                case 11:
                   tmp = EQ_SendCommand(axisId, 'q', 1, 6);
-                  if ((tmp & EQ_ERROR) == EQ_ERROR) {
+                  if ((tmp & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                      return EQ_GetMountError(tmp);
                   }
                   // assume pec is off and not training
@@ -1867,7 +1819,7 @@ namespace Lunatic.SyntaController
             return (MountActive ? 1 : 0);
          }
          else {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
       }
 
@@ -1892,7 +1844,7 @@ namespace Lunatic.SyntaController
 
          // Check Parameter id
          if (parameterId < 10000) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
 
          parameterId -= 10000;
@@ -1904,42 +1856,42 @@ namespace Lunatic.SyntaController
                switch (axisId) {
                   case AxisId.Axis1_RA:
                      if (!HasSnap[0]) {
-                        return MOUNT_GENERALERROR;
+                        return Constants.MOUNT_GENERALERROR;
                      }
                      break;
                   case AxisId.Axis2_DEC:
                      if (!HasSnap[1]) {
-                        return MOUNT_GENERALERROR;
+                        return Constants.MOUNT_GENERALERROR;
                      }
                      break;
                   case AxisId.Both_Axes:
                      if ((!HasSnap[0]) || (!HasSnap[1])) {
-                        return MOUNT_GENERALERROR;
+                        return Constants.MOUNT_GENERALERROR;
                      }
                      break;
                   default:
-                     return MOUNT_BADPARAM;
+                     return  Constants.MOUNT_BADPARAM;
                }
 
                if ((value < 0) || (value > 1)) {
-                  return MOUNT_BADPARAM;
+                  return  Constants.MOUNT_BADPARAM;
                }
 
                switch (axisId) {
                   case AxisId.Axis1_RA:
                   case AxisId.Axis2_DEC:
                      result = EQ_SendCommand(axisId, 'O', value, 1);
-                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                     if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                         return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                      }
                      break;
                   case AxisId.Both_Axes:
                      result = EQ_SendCommand(AxisId.Axis1_RA, 'O', value, 1);
-                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                     if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                         return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                      }
                      result = EQ_SendCommand(AxisId.Axis2_DEC, 'O', value, 1);
-                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                     if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                         return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                      }
                      break;
@@ -1951,21 +1903,21 @@ namespace Lunatic.SyntaController
                switch (axisId) {
                   case AxisId.Axis1_RA:
                      if (!HasPPEC[0]) {
-                        return MOUNT_GENERALERROR;
+                        return Constants.MOUNT_GENERALERROR;
                      }
                      break;
                   case AxisId.Axis2_DEC:
                      if (!HasPPEC[1]) {
-                        return MOUNT_GENERALERROR;
+                        return Constants.MOUNT_GENERALERROR;
                      }
                      break;
                   case AxisId.Both_Axes:
                      if ((!HasPPEC[0]) || (!HasPPEC[1])) {
-                        return MOUNT_GENERALERROR;
+                        return Constants.MOUNT_GENERALERROR;
                      }
                      break;
                   default:
-                     return MOUNT_BADPARAM;
+                     return  Constants.MOUNT_BADPARAM;
                }
                switch (value) {
                   case 0:
@@ -1975,24 +1927,24 @@ namespace Lunatic.SyntaController
                      value = 0;
                      break;
                   default:
-                     return MOUNT_BADPARAM;
+                     return  Constants.MOUNT_BADPARAM;
                }
                switch (axisId) {
                   case AxisId.Axis1_RA:
                   case AxisId.Axis2_DEC:
                      // Start/stop PPEC train
                      result = EQ_SendCommand(axisId, 'W', value, 6);
-                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                     if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                         return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                      }
                      break;
                   case AxisId.Both_Axes:
                      result = EQ_SendCommand(RAMotor, 'W', value, 6);
-                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                     if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                         return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                      }
                      result = EQ_SendCommand(AxisId.Axis2_DEC, 'W', value, 6);
-                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                     if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                         return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                      }
                      break;
@@ -2004,21 +1956,21 @@ namespace Lunatic.SyntaController
                switch (axisId) {
                   case AxisId.Axis1_RA:
                      if (!HasPPEC[0]) {
-                        return MOUNT_GENERALERROR;
+                        return Constants.MOUNT_GENERALERROR;
                      }
                      break;
                   case AxisId.Axis2_DEC:
                      if (!HasPPEC[1]) {
-                        return MOUNT_GENERALERROR;
+                        return Constants.MOUNT_GENERALERROR;
                      }
                      break;
                   case AxisId.Both_Axes:
                      if ((!HasPPEC[0]) || (!HasPPEC[1])) {
-                        return MOUNT_GENERALERROR;
+                        return Constants.MOUNT_GENERALERROR;
                      }
                      break;
                   default:
-                     return MOUNT_BADPARAM;
+                     return  Constants.MOUNT_BADPARAM;
                      break;
                }
                switch (value) {
@@ -2029,24 +1981,24 @@ namespace Lunatic.SyntaController
                      value = 2;
                      break;
                   default:
-                     return MOUNT_BADPARAM;
+                     return  Constants.MOUNT_BADPARAM;
                }
 
                switch (axisId) {
                   case AxisId.Axis1_RA:
                   case AxisId.Axis2_DEC:
                      result = EQ_SendCommand(axisId, 'W', value, 6);
-                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                     if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                         return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                      }
                      break;
                   case AxisId.Both_Axes:
                      result = EQ_SendCommand(RAMotor, 'W', value, 6);
-                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                     if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                         return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                      }
                      result = EQ_SendCommand(AxisId.Axis2_DEC, 'W', value, 6);
-                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                     if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                         return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                      }
                      break;
@@ -2058,25 +2010,25 @@ namespace Lunatic.SyntaController
                switch (axisId) {
                   case AxisId.Axis1_RA:
                      if (!HasEncoder[0]) {
-                        return MOUNT_GENERALERROR;
+                        return Constants.MOUNT_GENERALERROR;
                      }
                      break;
                   case AxisId.Axis2_DEC:
                      if (!HasEncoder[1]) {
-                        return MOUNT_GENERALERROR;
+                        return Constants.MOUNT_GENERALERROR;
                      }
                      break;
                   case AxisId.Both_Axes:
                      if ((!HasEncoder[0]) || (!HasEncoder[1])) {
-                        return MOUNT_GENERALERROR;
+                        return Constants.MOUNT_GENERALERROR;
                      }
                      break;
                   default:
-                     return MOUNT_BADPARAM;
+                     return  Constants.MOUNT_BADPARAM;
                }
 
                if (value < 0 || value > 1) {
-                  return MOUNT_BADPARAM;
+                  return  Constants.MOUNT_BADPARAM;
                }
                if (value == 0) {
                   value = 4;
@@ -2088,18 +2040,18 @@ namespace Lunatic.SyntaController
                   case AxisId.Axis1_RA:
                   case AxisId.Axis2_DEC:
                      result = EQ_SendCommand(axisId, 'W', value, 6);
-                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                     if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                         return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                      }
                      break;
 
                   case AxisId.Both_Axes:
                      result = EQ_SendCommand(RAMotor, 'W', value, 6);
-                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                     if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                         return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                      }
                      result = EQ_SendCommand(AxisId.Axis2_DEC, 'W', value, 6);
-                     if ((result & EQ_ERROR) == EQ_ERROR) {
+                     if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                         return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                      }
                      break;
@@ -2109,11 +2061,11 @@ namespace Lunatic.SyntaController
             case 10:
                // Encoder reset datum
                if (!HasHomeSensor) {
-                  return MOUNT_GENERALERROR;
+                  return Constants.MOUNT_GENERALERROR;
                }
 
                result = EQ_SendCommand(axisId, 'W', 8, 6);
-               if ((result & EQ_ERROR) == EQ_ERROR) {
+               if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                   return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                }
                break;
@@ -2121,14 +2073,14 @@ namespace Lunatic.SyntaController
             case 6:
                // Polar Scope LED brightness
                if (!HasPolarscopeLED) {
-                  return MOUNT_GENERALERROR;
+                  return Constants.MOUNT_GENERALERROR;
                }
 
                if ((value < 0) || (value > 255)) {
-                  return MOUNT_BADPARAM;
+                  return  Constants.MOUNT_BADPARAM;
                }
                result = EQ_SendCommand(AxisId.Axis2_DEC, 'V', value, 2);
-               if ((result & EQ_ERROR) == EQ_ERROR) {
+               if ((result & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                   return (EQ_GetMountError(result)); // Check errors, return "dll_error" value
                }
                break;
@@ -2136,7 +2088,7 @@ namespace Lunatic.SyntaController
             case 7:
                // Slew rate - Highspeed/Lowspeed threshold
                if ((value < 20) || (value > 800)) {
-                  return MOUNT_BADPARAM;
+                  return  Constants.MOUNT_BADPARAM;
                }
                switch (axisId) {
                   case AxisId.Axis1_RA:
@@ -2150,15 +2102,15 @@ namespace Lunatic.SyntaController
                      LowSpeedGotoMargin[1] = value;
                      break;
                   default:
-                     return MOUNT_BADPARAM;
+                     return  Constants.MOUNT_BADPARAM;
                }
                break;
 
             default:
-               return MOUNT_BADPARAM;
+               return  Constants.MOUNT_BADPARAM;
 
          }
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
 
 
@@ -2195,9 +2147,10 @@ namespace Lunatic.SyntaController
       public int EQ_SendCommand(int motorId, char command, int parameters, short count)
       {
          if (motorId == (int)AxisId.Both_Axes) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
-         int response = EQ_OK;
+         System.Diagnostics.Debug.WriteLine(String.Format("EQ_SendCommand({0}, {1}, {2}, {3})", motorId, command, parameters, count));
+         int response = Constants.EQ_OK;
          char[] hex_str = "0123456789ABCDEF     ".ToCharArray();   // Hexadecimal translation
          const int BufferSize = 20;
          StringBuilder sb = new StringBuilder(BufferSize);
@@ -2205,6 +2158,9 @@ namespace Lunatic.SyntaController
          sb.Append(command);
          sb.Append((motorId + 1).ToString());
          switch (count) {
+            case 0:
+               // Do nothing
+               break;
             case 1:
                // nibble 1
                sb.Append(hex_str[(parameters & 0x00000f)]);
@@ -2251,7 +2207,7 @@ namespace Lunatic.SyntaController
                sb.Append(hex_str[(parameters & 0x0f0000) >> 16]);
                break;
             default:
-               return EQ_INVALID;
+               return Constants.EQ_INVALID;
          }
          sb.Append(cEndChar);
          string cmdString = sb.ToString();
@@ -2292,7 +2248,7 @@ namespace Lunatic.SyntaController
 
          }
 
-         System.Diagnostics.Debug.WriteLine(" -> Response: " + response);
+         System.Diagnostics.Debug.WriteLine(string.Format("    -> Response: {0} (0x{0:X})", response));
          return response;
       }
 
@@ -2323,17 +2279,17 @@ namespace Lunatic.SyntaController
 
          // Check Mount
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
          // Check Parameters	
          if (axisId > AxisId.Axis2_DEC) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
 
 
-         if ((rate > MAX_RATE) || (rate < 0)) {
-            return MOUNT_BADPARAM - 3;
+         if ((rate > Constants.MAX_RATE) || (rate < 0)) {
+            return  Constants.MOUNT_BADPARAM - 3;
          }
 
 
@@ -2381,7 +2337,7 @@ namespace Lunatic.SyntaController
             // Check Motor Status
             // Send Command
             i = EQ_SendCommand(axisId, 'f', 0, NO_PARAMS);
-            if ((i & EQ_ERROR) == EQ_ERROR) {
+            if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                return EQ_GetMountError(i);                  // Check errors, return "dll_error" value
             }
 
@@ -2394,7 +2350,7 @@ namespace Lunatic.SyntaController
 
             if ((i & 0x0100) == 0) {
                //motor not initialised
-               return MOUNT_MOTORINACTIVE;
+               return Constants.MOUNT_MOTORINACTIVE;
             }
             else {
                if ((i & 0x01) == 0x01) {
@@ -2437,7 +2393,7 @@ namespace Lunatic.SyntaController
 
             // Set the motor hemisphere, mode, direction and speed	
             i = EQ_SendGCode(axisId, hemisphere, MountMode.Slew, direction, trackbase);
-            if ((i & EQ_ERROR) == EQ_ERROR) {
+            if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                return EQ_GetMountError(i);   // Check errors, return "dll_error" value
             }
          }
@@ -2445,7 +2401,7 @@ namespace Lunatic.SyntaController
 
          // Set the motor speed
          i = EQ_SendCommand(axisId, 'I', SpeedInt, 6);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return EQ_GetMountError(i);   // Check errors, return "dll_error" value
          }
 
@@ -2453,11 +2409,11 @@ namespace Lunatic.SyntaController
 
             // Start the motor
             i = EQ_SendCommand(axisId, 'J', 0, NO_PARAMS);
-            if ((i & EQ_ERROR) == EQ_ERROR) {
+            if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
                return EQ_GetMountError(i);   // Check errors, return "dll_error" value
             }
          }
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
 
 
@@ -2486,28 +2442,28 @@ namespace Lunatic.SyntaController
 
          // Check Mount
          if (!MountActive) {
-            return MOUNT_NOCOMPORT;
+            return Constants.MOUNT_NOCOMPORT;
          }
 
          // Check Parameters
          if (axisId > AxisId.Axis2_DEC) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
          if ((angle < 0) || (angle > 648000)) {
-            return MOUNT_BADPARAM;
+            return  Constants.MOUNT_BADPARAM;
          }
 
 
          // Check Motor Status first
          i = EQ_GetMotorStatus(axisId);
-         if ((i >= MOUNT_MOTORINACTIVE) || (i < 0x80)) {
+         if ((i >= Constants.MOUNT_MOTORINACTIVE) || (i < 0x80)) {
             //we have an error code 
             return i;
          }
          else {
             if ((i & 0x90) != 0x80) {
                // motor is moving already - can't do a goto if one is in progress.
-               return MOUNT_MOTORBUSY;
+               return Constants.MOUNT_MOTORBUSY;
             }
          }
 
@@ -2522,30 +2478,30 @@ namespace Lunatic.SyntaController
          }
          if (steps <= 0.0) {
             // nothing to do;
-            return MOUNT_SUCCESS;
+            return Constants.MOUNT_SUCCESS;
          }
 
 
          // Set the motor hemisphere, mode, direction and speed
          i = EQ_SendGCode(axisId, hemisphere, MountMode.Goto, direction, MountSpeed.LowSpeed);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
          }
 
 
          // Set the mount relative target
          i = EQ_SendCommand(axisId, 'H', steps, 6);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
          }
 
          // Start the motor
          i = EQ_SendCommand(axisId, 'J', 0, NO_PARAMS);
-         if ((i & EQ_ERROR) == EQ_ERROR) {
+         if ((i & Constants.EQ_ERROR) == Constants.EQ_ERROR) {
             return (EQ_GetMountError(i));               // Check errors, return "dll_error" value
          }
 
-         return MOUNT_SUCCESS;
+         return Constants.MOUNT_SUCCESS;
       }
 
 

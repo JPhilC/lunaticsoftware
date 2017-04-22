@@ -6,6 +6,7 @@ using System.ComponentModel;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 using System.Collections;
 using System.Collections.Generic;
+using Lunatic.SyntaController;
 
 namespace ASCOM.Lunatic.Telescope
 {
@@ -20,8 +21,59 @@ namespace ASCOM.Lunatic.Telescope
       public DateTime AlignmentTime { get; set; }
    }
 
+   public class DevelopmentOptions : DataObjectBase
+   {
+      public bool ShowAdvancedOptions { get; set; }
+      public bool ShowPolarAlign { get; set; }
+
+      public bool Use3PointAlgorithm { get; set; }
+
+      [Description("Maximum Goto Iterations")]
+      public int MaximumSlewCount { get; set; }
+
+      public int GotoResolution { get; set; }
+
+      [Description("Goto RA Compensation")]
+      public int GotoRACompensation { get; set; }
+
+      public bool ListDisplayMode { get; set; }
+   }
+
+   public class CustomMount : DataObjectBase
+   {
+      //CUSTOM_TRACKING_OFFSET_DEC=0
+      public int TrackingDecOffset { get; set; }
+      //CUSTOM_TRACKING_OFFSET_RA=0
+      public int TrackingRAOffset { get; set; }
+      //CUSTOM_DEC_STEPS_WORM=50133
+      public int DecWormSteps { get; set; }
+      //CUSTOM_RA_STEPS_WORM=50133
+      public int RAWormSteps { get; set; }
+      //CUSTOM_DEC_STEPS_360=9024000
+      public int DecStepsPer360 { get; set; }
+      //CUSTOM_RA_STEPS_360=9024000
+      public int RAStepsPer360 { get; set; }
+   }
+
+   [TypeConverter(typeof(EnumTypeConverter))]
+   public enum MountOptions
+   {
+      [Description("Auto detect")]
+      AutoDetect,
+      [Description("Custom")]
+      Custom
+   }
+
+
    public class Settings : DataObjectBase
    {
+      //CUSTOM_MOUNT=0
+      public CustomMount CustomMount { get; set; }
+      public MountOptions MountOption { get; set; }
+
+
+      public DevelopmentOptions DevelopmentOptions { get; set; }
+
       public bool ASCOMCompatibilityStrict { get; set; }
       //FriendlyName=
       //ProcessPrioirty=0
@@ -86,6 +138,16 @@ namespace ASCOM.Lunatic.Telescope
          }
       }
 
+      public int RAEncoderUnparkPosition { get; set; }
+      public int DECEncoderUnparkPosition { get; set; }
+
+      public int RAEncoderParkPosition { get; set; }
+      public int DECEncoderParkPosition { get; set; }
+
+      public AutoguiderPortRate RAAutoGuiderPortRate { get; set; }
+      public AutoguiderPortRate DECAutoGuiderPortRate { get; set; }
+
+
       private bool _IsSlewing;
       public bool IsSlewing
       {
@@ -146,9 +208,9 @@ namespace ASCOM.Lunatic.Telescope
       public double MaxSync { get; set; }
 
 
-         /// <summary>
-         /// Total Common RA-Encoder Steps
-         /// </summary>
+      /// <summary>
+      /// Total Common RA-Encoder Steps
+      /// </summary>
       public double Tot_step { get; set; }
 
       public bool EmulOneShot { get; set; }
@@ -169,6 +231,7 @@ namespace ASCOM.Lunatic.Telescope
       {
          this.AscomCompliance = new AscomCompliance();
          this.AlignmentStars = new List<AlignmentData>();
+         this.DevelopmentOptions = new DevelopmentOptions();
          SetDefaults();
       }
 
@@ -176,6 +239,9 @@ namespace ASCOM.Lunatic.Telescope
       private void SetDefaults()
       {
          this.SaveAlignmentStarsOnAppend = true;
+         this.DevelopmentOptions.MaximumSlewCount = 5;
+         this.DevelopmentOptions.GotoResolution = 20;
+         this.DevelopmentOptions.GotoRACompensation = 40;
       }
    }
 }

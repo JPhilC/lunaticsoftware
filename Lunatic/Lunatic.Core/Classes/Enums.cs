@@ -79,7 +79,9 @@ namespace Lunatic.Core
       [Description("Parking")]
       Parking,
       [Description("Unparking")]
-      Unparking
+      Unparking,
+      [Description("At home")]
+      AtHome
    }
 
    [TypeConverter(typeof(EnumTypeConverter))]

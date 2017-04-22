@@ -28,6 +28,8 @@ using ASCOM.Utilities;
 using ASCOM.DeviceInterface;
 using Lunatic.Core;
 using Lunatic.SyntaController;
+using System.Threading.Tasks;
+using Core = Lunatic.Core;
 
 namespace ASCOM.Lunatic.Telescope
 {
@@ -83,9 +85,19 @@ namespace ASCOM.Lunatic.Telescope
       protected TraceLogger _Logger;
 
       private MountController _Mount;
+      private int _MountVersion;
+      private int[] UnparkEncoderPosition = new int[2];
 
+      private double[] GotoResolution = new double[2];      // Goto resolutions.
+      private int[] WormSteps = new int[2];
+      private int[] WormPeriod = new int[2];
+      private double[] LowSpeedSlewRate = new double[2];         // [0] = LowSpeed, [1] = HighSpeed.
+
+      private bool RAStatusSlew = false;
 
       #region Internal properties ...
+
+
       // private const int RAAxisIndex = 0;
       // private const int DECAxisIndex = 1;
       /// <summary>
@@ -98,6 +110,24 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             return SettingsProvider.Current.Settings;
+         }
+      }
+
+      //EQPARKSTATUS=parked
+      private ParkStatus _ParkStatus;
+      private ParkStatus ParkStatus
+      {
+         get
+         {
+            return _ParkStatus;
+         }
+         set
+         {
+            if (value == _ParkStatus) {
+               return;
+            }
+            _ParkStatus = value;
+            RaisePropertyChanged();
          }
       }
 
@@ -131,22 +161,26 @@ namespace ASCOM.Lunatic.Telescope
          _Mount = SharedResources.Controller;
 
          _Logger.LogMessage("Telescope", "Completed initialisation");
+
+         MaximumSyncDifference = (2 * Math.PI) / 8.0;    // Allow a 45.0 (360/8) but in degrees discrepancy in Radians.
       }
 
 
 
-
-      #region Lunatic ITelescope implimentation ...
-
       private TrackingStatus TrackingState { get; set; }
 
-      private HemisphereOption Hemisphere { get; set; }
+      private HemisphereOption Hemisphere
+      {
+         get
+         {
+            return (SiteLatitude >= 0.0 ? HemisphereOption.Northern : HemisphereOption.Southern);
+         }
+
+      }
 
       private SyncModeOption SyncMode { get; set; }
 
       private SyncAlignmentModeOptions SyncAlignmentMode { get; set; }
-
-      #endregion
 
 
       #region Private properties and methods
@@ -264,6 +298,22 @@ namespace ASCOM.Lunatic.Telescope
 
       #endregion
 
+      #region Initialisation ...
+      /// <summary>
+      /// Initialise the encoder positions for the RA meridians, the DEC encoder
+      /// home position and the maximum synchronisation parameters.
+      /// </summary>
+      private void InitialiseMeridians()
+      {
+         TotalStepsPer360[0] = _Mount.EQ_GetTotal360microstep(AxisId.Axis1_RA);
+         TotalStepsPer360[1] = _Mount.EQ_GetTotal360microstep(AxisId.Axis2_DEC);
+         MeridianWest = EncoderZeroPosition[0] + (TotalStepsPer360[0] / 4);
+         MeridianEast = EncoderZeroPosition[0] - (TotalStepsPer360[0] / 4);
+         EncoderHomePosition[1] = (TotalStepsPer360[1] / 4) + EncoderZeroPosition[1];    // totstep/4 + Homepos
+         MaximumSyncDifference = TotalStepsPer360[0] / 16;             // totalstep /16 = 22.5 degree field
+      }
+      #endregion
+
       #region Setup dialogue threading classes ...
       public class SetupThread
       {
@@ -293,5 +343,493 @@ namespace ASCOM.Lunatic.Telescope
       public delegate void SetupCallback(bool? saveChanges);
       #endregion
 
+      #region Parking and Unparking ...
+      private void ParkScope()
+      {
+      }
+
+      private void ParkScopeAsync()
+      {
+      }
+
+      private void UnparkScope()
+      {
+         if (_Mount.EQ_GetMountStatus() == 1) {     // Make sure that we unpark only if the mount is online
+
+
+            if (ParkStatus == ParkStatus.Parked) {
+
+
+               // HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(178)
+
+
+
+               // Load Alignment if required
+
+
+               // Call AlignmentStarsUnpark
+
+
+
+               // Just make sure motors are not moving
+
+
+               // Call PEC_StopTracking
+
+               _Mount.EQ_MotorStop(AxisId.Both_Axes);
+
+
+
+               //            eqres = EQ_MotorStop(0)
+               //            eqres = EQ_MotorStop(1)
+
+
+
+
+               _Mount.EQ_SetMotorValues(AxisId.Axis1_RA, UnparkEncoderPosition[(int)AxisId.Axis1_RA]);
+               _Mount.EQ_SetMotorValues(AxisId.Axis2_DEC, UnparkEncoderPosition[(int)AxisId.Axis2_DEC]);
+
+
+               //  set status as unparked
+
+               // Set status as unparked 
+               ParkStatus = ParkStatus.Unparked;
+               // Persist the current Park status to disk
+               Settings.ParkStatus = ParkStatus;
+               SettingsProvider.Current.SaveSettings();
+            }
+         }
+         else {
+
+            // HC.Add_Message(oLangDll.GetLangString(5037))
+
+
+         }
+
+
+      }
+
+
+      private void UnparkScopeAsync()
+      {
+         var t = Task.Run(() => UnparkScope());
+         t.Wait();
+      }
+      #endregion
+
+
+      #region Moving and slewing ...
+      private void InternalMoveAxis(AxisId axis, double rate)
+      {
+         System.Diagnostics.Debug.WriteLine(string.Format("InternalMoveAxis({0}, {1})", axis, rate));
+         double j;
+         double currentRate;
+         bool moveRAAxisSlewing = false;
+         bool moveDecAxisSlewing = false;
+
+         if (rate != 0.0) {
+            // HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(189)
+         }
+
+         j = rate * 3600; // Convert to Arcseconds
+
+         if (axis == AxisId.Axis1_RA) {
+
+            if (rate == 0 && DeclinationRate == 0) {
+               // HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(178)
+            }
+
+
+
+            if (Hemisphere == HemisphereOption.Southern) {
+               j = -1 * j;
+               currentRate = RightAscensionRate * -1;
+            }
+            else {
+               currentRate = RightAscensionRate;
+            }
+
+
+            // check for change of direction
+            if ((currentRate * j) <= 0) {
+               StartRAByRate(j);
+            }
+            else {
+               ChangeRAByRate(j);
+            }
+
+
+            RightAscensionRate = j;
+
+
+
+            if (rate == 0) {
+               moveRAAxisSlewing = false;
+            }
+            else {
+               TrackingState = TrackingStatus.Custom;
+               moveRAAxisSlewing = true;
+            }
+         }
+
+
+         if (axis == AxisId.Axis2_DEC) {
+
+            if (rate == 0 && RightAscensionRate == 0) {
+               // HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(178)
+            }
+
+
+            // check for change of direction
+            if ((DeclinationRate * j) <= 0) {
+               StartDECByRate(j);
+            }
+            else {
+               ChangeDECByRate(j);
+            }
+
+
+            DeclinationRate = j;
+            if (rate == 0) {
+               moveDecAxisSlewing = false;
+            }
+            else {
+               TrackingState = TrackingStatus.Custom;
+               moveDecAxisSlewing = true;
+            }
+         }
+
+         _IsMoveAxisSlewing = (moveRAAxisSlewing || moveDecAxisSlewing);
+      }
+
+      private void StartRAByRate(double raRate)
+      {
+         System.Diagnostics.Debug.WriteLine(string.Format("StartRAByRate({0})", raRate));
+         double i;
+         double j;
+         MountSpeed mountSpeed = MountSpeed.LowSpeed;
+         int highSpeedRatio = 1;
+         i = Math.Abs(raRate);
+         int eqResult;
+
+         if (_MountVersion > 0x301) {
+            if (i > 1000) {
+               mountSpeed = MountSpeed.HighSpeed;
+               highSpeedRatio = _Mount.EQ_GetMountParameter(AxisId.Axis1_RA, 10003);
+            }
+         }
+         else {
+            if (i > 3000) {
+               mountSpeed = MountSpeed.HighSpeed;
+               highSpeedRatio = _Mount.EQ_GetMountParameter(AxisId.Axis1_RA, 10003);
+            }
+         }
+
+         // HC.Add_Message (oLangDll.GetLangString(117) & " " & str(m) & " , " & str(RA_RATE) & " arcsec/sec")
+
+         eqResult = _Mount.EQ_MotorStop(AxisId.Axis1_RA);          // Stop RA Motor
+         if (eqResult != Core.Constants.MOUNT_SUCCESS) {
+            return;
+         }
+
+         if (raRate == 0) {
+            _IsSlewing = false;
+            RAStatusSlew = false;
+            eqResult = _Mount.EQ_MotorStop(AxisId.Axis1_RA);
+            MoveAxisRate[0] = MountSpeed.LowSpeed;
+            return;
+         }
+
+         i = raRate;
+         j = Math.Abs(i);              // Get the absolute value for parameter passing
+         if (_MountVersion == 0x301) {
+            if ((j > 1350) && (j <= 3000)) {
+               if (j < 2175) {
+                  j = 1350;
+               }
+               else {
+                  j = 3001;
+                  mountSpeed = MountSpeed.HighSpeed;
+                  highSpeedRatio = _Mount.EQ_GetMountParameter(AxisId.Axis1_RA, 10003);
+               }
+            }
+         }
+
+
+         MoveAxisRate[0] = mountSpeed;    // Save Speed Settings
+
+         // HC.Add_FileMessage ("StartRARate=" & FormatNumber(RA_RATE, 5))
+         j = ((highSpeedRatio * LowSpeedSlewRate[0] / j) + 0.5) + 30000; // Compute for the rate
+
+         if (i >= 0) {
+            eqResult = _Mount.EQ_SetCustomTrackRate(AxisId.Axis1_RA, TrackMode.Initial, (int)j, mountSpeed, Hemisphere, AxisDirection.Forward);
+         }
+         else {
+            eqResult = _Mount.EQ_SetCustomTrackRate(AxisId.Axis1_RA, TrackMode.Initial, (int)j, mountSpeed, Hemisphere, AxisDirection.Reverse);
+         }
+
+      }
+
+      // Change RA motor rate based on an input rate of arcsec per Second
+
+      private void ChangeRAByRate(double raRate)
+      {
+         System.Diagnostics.Debug.WriteLine(string.Format("ChangeRAByRate({0})", raRate));
+
+         double j;
+         MountSpeed mountSpeed = MountSpeed.LowSpeed;
+         int highSpeedRatio;
+         AxisDirection dir;
+         int eqResult;
+         TrackMode init = TrackMode.Update;
+
+
+         if (raRate >= 0) {
+            dir = AxisDirection.Forward;
+         }
+         else {
+            dir = AxisDirection.Reverse;
+         }
+
+
+         if (raRate == 0) {
+            // rate = 0 so stop motors
+            _IsSlewing = false;
+            eqResult = _Mount.EQ_MotorStop(AxisId.Axis1_RA);
+            RAStatusSlew = false;
+            MoveAxisRate[0] = 0;
+            return;
+         }
+
+         highSpeedRatio = 1;   // Speed multiplier = 1
+         j = Math.Abs(raRate);
+
+
+
+         if (_MountVersion > 0x301) {
+            // if above high speed theshold
+            if (j > 1000) {
+               mountSpeed = MountSpeed.HighSpeed;               // HIGH SPEED
+               highSpeedRatio = _Mount.EQ_GetMountParameter(AxisId.Axis1_RA, 10003);  // GET HIGH SPEED MULTIPLIER
+            }
+         }
+         else {
+            // who knows what Mon is up to here - a special for his mount perhaps?
+            if (_MountVersion == 0x301) {
+               if ((j > 1350) && (j <= 3000)) {
+                  if (j < 2175) {
+                     j = 1350;
+                  }
+                  else {
+                     j = 3001;
+                     mountSpeed = MountSpeed.HighSpeed;
+                     highSpeedRatio = _Mount.EQ_GetMountParameter(AxisId.Axis1_RA, 10003);
+                  }
+               }
+            }
+            // if above high speed theshold
+            if (j > 3000) {
+               mountSpeed = MountSpeed.HighSpeed;          // HIGH SPEED
+               highSpeedRatio = _Mount.EQ_GetMountParameter(AxisId.Axis1_RA, 10003);  // GET HIGH SPEED MULTIPLIER
+            }
+         }
+
+
+         // HC.Add_FileMessage ("ChangeRARate=" & FormatNumber(rate, 5))
+
+         // if there// s a switch between high/low speed or if operating at high speed
+         // we ned to do additional initialisation
+         if (mountSpeed != MountSpeed.LowSpeed || mountSpeed != MoveAxisRate[0]) {
+            init = TrackMode.Initial;
+         }
+         if (init == TrackMode.Initial) {
+            // Stop Motor
+            // HC.Add_FileMessage ("Direction or High/Low speed change")
+            eqResult = _Mount.EQ_MotorStop(AxisId.Axis1_RA);
+            if (eqResult != Core.Constants.MOUNT_SUCCESS) {
+               return;
+            }
+
+         }
+         MoveAxisRate[0] = mountSpeed;
+
+         // Compute for the rate
+         j = ((highSpeedRatio * LowSpeedSlewRate[0] / j) + 0.5) + 30000;
+
+         eqResult = _Mount.EQ_SetCustomTrackRate(AxisId.Axis1_RA, init, (int)j, mountSpeed, Hemisphere, dir);
+         // HC.Add_FileMessage ("EQ_SetCustomTrackRate=0," & CStr(init) & "," & CStr(j) & "," & CStr(k) & "," & CStr(gHemisphere) & "," & CStr(dir))
+         // HC.Add_Message (oLangDll.GetLangString(117) & "=" & str(rate) & " arcsec/sec" & "," & CStr(eqres))
+      }
+
+
+      // Start DEC motor based on an input rate of arcsec per Second
+
+      private void StartDECByRate(double decRate)
+      {
+         System.Diagnostics.Debug.WriteLine(string.Format("StartDECByRate({0})", decRate));
+         double i;
+         double j;
+         MountSpeed mountSpeed = MountSpeed.LowSpeed;
+         int highSpeedRatio = 1;
+         i = Math.Abs(decRate);
+         int eqResult;
+
+
+         if (_MountVersion > 0x301) {
+            if (i > 1000) {
+               mountSpeed = MountSpeed.HighSpeed;
+               highSpeedRatio = _Mount.EQ_GetMountParameter(AxisId.Axis2_DEC, 10003);
+            }
+         }
+         else {
+            if (i > 3000) {
+               mountSpeed = MountSpeed.HighSpeed;
+               highSpeedRatio = _Mount.EQ_GetMountParameter(AxisId.Axis2_DEC, 10003);
+            }
+         }
+
+
+         // HC.Add_Message (oLangDll.GetLangString(118) & " " & str(m) & " , " & str(DEC_RATE) & " arcsec/sec")
+
+         eqResult = _Mount.EQ_MotorStop(AxisId.Axis2_DEC);          // Stop RA Motor
+         if (eqResult != Core.Constants.MOUNT_SUCCESS) {
+            return;
+         }
+
+         if (decRate == 0) {
+            _IsSlewing = false;
+            RAStatusSlew = false;
+            eqResult = _Mount.EQ_MotorStop(AxisId.Axis2_DEC);
+            MoveAxisRate[1] = MountSpeed.LowSpeed;
+            return;
+         }
+         i = decRate;
+         j = Math.Abs(i);              // Get the absolute value for parameter passing
+         if (_MountVersion == 0x301) {
+            if ((j > 1350) && (j <= 3000)) {
+               if (j < 2175) {
+                  j = 1350;
+               }
+               else {
+                  j = 3001;
+                  mountSpeed = MountSpeed.HighSpeed;
+                  highSpeedRatio = _Mount.EQ_GetMountParameter(AxisId.Axis2_DEC, 10003);
+               }
+            }
+         }
+
+         MoveAxisRate[1] = mountSpeed;      // Save Speed Settings
+
+         // HC.Add_FileMessage ("StartDecRate=" & FormatNumber(DEC_RATE, 5))
+         //    j = Int((m * 9325.46154 / j) + 0.5) + 30000 // Compute for the rate
+         j = ((highSpeedRatio * LowSpeedSlewRate[1] / j) + 0.5) + 30000; // Compute for the rate
+
+         if (i >= 0) {
+            eqResult = _Mount.EQ_SetCustomTrackRate(AxisId.Axis2_DEC, TrackMode.Initial, (int)j, mountSpeed, Hemisphere, AxisDirection.Forward);
+         }
+         else {
+            eqResult = _Mount.EQ_SetCustomTrackRate(AxisId.Axis2_DEC, TrackMode.Initial, (int)j, mountSpeed, Hemisphere, AxisDirection.Reverse);
+         }
+      }
+
+
+
+      // Change DEC motor rate based on an input rate of arcsec per Second
+
+      private void ChangeDECByRate(double decRate)
+      {
+
+         double j;
+         MountSpeed mountSpeed = MountSpeed.LowSpeed;
+         int highSpeedRatio = 1;
+         AxisDirection dir;
+         TrackMode init = TrackMode.Update;
+         int eqResult;
+
+
+         if (decRate >= 0) {
+            dir = AxisDirection.Forward;
+         }
+         else {
+            dir = AxisDirection.Forward;
+         }
+
+
+         if (decRate == 0) {
+            // rate = 0 so stop motors
+            _IsSlewing = false;
+            eqResult = _Mount.EQ_MotorStop(AxisId.Axis2_DEC);
+            //        gRAStatus_slew = False
+            MoveAxisRate[1] = MountSpeed.LowSpeed;
+            return;
+         }
+
+         j = Math.Abs(decRate);
+
+         if (_MountVersion > 0x301) {
+            // if above high speed theshold
+            if (j > 1000) {
+               mountSpeed = MountSpeed.HighSpeed;               // HIGH SPEED
+               highSpeedRatio = _Mount.EQ_GetMountParameter(AxisId.Axis2_DEC, 10003);  // GET HIGH SPEED MULTIPLIER
+            }
+         }
+         else {
+            // who knows what Mon is up to here - a special for his mount perhaps?
+            if (_MountVersion == 0x301) {
+               if ((j > 1350) && (j <= 3000)) {
+                  if (j < 2175) {
+                     j = 1350;
+                  }
+                  else {
+                     j = 3001;
+                     mountSpeed = MountSpeed.HighSpeed;
+                     highSpeedRatio = _Mount.EQ_GetMountParameter(AxisId.Axis2_DEC, 10003);
+                  }
+               }
+            }
+            // if above high speed theshold
+            if (j > 3000) {
+               mountSpeed = MountSpeed.HighSpeed;               // HIGH SPEED
+               highSpeedRatio = _Mount.EQ_GetMountParameter(AxisId.Axis2_DEC, 10003);  // GET HIGH SPEED MULTIPLIER
+            }
+         }
+
+
+         // HC.Add_FileMessage ("ChangeDECRate=" & FormatNumber(rate, 5))
+
+         // if there// s a switch between high/low speed or if operating at high speed
+         // we need to do additional initialisation
+         if (mountSpeed != MountSpeed.LowSpeed || mountSpeed != MoveAxisRate[1]) {
+            init = TrackMode.Initial;
+         }
+
+
+         if (init == TrackMode.Initial) {
+            // Stop Motor
+            // HC.Add_FileMessage ("Direction or High/Low speed change")
+            eqResult = _Mount.EQ_MotorStop(AxisId.Axis2_DEC);
+            if (eqResult != Core.Constants.MOUNT_SUCCESS) {
+               return;
+            }
+         }
+         MoveAxisRate[1] = mountSpeed;
+
+         // Compute for the rate
+         //    j = Int((m * 9325.46154 / j) + 0.5) + 30000
+         j = ((highSpeedRatio * LowSpeedSlewRate[1] / j) + 0.5) + 30000;
+
+         eqResult = _Mount.EQ_SetCustomTrackRate(AxisId.Axis2_DEC, init, (int)j, mountSpeed, Hemisphere, dir);
+         // HC.Add_FileMessage ("EQ_SetCustomTrackRate=1," & CStr(init) & "," & CStr(j) & "," & CStr(k) & "," & CStr(gHemisphere) & "," & CStr(dir))
+         // HC.Add_Message (oLangDll.GetLangString(118) & "=" & str(rate) & " arcsec/sec" & "," & CStr(eqres))
+
+      }
+
+      private void InternalStopAxis(AxisId axis)
+      {
+         _Mount.EQ_MotorStop(axis);
+      }
+
+      #endregion
    }
+
 }
