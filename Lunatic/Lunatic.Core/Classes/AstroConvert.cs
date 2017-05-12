@@ -119,6 +119,34 @@ namespace Lunatic.Core
          return ha;
       }
 
+
+
+      /// <summary>
+      /// Function that will ensure that the DEC value will be between -90 to 90
+      /// Even if it is set at the other side of the pier
+      /// </summary>
+      /// <param name="degrees"></param>
+      /// <returns></returns>
+      public static double RangeDEC(double degrees)
+      {
+
+         double result = degrees;
+         if (degrees >= 270.0 && degrees <= 360.0) {
+            result = degrees - 360.0;
+         }
+         else {
+            if (degrees >= 180.0 && degrees < 270.0) {
+               result = 180.0 - degrees;
+            }
+            else {
+               if (degrees >= 90.0 && degrees < 180.0) {
+                  result = 180.0 - degrees;
+               }
+            }
+         }
+         return result;
+      }
+
       /// <summary>
       /// Ensure the value lies between zero and the ceiling.
       /// </summary>
@@ -164,7 +192,7 @@ namespace Lunatic.Core
 
       #endregion
 
-      #region Axis positions ...
+      #region Axis positions (radians) ...
 
       /// <summary>
       /// Returns an hour value for a given axis position in Radians
@@ -186,10 +214,10 @@ namespace Lunatic.Core
             hours = ((zeroPosition - valuePosition) / Constants.TWO_PI) * 24;
          }
          if (hemisphere == HemisphereOption.Northern) {
-            hours = Range24(hours + 6.0);     // Set to true Hours which is perpendicular to RA Axis
+            hours = Range24(hours);
          }
          else {
-            hours = Range24((24.0 - hours) + 6.0);
+            hours = Range24(24.0 - hours);
          }
          return hours;
       }
@@ -330,6 +358,86 @@ namespace Lunatic.Core
       }
       #endregion
 
+      #region Axis positions (encoder steps) ...
+      public static double GetEncoderHours(int encoderZeroPos, int encoderValue, int stepsPer360, HemisphereOption hemisphere)
+      {
+         double result = 0.0;
+         // Compute in Hours the encoder value based on 0 position value (RAOffset0)
+         // and Total 360 degree rotation microstep count (Tot_Enc
+         if (encoderValue > encoderZeroPos) {
+            result = ((encoderValue - encoderZeroPos) / stepsPer360) * 24.0;
+            result = 24.0 - result;
+         }
+         else {
+            result = ((encoderZeroPos - encoderValue) / stepsPer360) * 24.0;
+         }
+         if (hemisphere == HemisphereOption.Northern) {
+            result = AstroConvert.Range24(result + 6.0);
+         }
+         else {
+            result = AstroConvert.Range24((24.0 - result) + 6.0);
+         }
+         return result;
+      }
+
+
+      //Public Function Get_EncoderfromHours(encOffset0 As Double, hourval As Double, Tot_enc As Double, hmspr As Long) As Long
+
+
+      //    hourval = Range24(hourval - 6#)         ' Re-normalize from a perpendicular position
+      //    If hmspr = 0 Then
+      //        If(hourval < 12) Then
+      //            Get_EncoderfromHours = encOffset0 - ((hourval / 24) * Tot_enc)
+      //        Else
+      //            Get_EncoderfromHours = (((24 - hourval) / 24) * Tot_enc) + encOffset0
+      //        End If
+      //    Else
+      //        If(hourval < 12) Then
+      //           Get_EncoderfromHours = ((hourval / 24) * Tot_enc) + encOffset0
+      //        Else
+      //            Get_EncoderfromHours = encOffset0 - (((24 - hourval) / 24) * Tot_enc)
+      //        End If
+      //    End If
+
+      //End Function
+
+      //Public Function Get_EncoderfromDegrees(encOffset0 As Double, degval As Double, Tot_enc As Double, Pier As Double, hmspr As Long) As Long
+
+      //    If hmspr = 1 Then degval = 360 - degval
+      //    If(degval > 180) And(Pier = 0) Then
+      //        Get_EncoderfromDegrees = encOffset0 - (((360 - degval) / 360) * Tot_enc)
+      //    Else
+      //        Get_EncoderfromDegrees = ((degval / 360) * Tot_enc) + encOffset0
+      //    End If
+
+      //End Function
+
+
+      public static double GetEncoderDegrees(int encoderZeroPos, int encoderValue, int stepsPer360, HemisphereOption hemisphere)
+      {
+         double result = 0.0;
+
+         //    Compute in Hours the encoder value based on 0 position value (EncOffset0)
+         //    and Total 360 degree rotation microstep count (Tot_Enc
+
+         if (encoderValue > encoderZeroPos) {
+            result = ((encoderValue - encoderZeroPos) / stepsPer360) * 360.0;
+         }
+         else {
+            result = ((encoderZeroPos - encoderValue) / stepsPer360) * 360.0;
+            result = 360.0 - result;
+         }
+
+         if (hemisphere == HemisphereOption.Northern) {
+            result = AstroConvert.Range360(result);
+         }
+         else {
+            result = AstroConvert.Range360(360.0 - result);
+         }
+         return result;
+      }
+      #endregion
+
       #region AA-HADEC ...
       static double lastLatitide;
       static double sinLatitude = 0.0;
@@ -375,7 +483,7 @@ namespace Lunatic.Core
       {
          double alt = 0.0;
          double az = 0.0;
-         aaha_aux(latitude.Radians, equatorial.RightAcension.Radians, equatorial.Declination.Radians, ref alt, ref az);
+         aaha_aux(latitude.Radians, equatorial.RightAscention.Radians, equatorial.Declination.Radians, ref alt, ref az);
          return new AltAzCoordinate(new Angle(alt, true), new Angle(az, true));
       }
 
@@ -440,175 +548,6 @@ namespace Lunatic.Core
 
          Bp = AstroConvert.Range(B, 2 * Math.PI);
       }
-      #endregion
-
-      #region Delta Sync stuff ...
-      public static double DeltaRAMap(double raAxisPosition)      // Delta_RA_MAP
-      {
-         throw new NotImplementedException();
-      }
-
-      public static double DeltaDECMap(double raAxisPosition)      // Delta_DEC_MAP
-      {
-         throw new NotImplementedException();
-      }
-
-      public static CarteseanCoordinate DeltaMatrixMap(double raAxisPosition, double decAxisPosition) // Delta_Matrix_Map
-      {
-         throw new NotImplementedException();
-      }
-
-      public static CarteseanCoordinate DeltaMatrixReverseMap(double raAxisPosition, double decAxisPosition) //Delta_Matrix_Reverse_Map
-      {
-         throw new NotImplementedException();
-      }
-
-      public static CarteseanCoordinate DeltaSyncMatrixMap(double raAxisPosition, double decAxisPosition)    // DeltaSync_Matrix_Map
-      {
-         throw new NotImplementedException();
-      }
-
-      public static CarteseanCoordinate DeltaSyncReverseMatrixMap(double raAxisPosition, double decAxisPosition)      // DeltaSyncReverse_Matrix_Map
-      {
-         throw new NotImplementedException();
-      }
-
-      //      Public Function Delta_Matrix_Map(ByVal RA As Double, ByVal DEC As Double) As Coordt
-      //Dim i As Integer
-      //Dim obtmp As Coord
-      //Dim obtmp2 As Coord
-
-      //    If(RA >= &H1000000) Or(DEC >= &H1000000) Then
-      //      Delta_Matrix_Map.X = RA
-      //      Delta_Matrix_Map.Y = DEC
-
-      //      Delta_Matrix_Map.z = 1
-
-      //      Delta_Matrix_Map.F = 0
-
-      //      Exit Function
-
-      //  End If
-
-
-      //  obtmp.X = RA
-
-      //  obtmp.Y = DEC
-
-      //  obtmp.z = 1
-
-      //    ' re transform based on the nearest 3 stars
-
-      //  i = EQ_UpdateTaki(RA, DEC)      // Find the nearest 3 points and they update the Taki transformation matrix
-
-
-      //  obtmp2 = EQ_plTaki(obtmp)
-
-
-      //  Delta_Matrix_Map.X = obtmp2.X
-
-      //  Delta_Matrix_Map.Y = obtmp2.Y
-
-      //  Delta_Matrix_Map.z = 1
-
-      //  Delta_Matrix_Map.F = i
-
-
-      //End Function
-
-
-      //Public Function Delta_Matrix_Reverse_Map(ByVal RA As Double, ByVal DEC As Double) As Coordt
-
-      //Dim i As Integer
-      //Dim obtmp As Coord
-      //Dim obtmp2 As Coord
-
-      //    If(RA >= &H1000000) Or(DEC >= &H1000000) Then
-      //      Delta_Matrix_Reverse_Map.X = RA
-      //      Delta_Matrix_Reverse_Map.Y = DEC
-
-      //      Delta_Matrix_Reverse_Map.z = 1
-
-      //      Delta_Matrix_Reverse_Map.F = 0
-
-      //      Exit Function
-
-      //  End If
-
-
-      //  obtmp.X = RA + gRASync01
-
-      //  obtmp.Y = DEC + gDECSync01
-
-      //  obtmp.z = 1
-
-      //    ' re transform using the 3 nearest stars
-
-      //  i = EQ_UpdateAffine(obtmp.X, obtmp.Y)    // Gets the nearest 3 points then uses these to generate the Affine transformation
-
-      //  obtmp2 = EQ_plAffine(obtmp)
-
-
-      //  Delta_Matrix_Reverse_Map.X = obtmp2.X
-
-      //  Delta_Matrix_Reverse_Map.Y = obtmp2.Y
-
-      //  Delta_Matrix_Reverse_Map.z = 1
-
-      //  Delta_Matrix_Reverse_Map.F = i
-
-
-      //  gSelectStar = 0
-
-
-      //End Function
-
-
-      //Public Function DeltaSync_Matrix_Map(ByVal RA As Double, ByVal DEC As Double) As Coordt
-      //Dim i As Long
-
-      //    If(RA >= &H1000000) Or(DEC >= &H1000000) Then GoTo HandleError
-
-      //  i = GetNearest(RA, DEC)
-      //    If i<> -1 Then
-      //        gSelectStar = i
-      //        DeltaSync_Matrix_Map.X = RA + (ct_Points(i).X - my_Points(i).X) + gRASync01
-      //        DeltaSync_Matrix_Map.Y = DEC + (ct_Points(i).Y - my_Points(i).Y) + gDECSync01
-      //        DeltaSync_Matrix_Map.z = 1
-      //        DeltaSync_Matrix_Map.F = 0
-      //    Else
-      //HandleError:
-      //        DeltaSync_Matrix_Map.X = RA
-      //        DeltaSync_Matrix_Map.Y = DEC
-      //        DeltaSync_Matrix_Map.z = 0
-      //        DeltaSync_Matrix_Map.F = 0
-      //    End If
-      //End Function
-
-
-      //Public Function DeltaSyncReverse_Matrix_Map(ByVal RA As Double, ByVal DEC As Double) As Coordt
-      //Dim i As Long
-
-      //    If(RA >= &H1000000) Or(DEC >= &H1000000) Or gAlignmentStars_count = 0 Then GoTo HandleError
-
-      //  i = GetNearest(RA, DEC)
-
-
-      //    If i<> -1 Then
-      //        gSelectStar = i
-      //        DeltaSyncReverse_Matrix_Map.X = RA - (ct_Points(i).X - my_Points(i).X)
-      //        DeltaSyncReverse_Matrix_Map.Y = DEC - (ct_Points(i).Y - my_Points(i).Y)
-      //        DeltaSyncReverse_Matrix_Map.z = 1
-      //        DeltaSyncReverse_Matrix_Map.F = 0
-      //    Else
-      //HandleError:
-      //        DeltaSyncReverse_Matrix_Map.X = RA
-      //        DeltaSyncReverse_Matrix_Map.Y = DEC
-      //        DeltaSyncReverse_Matrix_Map.z = 1
-      //        DeltaSyncReverse_Matrix_Map.F = 0
-      //    End If
-
-      //End Function
       #endregion
 
    }

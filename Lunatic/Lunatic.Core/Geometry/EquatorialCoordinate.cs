@@ -16,7 +16,7 @@ namespace Lunatic.Core.Geometry
       //private DateTime _ObservedWhen;
       //private Angle _Longitude;
 
-      public HourAngle RightAcension
+      public HourAngle RightAscention
       {
          get
          {
@@ -31,26 +31,26 @@ namespace Lunatic.Core.Geometry
          }
       }
 
-      public EquatorialCoordinate(double rightAcension, double declination)   // , double longitude, DateTime observedTime)
+      public EquatorialCoordinate(double rightAscention, double declination)   // , double longitude, DateTime observedTime)
       {
-         if (rightAcension < 0 || rightAcension > 24.0) { throw new ArgumentOutOfRangeException("Right Ascension must be between 0 and 24."); }
+         if (rightAscention < 0 || rightAscention > 24.0) { throw new ArgumentOutOfRangeException("Right Ascension must be between 0 and 24."); }
          if (declination < -90 || declination > 90) { throw new ArgumentOutOfRangeException("Declination must be between -90 and 90."); }
-         _RA = new HourAngle(rightAcension);
+         _RA = new HourAngle(rightAscention);
          _Dec = new Angle(declination);
          //_Longitude = new Angle(longitude);
          //_ObservedWhen = observedTime;
       }
 
-      //public EquatorialCoordinate(HourAngle rightAcension, Angle declination)    // , Angle longitude)
-      //   :this(rightAcension, declination, longitude, DateTime.Now)
+      //public EquatorialCoordinate(HourAngle rightAscention, Angle declination)    // , Angle longitude)
+      //   :this(rightAscention, declination, longitude, DateTime.Now)
       //{
       //}
 
-      public EquatorialCoordinate(HourAngle rightAcension, Angle declination)    // , Angle longitude, DateTime observedTime)
+      public EquatorialCoordinate(HourAngle rightAscention, Angle declination)    // , Angle longitude, DateTime observedTime)
       {
-         if (rightAcension.Value < 0 || rightAcension.Value > 24.0) { throw new ArgumentOutOfRangeException("Right Ascension must be between 0 and 24."); }
+         if (rightAscention.Value < 0 || rightAscention.Value > 24.0) { throw new ArgumentOutOfRangeException("Right Ascension must be between 0 and 24."); }
          if (declination.Value < -90 || declination.Value > 90) { throw new ArgumentOutOfRangeException("Declination must be between -90 and 90."); }
-         _RA = rightAcension;
+         _RA = rightAscention;
          _Dec = declination;
          //_Longitude = longitude;
          //_ObservedWhen = observedTime;
@@ -62,7 +62,7 @@ namespace Lunatic.Core.Geometry
       /// </summary>
       public static bool operator ==(EquatorialCoordinate pos1, EquatorialCoordinate pos2)
       {
-         return (pos1.RightAcension.Value == pos2.RightAcension.Value && pos1.Declination.Value == pos2.Declination.Value);
+         return (pos1.RightAscention.Value == pos2.RightAscention.Value && pos1.Declination.Value == pos2.Declination.Value);
       }
 
       public static bool operator !=(EquatorialCoordinate pos1, EquatorialCoordinate pos2)
@@ -90,12 +90,12 @@ namespace Lunatic.Core.Geometry
 
       public static EquatorialCoordinate operator -(EquatorialCoordinate pos1, EquatorialCoordinate pos2)
       {
-         return new EquatorialCoordinate(pos1.RightAcension - pos2.RightAcension, pos1.Declination - pos2.Declination);
+         return new EquatorialCoordinate(pos1.RightAscention - pos2.RightAscention, pos1.Declination - pos2.Declination);
       }
 
       public static EquatorialCoordinate operator +(EquatorialCoordinate pos1, EquatorialCoordinate pos2)
       {
-         return new EquatorialCoordinate(pos1.RightAcension + pos2.RightAcension, pos1.Declination + pos2.Declination);
+         return new EquatorialCoordinate(pos1.RightAscention + pos2.RightAscention, pos1.Declination + pos2.Declination);
       }
 
 
@@ -115,7 +115,7 @@ namespace Lunatic.Core.Geometry
             cartCoord = polar.ToCartesean();
          }
          else {
-            cartCoord = new CarteseanCoordinate(this.RightAcension.Radians, this.Declination.Radians, 1.0);
+            cartCoord = new CarteseanCoordinate(this.RightAscention.Radians, this.Declination.Radians, 1.0);
          }
          return cartCoord;
       }

@@ -10,6 +10,7 @@ using ASCOM.Lunatic.Telescope;
 using ASCOM.Lunatic.Telescope.Classes;
 using Lunatic.Core.Geometry;
 using Lunatic.SyntaController;
+using ASCOM.Astrometry.Transform;
 
 /// <summary>
 /// The ASCOM ITelescopeV3 implimentation for the driver.
@@ -134,7 +135,7 @@ namespace ASCOM.Lunatic.Telescope
 
          if (raRate == 0) {
             _IsSlewing = false;
-            RAStatusSlew = false;
+            RAAxisSlewing = false;
             eqResult = _Mount.EQ_MotorStop(AxisId.Axis1_RA);
             MoveAxisRate[0] = MountSpeed.LowSpeed;
             return;
@@ -196,7 +197,7 @@ namespace ASCOM.Lunatic.Telescope
             // rate = 0 so stop motors
             _IsSlewing = false;
             eqResult = _Mount.EQ_MotorStop(AxisId.Axis1_RA);
-            RAStatusSlew = false;
+            RAAxisSlewing = false;
             MoveAxisRate[0] = 0;
             return;
          }
@@ -298,7 +299,7 @@ namespace ASCOM.Lunatic.Telescope
 
          if (decRate == 0) {
             _IsSlewing = false;
-            RAStatusSlew = false;
+            RAAxisSlewing = false;
             eqResult = _Mount.EQ_MotorStop(AxisId.Axis2_DEC);
             MoveAxisRate[1] = MountSpeed.LowSpeed;
             return;
@@ -426,66 +427,98 @@ namespace ASCOM.Lunatic.Telescope
 
       #endregion
 
+      #region Emulated stuff ...
+      private double GetEmulatedRAAxisPosition()
+      {
+         double raIncrement = 0.0;
+         double elapsedTime;
+         double newRaAxisPosition;
+         if (Tracking) {
+            double currentTime = AstroConvert.LocalApparentSiderealTime(SiteLongitude);
+            if (EmulatorLastReadTime == 0) {
+               currentTime = 0.000002;
+            }
+            if (EmulatorAxisInitialPosition[RA_AXIS] == 0.0) {
+               EmulatorAxisInitialPosition[RA_AXIS] = EmulatorAxisPosition[RA_AXIS];
+            }
+            if (EmulatorLastReadTime > currentTime) {
+               elapsedTime = EmulatorLastReadTime - currentTime;
+            }
+            else {
+               // looped past 24H
+               elapsedTime = 24.0 - EmulatorLastReadTime + currentTime;
+            }
+            EmulatorLastReadTime = currentTime;
+            EmulatorAxisInitialPosition[RA_AXIS] = EmulatorAxisPosition[RA_AXIS];
+            raIncrement = Core.Constants.SIDEREAL_RATE_RADIANS * elapsedTime;
+         }
+         if (Hemisphere == HemisphereOption.Northern) {
+            newRaAxisPosition = AstroConvert.Range24(EmulatorAxisInitialPosition[RA_AXIS] + raIncrement);
+         }
+         else {
+            newRaAxisPosition = AstroConvert.Range24(EmulatorAxisInitialPosition[RA_AXIS] - raIncrement);
+         }
+         return newRaAxisPosition;
+      }
+
+      #endregion
+
       #region Tracking stuff ...
 
-      private void StopTracking() {
-         /*
-         gSlewStatus = False
+      private void StopTracking()
+      {
+         _IsSlewing = false;
 
-      If gEQparkstatus = 2 Then
-        ' we were slewing to park position
-        ' well its not happening now!
-        gEQparkstatus = 0
-        HC.ParkTimer.Enabled = False
-        HC.Frame15.Caption = oLangDll.GetLangString(146) & " " & oLangDll.GetLangString(179)
-        Call SetParkCaption
-    End If
-
-
-    If gPEC_Enabled Then
-       PEC_StopTracking
-    End If
+         if (ParkStatus == ParkStatus.Parking) {
+            // we were slewing to park position
+            // well its not happening now!
+            ParkStatus = ParkStatus.Unparked;
+            // HC.ParkTimer.Enabled = False
+            // HC.Frame15.Caption = oLangDll.GetLangString(146) & " " & oLangDll.GetLangString(179)
+            // Call SetParkCaption
+         }
 
 
-'    eqres = EQ_MotorStop(0)
-'    eqres = EQ_MotorStop(1)
-    eqres = EQ_MotorStop(2)
+         if (PECEnabled) {
+            PECStopTracking();
+         }
+
+         _Mount.EQ_MotorStop(AxisId.Both_Axes);
 
 
-    gRA_LastRate = 0
-'    Do
-'        eqres = EQ_GetMotorStatus(0)
-'        If (eqres = EQ_NOTINITIALIZED) Or (eqres = EQ_COMNOTOPEN) Or (eqres = EQ_COMTIMEOUT) Then GoTo STOPEND1
-'    Loop While (eqres And EQ_MOTORBUSY) <> 0
-'
-'STOPEND1:
-'    Do
-'        eqres = EQ_GetMotorStatus(1)
-'        If (eqres = EQ_NOTINITIALIZED) Or (eqres = EQ_COMNOTOPEN) Or (eqres = EQ_COMTIMEOUT) Then GoTo STOPEND2
-'    Loop While (eqres And EQ_MOTORBUSY) <> 0
-'
-'STOPEND2:
-    ' clear an active flips
-    HC.ChkForceFlip.Value = 0
-    gCWUP = False
-    gGotoParams.SuperSafeMode = 0
+         LastPECRate = 0;
+         //    Do
+         //        eqres = EQ_GetMotorStatus(0)
+         //        If (eqres = EQ_NOTINITIALIZED) Or (eqres = EQ_COMNOTOPEN) Or (eqres = EQ_COMTIMEOUT) Then GoTo STOPEND1
+         //    Loop While (eqres And EQ_MOTORBUSY) <> 0
+         //
+         //STOPEND1:
+         //    Do
+         //        eqres = EQ_GetMotorStatus(1)
+         //        If (eqres = EQ_NOTINITIALIZED) Or (eqres = EQ_COMNOTOPEN) Or (eqres = EQ_COMTIMEOUT) Then GoTo STOPEND2
+         //    Loop While (eqres And EQ_MOTORBUSY) <> 0
+         //
+         //STOPEND2:
+         // clear an active flips
+         // HC.ChkForceFlip.Value = 0
+         AllowCounterWeightUpSlewing = false;
+         GotoParameters.SuperSafeMode = false;
 
 
-    gRAStatus_slew = False
-    gTrackingStatus = 0
-    gDeclinationRate = 0
-    gRightAscensionRate = 0
-    HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(178)
-    HC.Add_Message(oLangDll.GetLangString(5130))
+         RAAxisSlewing = false;
+         TrackingState = TrackingStatus.Off;
+         _DeclinationRate = 0;
+         _RightAscensionRate = 0;
+         // HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(178)
+         //HC.Add_Message(oLangDll.GetLangString(5130))
 
 
-    gEmulNudge = False               ' Enable Emulation
-    gEmulOneShot = True              ' Get One shot cap
+         EmulatorNudge = false;                // Enable Emulation
+         EmulatorOneShot = true;              // Get One shot cap
 
 
-    EQ_Beep(7)
-*/
-}
+         // EQ_Beep(7)
+      }
 
       private void StartSiderealTracking(bool mute)
       {
@@ -593,6 +626,7 @@ namespace ASCOM.Lunatic.Telescope
 
       private void StartCustomTracking(bool mute)
       {
+
          LastPECRate = 0;
          if (ParkStatus != ParkStatus.Unparked) {
             // HC.Add_Message(oLangDll.GetLangString(5013))
@@ -605,22 +639,264 @@ namespace ASCOM.Lunatic.Telescope
          }
 
 
-         _Mount.EQ_StartRATrack(MountTracking.Solar, Hemisphere, (Hemisphere == HemisphereOption.Northern ? AxisDirection.Forward : AxisDirection.Reverse));
-         _Mount.EQ_MotorStop(AxisId.Axis2_DEC);
-         TrackingState = TrackingStatus.Solar;                 // Lunar rate tracking'
-         _TrackingRate = DriveRates.driveKing;                // Backing variable for ASCOM TrackingRate member.
-         _DeclinationRate = 0;
-         _RightAscensionRate = Core.Constants.SOLAR_RATE;
-
-         //HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(123)
-         //HC.Add_Message(oLangDll.GetLangString(5015))
          EmulatorNudge = false;               //  Enable Emulation
          if (!mute) {
-            // EQ_Beep(??)
+            // EQ_Beep(13)
          }
 
+         double[] rate = new double[2];
+         double i;
+         double j;
+
+
+         // On Error GoTo handlerr
+
+         if (CustomTrackDefinition == null) {
+
+            rate[0] = CustomTrackingRate[0];
+            rate[1] = CustomTrackingRate[1];
+            if (Hemisphere == HemisphereOption.Southern) {
+               rate[0] = -1 * rate[0];
+            }
+
+
+
+            if (Math.Abs(rate[0]) > 12000 || Math.Abs(rate[1]) > 12000) {
+               //   HC.Add_Message (oLangDll.GetLangString(5039))
+               StopTracking();
+               return;
+            }
+
+
+
+            // HC.Add_Message(oLangDll.GetLangString(5040) & Format$(str(i), "000.00") & " DEC:" & Format$(str(j), "000.00") &" arcsec/sec")
+
+            CustomMoveAxis(AxisId.Axis1_RA, rate[0], true, "Custom");
+            CustomMoveAxis(AxisId.Axis2_DEC, rate[1], true, "Custom");
+         }
+         else {
+            // custom track file is assigned
+            // TODO: Sort out custom track stuff
+            CustomTrackDefinition.TrackIdx = -1; // = GetTrackFileIdx(1, true);
+            if (CustomTrackDefinition.TrackIdx != -1) {
+               if (CustomTrackDefinition.IsWaypoint) {
+                  // Call GetTrackTarget(i, j)
+                  CustomTrackDefinition.RAAdjustment = Settings.CurrentMountPosition.Equatorial.RightAscention - rate[0];
+                  CustomTrackDefinition.DECAdjustment = Settings.CurrentMountPosition.Equatorial.Declination - rate[1];
+               }
+               else {
+                  CustomTrackDefinition.RAAdjustment = 0;
+                  CustomTrackDefinition.DECAdjustment = 0;
+               }
+               rate[0] = CustomTrackDefinition.TrackSchedule[CustomTrackDefinition.TrackIdx].RaRate;
+               rate[1] = CustomTrackDefinition.TrackSchedule[CustomTrackDefinition.TrackIdx].DecRate;
+               // HC.decCustom.Text = FormatNumber(j, 5)
+               if (Hemisphere == HemisphereOption.Southern) {
+                  // HC.raCustom.Text = FormatNumber(-1 * i, 5)
+               }
+               else {
+                  // HC.raCustom.Text = FormatNumber(i, 5)
+               }
+               CustomMoveAxis(AxisId.Axis1_RA, rate[0], true, Settings.CustomTrackName);
+               CustomMoveAxis(AxisId.Axis2_DEC, rate[1], true, Settings.CustomTrackName);
+            }
+
+            CustomTrackDefinition.TrackingChangesEnabled = true;
+            // HC.CustomTrackTimer.Enabled = True
+         }
+         return;
+
+
+
       }
+
+      private void CustomMoveAxis(AxisId axis, double rate, bool initialise, string rateName)
+      {
+      }
+
+
       #endregion
+
+      #region Delta Sync stuff ...
+      //private double DeltaRAMap(double raAxisPosition)      // Delta_RA_MAP
+      //{
+      //   return raAxisPosition + Settings.RA1Star + Settings.RASync01;
+      //}
+
+      //private double DeltaDECMap(double DecAxisPosition)      // Delta_DEC_MAP
+      //{
+      //   return DecAxisPosition + Settings.DEC1Star + Settings.DECSync01;
+      //}
+
+      private AxisPosition DeltaMap(AxisPosition originalAxisPosition)
+      {
+         return originalAxisPosition + Settings.InitialAxisAlignmentAdjustment + Settings.InitialAxisSyncAdjustment;
+      }
+
+      public static CarteseanCoordinate DeltaMatrixMap(double raAxisPosition, double decAxisPosition) // Delta_Matrix_Map
+      {
+         throw new NotImplementedException();
+      }
+
+      public AltAzCoordinate DeltaMatrixReverseMap(AltAzCoordinate targetAltAz) //Delta_Matrix_Reverse_Map
+      {
+         //Public Function Delta_Matrix_Reverse_Map(ByVal RA As Double, ByVal DEC As Double) As Coordt
+
+         //Dim i As Integer
+         //Dim obtmp As Coord
+         //Dim obtmp2 As Coord
+
+         //    If(RA >= &H1000000) Or(DEC >= &H1000000) Then
+         //      Delta_Matrix_Reverse_Map.X = RA
+         //      Delta_Matrix_Reverse_Map.Y = DEC
+
+         //      Delta_Matrix_Reverse_Map.z = 1
+
+         //      Delta_Matrix_Reverse_Map.F = 0
+
+         //      Exit Function
+
+         //  End If
+
+
+         //  obtmp.X = RA + gRASync01
+
+         //  obtmp.Y = DEC + gDECSync01
+
+         //  obtmp.z = 1
+
+         //    ' re transform using the 3 nearest stars
+
+         //  i = EQ_UpdateAffine(obtmp.X, obtmp.Y)    // Gets the nearest 3 points then uses these to generate the Affine transformation
+
+         //  obtmp2 = EQ_plAffine(obtmp)
+
+
+         //  Delta_Matrix_Reverse_Map.X = obtmp2.X
+
+         //  Delta_Matrix_Reverse_Map.Y = obtmp2.Y
+
+         //  Delta_Matrix_Reverse_Map.z = 1
+
+         //  Delta_Matrix_Reverse_Map.F = i
+
+
+         //  gSelectStar = 0
+
+
+         //End Function
+         throw new NotImplementedException();
+      }
+
+      /// <summary>
+      /// Return an AltAzCoordinate with adjustment based on the nearest available alignment point.
+      /// </summary>
+      /// <param name="targetAltAz"></param>
+      /// <returns></returns>
+      public AltAzCoordinate DeltaSyncMatrixMap(AltAzCoordinate targetAltAz)    // DeltaSync_Matrix_Map
+      {
+         AltAzCoordinate result = new AltAzCoordinate(targetAltAz.Altitude, targetAltAz.Azimuth);
+         SelectedAlignmentPoint = Settings.AlignmentPoints.GetNearestPoint(targetAltAz, Settings.AlignmentPointFilter);
+         if (SelectedAlignmentPoint != null) {
+            result = targetAltAz + (SelectedAlignmentPoint.TargetAltAz - SelectedAlignmentPoint.AlignedAltAz);
+         }
+         return result;
+      }
+
+      /// <summary>
+      /// Return an AltAzCoordinate with adjustment based on the nearest available alignment point.
+      /// </summary>
+      /// <param name="targetAltAz"></param>
+      /// <returns></returns>
+      public MountCoordinate DeltaSyncMatrixMap(MountCoordinate original, Transform transform, double localJulianTimeUTC)    // DeltaSync_Matrix_Map
+      {
+         MountCoordinate result = original;
+         SelectedAlignmentPoint = Settings.AlignmentPoints.GetNearestPoint(original.AltAzimuth, Settings.AlignmentPointFilter);
+         if (SelectedAlignmentPoint != null) {
+            AltAzCoordinate adjustedAltAz = original.AltAzimuth + (SelectedAlignmentPoint.TargetAltAz - SelectedAlignmentPoint.AlignedAltAz);
+            result = new MountCoordinate(adjustedAltAz, transform, localJulianTimeUTC);
+         }
+         return result;
+      }
+
+      public static AltAzCoordinate DeltaSyncReverseMatrixMap(double raAxisPosition, double decAxisPosition)      // DeltaSyncReverse_Matrix_Map
+      {
+         throw new NotImplementedException();
+      }
+
+      //      Public Function Delta_Matrix_Map(ByVal RA As Double, ByVal DEC As Double) As Coordt
+      //Dim i As Integer
+      //Dim obtmp As Coord
+      //Dim obtmp2 As Coord
+
+      //    If(RA >= &H1000000) Or(DEC >= &H1000000) Then
+      //      Delta_Matrix_Map.X = RA
+      //      Delta_Matrix_Map.Y = DEC
+
+      //      Delta_Matrix_Map.z = 1
+
+      //      Delta_Matrix_Map.F = 0
+
+      //      Exit Function
+
+      //  End If
+
+
+      //  obtmp.X = RA
+
+      //  obtmp.Y = DEC
+
+      //  obtmp.z = 1
+
+      //    ' re transform based on the nearest 3 stars
+
+      //  i = EQ_UpdateTaki(RA, DEC)      // Find the nearest 3 points and they update the Taki transformation matrix
+
+
+      //  obtmp2 = EQ_plTaki(obtmp)
+
+
+      //  Delta_Matrix_Map.X = obtmp2.X
+
+      //  Delta_Matrix_Map.Y = obtmp2.Y
+
+      //  Delta_Matrix_Map.z = 1
+
+      //  Delta_Matrix_Map.F = i
+
+
+      //End Function
+
+
+
+
+
+
+      //Public Function DeltaSyncReverse_Matrix_Map(ByVal RA As Double, ByVal DEC As Double) As Coordt
+      //Dim i As Long
+
+      //    If(RA >= &H1000000) Or(DEC >= &H1000000) Or gAlignmentStars_count = 0 Then GoTo HandleError
+
+      //  i = GetNearest(RA, DEC)
+
+
+      //    If i<> -1 Then
+      //        gSelectStar = i
+      //        DeltaSyncReverse_Matrix_Map.X = RA - (ct_Points(i).X - my_Points(i).X)
+      //        DeltaSyncReverse_Matrix_Map.Y = DEC - (ct_Points(i).Y - my_Points(i).Y)
+      //        DeltaSyncReverse_Matrix_Map.z = 1
+      //        DeltaSyncReverse_Matrix_Map.F = 0
+      //    Else
+      //HandleError:
+      //        DeltaSyncReverse_Matrix_Map.X = RA
+      //        DeltaSyncReverse_Matrix_Map.Y = DEC
+      //        DeltaSyncReverse_Matrix_Map.z = 1
+      //        DeltaSyncReverse_Matrix_Map.F = 0
+      //    End If
+
+      //End Function
+      #endregion
+
 
    }
 }

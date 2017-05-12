@@ -28,6 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documents", "Documents", "{
 		Documents\NOVAS_C3.1_Guide.pdf = Documents\NOVAS_C3.1_Guide.pdf
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LunaticTestConsole", "LunaticTestConsole\LunaticTestConsole.csproj", "{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -110,11 +112,24 @@ Global
 		{09B43D5F-A8FF-47A8-B31B-D66C0418EC00}.Release|x64.Build.0 = Release|Any CPU
 		{09B43D5F-A8FF-47A8-B31B-D66C0418EC00}.Release|x86.ActiveCfg = Release|Any CPU
 		{09B43D5F-A8FF-47A8-B31B-D66C0418EC00}.Release|x86.Build.0 = Release|Any CPU
+		{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0}.Debug|x64.Build.0 = Debug|Any CPU
+		{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0}.Debug|x86.Build.0 = Debug|Any CPU
+		{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0}.Release|x64.ActiveCfg = Release|Any CPU
+		{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0}.Release|x64.Build.0 = Release|Any CPU
+		{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0}.Release|x86.ActiveCfg = Release|Any CPU
+		{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{09B43D5F-A8FF-47A8-B31B-D66C0418EC00} = {0CF99B5A-BFEF-4670-9C83-CD6F7E2387C8}
+		{3E1AFBD4-8251-4A82-8BD0-DF6084BAB9D0} = {0CF99B5A-BFEF-4670-9C83-CD6F7E2387C8}
 	EndGlobalSection
 EndGlobal

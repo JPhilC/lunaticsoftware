@@ -23,18 +23,16 @@ namespace Lunatic.Core.Tests
             transform.SiteLatitude = new Angle("52°40'6.38\"");
             transform.SiteLongitude = longitude;
             transform.SiteElevation = 175.5;
-            transform.JulianDateUTC = util.DateLocalToJulian(testTime);
-
             MountCoordinate deneb = new MountCoordinate("+20h42m1.78s", "+45°20'40.6\"");
-            deneb.ObservedAltAzimuth = new AltAzCoordinate("+82°39'42.0\"", "+183°53'10.5\"");
-            AltAzCoordinate suggestedAltAz = deneb.GetAltAzimuth(transform);
+            deneb.AltAzimuth = new AltAzCoordinate("+82°39'42.0\"", "+183°53'10.5\"");
+            AltAzCoordinate suggestedAltAz = deneb.GetAltAzimuth(transform, util.DateLocalToJulian(testTime));
 
             System.Diagnostics.Debug.WriteLine(string.Format("{0} (Suggested), Expecting {1}",
                suggestedAltAz,
-               deneb.ObservedAltAzimuth));
+               deneb.AltAzimuth));
             double tolerance = 5.0 / 3600; // 5 seconds.
-            bool testResult = ((Math.Abs(suggestedAltAz.Altitude.Value-deneb.ObservedAltAzimuth.Altitude.Value) < tolerance) 
-                  && (Math.Abs(suggestedAltAz.Azimuth.Value - deneb.ObservedAltAzimuth.Azimuth.Value) < tolerance));
+            bool testResult = ((Math.Abs(suggestedAltAz.Altitude.Value-deneb.AltAzimuth.Altitude.Value) < tolerance) 
+                  && (Math.Abs(suggestedAltAz.Azimuth.Value - deneb.AltAzimuth.Azimuth.Value) < tolerance));
             Assert.IsTrue(testResult);
          }
       }

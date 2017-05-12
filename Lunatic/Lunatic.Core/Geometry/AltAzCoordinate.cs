@@ -16,6 +16,7 @@ namespace Lunatic.Core.Geometry
       private Angle _Az;
       private double _X;
       private double _Y;
+      private bool _Flag;
       public const double ALT_OFFSET = 180;  // Used to allow us to encode altitudes of when determing equivalent cartesean coordinates.
 
       public Angle Altitude
@@ -59,6 +60,21 @@ namespace Lunatic.Core.Geometry
          }
       }
 
+      /// <summary>
+      /// A flag to single a true of false.
+      /// </summary>
+      public bool Flag
+      {
+         get
+         {
+            return _Flag;
+         }
+         set
+         {
+            _Flag = value;
+         }
+      }
+
       public AltAzCoordinate(string altitude, string azimuth)
       {
 
@@ -66,6 +82,7 @@ namespace Lunatic.Core.Geometry
          _Az = new Angle(azimuth);
          _X = Math.Cos(_Az.Radians) * (_Alt + ALT_OFFSET);
          _Y = Math.Sin(_Az.Radians) * (_Alt + ALT_OFFSET);
+         _Flag = false;
       }
       public AltAzCoordinate(double altitude,double azimuth)
       {
@@ -79,6 +96,7 @@ namespace Lunatic.Core.Geometry
          _Az = new Angle(azimuth);
          _X = Math.Cos(_Az.Radians) * (_Alt + ALT_OFFSET);
          _Y = Math.Sin(_Az.Radians) * (_Alt + ALT_OFFSET);
+         _Flag = false;
       }
 
       public AltAzCoordinate(Angle altitude, Angle azimuth)
@@ -93,6 +111,7 @@ namespace Lunatic.Core.Geometry
          _Az = azimuth;
          _X = Math.Cos(_Az.Radians) * (_Alt + ALT_OFFSET);
          _Y = Math.Sin(_Az.Radians) * (_Alt + ALT_OFFSET);
+         _Flag = false;
       }
 
       /// <summary>

@@ -7,19 +7,11 @@ using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 using System.Collections;
 using System.Collections.Generic;
 using Lunatic.SyntaController;
+using Lunatic.Core.Classes;
+using Lunatic.Core.Geometry;
 
 namespace ASCOM.Lunatic.Telescope
 {
-
-   /// <summary>
-   /// Class for alignment data
-   /// </summary>
-   public class AlignmentData : DataObjectBase
-   {
-      public double CatalogAxisPosition { get; set; }
-      public double ObservedAxisPosition { get; set; }
-      public DateTime AlignmentTime { get; set; }
-   }
 
    public class DevelopmentOptions : DataObjectBase
    {
@@ -67,6 +59,12 @@ namespace ASCOM.Lunatic.Telescope
 
    public class Settings : DataObjectBase
    {
+      /// <summary>
+      /// The encoder timer interval in milliseconds. Controls
+      /// how ofen the mount is queried for it's current position.
+      /// </summary>
+      public int EncoderTimerInterval { get; set; }
+
       //CUSTOM_MOUNT=0
       public CustomMount CustomMount { get; set; }
       public MountOptions MountOption { get; set; }
@@ -138,28 +136,25 @@ namespace ASCOM.Lunatic.Telescope
          }
       }
 
+      public AxisPosition AxisUnparkPosition { get; set; }
+
+
+      [Obsolete("Use AxisUnparkPosition")]
       public int RAEncoderUnparkPosition { get; set; }
+      [Obsolete("Use AxisUnparkPosition")]
       public int DECEncoderUnparkPosition { get; set; }
 
+      public AxisPosition AxisParkPosition { get; set; }
+
+      [Obsolete("Use AxisParkPosition")]
       public int RAEncoderParkPosition { get; set; }
+      [Obsolete("Use AxisParkPosition")]
       public int DECEncoderParkPosition { get; set; }
 
       public AutoguiderPortRate RAAutoGuiderPortRate { get; set; }
       public AutoguiderPortRate DECAutoGuiderPortRate { get; set; }
 
-
-      private bool _IsSlewing;
-      public bool IsSlewing
-      {
-         get
-         {
-            return _IsSlewing;
-         }
-         set
-         {
-            Set<bool>(ref _IsSlewing, value);
-         }
-      }
+      public bool CheckRASync { get; set; }
 
       // gAscomCompatibility.AllowPulseGuide
       public PulseGuidingOption PulseGuidingMode { get; set; }
@@ -172,36 +167,55 @@ namespace ASCOM.Lunatic.Telescope
 
       public bool DisableSyncLimit { get; set; }
 
+
+
+      public MountCoordinate CurrentMountPosition { get; set; }
       /// <summary>
       /// The RA Axis position in Radians
       /// </summary>
+      [Obsolete("Use CurrentMountPosition instead")]
       public double RAAxisPosition { get; set; }
 
       /// <summary>
       /// The DEC Axis position in Radians
       /// </summary>
+      [Obsolete("Use CurrentMountPosition instead")]
       public double DECAxisPosition { get; set; }
 
       /// <summary>
-      /// Initial RA sync adjustment (radians)
+      /// Initial RA sync adjustment (Radians)
       /// </summary>
+      [Obsolete("Use InitialAxisSyncAdjustment instead")]
       public double RASync01 { get; set; }
 
       /// <summary>
-      /// Initial DEC sync adjustment (radians)
+      /// Initial DEC sync adjustment (Radians)
       /// </summary>
+      [Obsolete("Use InitialAxisSyncAdjustment instead")]
       public double DECSync01 { get; set; }
 
+
       /// <summary>
-      /// Initial RA Alignment adjustment (radians)
+      /// Initial sync adjustment (Radians)
       /// </summary>
+      public AxisPosition InitialAxisSyncAdjustment { get; set; }
+
+      /// <summary>
+      /// Initial RA Alignment adjustment (Radians)
+      /// </summary>
+      [Obsolete("Use InitialAxisAlignmentAdjustment instead")]
       public double RA1Star { get; set; }
 
       /// <summary>
-      /// Initial DEC Alignment adjustment (radians)
+      /// Initial DEC Alignment adjustment (Radians)
       /// </summary>
+      [Obsolete("Use InitialAxisAlignmentAdjustment instead")]
       public double DEC1Star { get; set; }
 
+      /// <summary>
+      /// Initial alignment adjustment
+      /// </summary>
+      public AxisPosition InitialAxisAlignmentAdjustment { get; set; }
       /// <summary>
       /// Max Sync Diff (EQ_MAXSYNC)
       /// </summary>
@@ -211,13 +225,17 @@ namespace ASCOM.Lunatic.Telescope
       /// <summary>
       /// Total Common RA-Encoder Steps
       /// </summary>
-      public double Tot_step { get; set; }
+      public int Tot_step { get; set; }
 
       public bool EmulOneShot { get; set; }
 
-      public List<AlignmentData> AlignmentStars { get; set; }
+      public bool CommsErrorStop { get; set; }
+
+      public AlignmentPointCollection AlignmentPoints { get; set; }
 
       public bool SaveAlignmentStarsOnAppend { get; set; }
+
+      public PointFilterOption AlignmentPointFilter { get; set; }
 
       public bool UseAffineTakiAndPolar { get; set; }    // Formally HC.PolarEnable
 
@@ -229,10 +247,12 @@ namespace ASCOM.Lunatic.Telescope
 
       public bool TrackUsingPEC { get; set; }            // Track using PEC (HC.CheckPEC.Value)
 
+      public string CustomTrackName { get; set; }
+
       public Settings()
       {
          this.AscomCompliance = new AscomCompliance();
-         this.AlignmentStars = new List<AlignmentData>();
+         this.AlignmentPoints = new AlignmentPointCollection();
          this.DevelopmentOptions = new DevelopmentOptions();
          SetDefaults();
       }
@@ -244,6 +264,9 @@ namespace ASCOM.Lunatic.Telescope
          this.DevelopmentOptions.MaximumSlewCount = 5;
          this.DevelopmentOptions.GotoResolution = 20;
          this.DevelopmentOptions.GotoRACompensation = 40;
+         this.EncoderTimerInterval = 200; // Default to 200 milliseconds.
+         // Default the current mount position to NCP from Greenwich Observatory (as good as anywhere).
+         this.CurrentMountPosition = new MountCoordinate(new AltAzCoordinate(51.4769, 0.0));
       }
    }
 }

@@ -43,7 +43,7 @@ namespace Lunatic.Core.Geometry
          foreach (MountCoordinate mc in coordinates) {
             AltAzCoordinate suggestedAltAzimuth = mc.GetAltAzimuth(transform);
             _from[i] = new double[2] { suggestedAltAzimuth.X, suggestedAltAzimuth.Y };
-            _to[i] = new double[2] { mc.ObservedAltAzimuth.X, mc.ObservedAltAzimuth.Y };
+            _to[i] = new double[2] { mc.AltAzimuth.X, mc.AltAzimuth.Y };
             i++;
          }
          if (!GenerateTransformationMatrix()) {

@@ -56,13 +56,13 @@ namespace Lunatic.Core.Tests
       public void AffineAltAzXY()
       {
          MountCoordinate mirphac = new MountCoordinate("3h25m34.77s", "49°55'12.0\"");
-         mirphac.ObservedAltAzimuth = AltAzCoordinate.FromCartesean(166.35854122, 117.31180100);
+         mirphac.AltAzimuth = AltAzCoordinate.FromCartesean(166.35854122, 117.31180100);
          MountCoordinate almaak = new MountCoordinate("2h04m58.83s", "42°24'41.1\"");
-         almaak.ObservedAltAzimuth = AltAzCoordinate.FromCartesean(128.55624013, 167.82625637);
+         almaak.AltAzimuth = AltAzCoordinate.FromCartesean(128.55624013, 167.82625637);
          MountCoordinate ruchbah = new MountCoordinate("1h26m58.39s", "60°19'33.3\"");
-         ruchbah.ObservedAltAzimuth = AltAzCoordinate.FromCartesean(173.53560437, 141.50092003);
+         ruchbah.AltAzimuth = AltAzCoordinate.FromCartesean(173.53560437, 141.50092003);
          MountCoordinate gper = new MountCoordinate("2h03m28.89s", "54°34'10.9\"");
-         gper.ObservedAltAzimuth = AltAzCoordinate.FromCartesean(161.76649179, 145.00573319);
+         gper.AltAzimuth = AltAzCoordinate.FromCartesean(161.76649179, 145.00573319);
 
          // Create a list of observed catalog Mount Coordinates and initialise the solver.
          List<MountCoordinate> coordinates = new List<MountCoordinate>() {
@@ -88,7 +88,7 @@ namespace Lunatic.Core.Tests
             System.Diagnostics.Debug.WriteLine("Reverse test the initialisation set.");
             foreach (MountCoordinate mc in coordinates) {
                sugPosition = mc.GetAltAzimuth(transform);
-               obsPosition = mc.ObservedAltAzimuth;
+               obsPosition = mc.AltAzimuth;
                newPosition = affineSolver.Transform(sugPosition);
                System.Diagnostics.Debug.WriteLine("({0},{1}) => ({2},{3}) ~= ({4},{5})",
                   sugPosition.X,
@@ -104,7 +104,7 @@ namespace Lunatic.Core.Tests
             // Now test gPer which was not included in the initialisation set.
             System.Diagnostics.Debug.WriteLine("Test contained point.");
             sugPosition = gper.GetAltAzimuth(transform);
-            obsPosition = gper.ObservedAltAzimuth;
+            obsPosition = gper.AltAzimuth;
             newPosition = affineSolver.Transform(sugPosition);
             System.Diagnostics.Debug.WriteLine("({0},{1}) => ({2},{3}) ~= ({4},{5})",
                sugPosition.X,
@@ -123,13 +123,13 @@ namespace Lunatic.Core.Tests
       public void AffineAltAz()
       {
          MountCoordinate mirphac = new MountCoordinate("3h25m34.77s", "49°55'12.0\"");
-         mirphac.ObservedAltAzimuth = AltAzCoordinate.FromCartesean(166.35854122, 117.31180100);
+         mirphac.AltAzimuth = AltAzCoordinate.FromCartesean(166.35854122, 117.31180100);
          MountCoordinate almaak = new MountCoordinate("2h04m58.83s", "42°24'41.1\"");
-         almaak.ObservedAltAzimuth = AltAzCoordinate.FromCartesean(128.55624013, 167.82625637);
+         almaak.AltAzimuth = AltAzCoordinate.FromCartesean(128.55624013, 167.82625637);
          MountCoordinate ruchbah = new MountCoordinate("1h26m58.39s", "60°19'33.3\"");
-         ruchbah.ObservedAltAzimuth = AltAzCoordinate.FromCartesean(173.53560437, 141.50092003);
+         ruchbah.AltAzimuth = AltAzCoordinate.FromCartesean(173.53560437, 141.50092003);
          MountCoordinate gper = new MountCoordinate("2h03m28.89s", "54°34'10.9\"");
-         gper.ObservedAltAzimuth = AltAzCoordinate.FromCartesean(161.76649179, 145.00573319);
+         gper.AltAzimuth = AltAzCoordinate.FromCartesean(161.76649179, 145.00573319);
 
          // Create a list of observed catalog Mount Coordinates and initialise the solver.
          List<MountCoordinate> coordinates = new List<MountCoordinate>() {
@@ -156,7 +156,7 @@ namespace Lunatic.Core.Tests
             System.Diagnostics.Debug.WriteLine("Reverse test the initialisation set.");
             foreach (MountCoordinate mc in coordinates) {
                sugPosition = mc.GetAltAzimuth(transform);
-               obsPosition = mc.ObservedAltAzimuth;
+               obsPosition = mc.AltAzimuth;
                newPosition = affineSolver.Transform(sugPosition);
                System.Diagnostics.Debug.WriteLine("({0}) => ({1}) ~= ({2})",
                   sugPosition,
@@ -169,7 +169,7 @@ namespace Lunatic.Core.Tests
             // Now test gPer which was not included in the initialisation set.
             System.Diagnostics.Debug.WriteLine("Test contained point.");
             sugPosition = gper.GetAltAzimuth(transform);
-            obsPosition = gper.ObservedAltAzimuth;
+            obsPosition = gper.AltAzimuth;
             newPosition = affineSolver.Transform(sugPosition);
             System.Diagnostics.Debug.WriteLine("({0}) => ({1}) ~= ({2})",
                sugPosition,
@@ -215,7 +215,7 @@ namespace Lunatic.Core.Tests
       //         System.Diagnostics.Debug.WriteLine("(Catalog {0}:  Observed {1} -> AxisPositions ({2},{3})",
       //            mc.Equatorial,
       //            eqPosition,
-      //            AstroConvert.HrsToRad(eqPosition.RightAcension),
+      //            AstroConvert.HrsToRad(eqPosition.RightAscention),
       //            AstroConvert.DegToRad(eqPosition.Declination));
       //      }
       //   }

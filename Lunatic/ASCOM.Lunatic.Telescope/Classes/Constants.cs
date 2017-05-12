@@ -27,11 +27,6 @@ namespace ASCOM.Lunatic.Telescope
 {
    public static class Constants
    {
-      public const double EMUL_RATE = 20.98;                      //  0.2 * 9024000/( (23*60*60)+(56*60)+4)
-                                                                  // 0.2 = 200ms
-      public const double EMUL_RATE2 = 104.730403903004;          // (9024000/86164.0905)
-                                                                  // 104.73040390300411747513310083625
-
       public const double ARCSECSTEP = 0.144;                     // .144 arcesconds / step
 
       // Iterative GOTO Constants

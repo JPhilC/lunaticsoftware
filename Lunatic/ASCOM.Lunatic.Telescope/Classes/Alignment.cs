@@ -1,4 +1,5 @@
 ﻿using Lunatic.Core;
+using Lunatic.Core.Classes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +38,7 @@ namespace ASCOM.Lunatic.Telescope.Classes
          //Dim EDec As Long
          //Dim RA_Hours As Double
          //Dim flipped As Boolean
-         int alignmentStarCount;
+         int alignmentPointCount;
          int i;
          int count;
          double eRA;
@@ -53,15 +54,10 @@ namespace ASCOM.Lunatic.Telescope.Classes
          //        EQ_NPointAppend = False
          //        Exit Function
          //    End If
-         if (settings.IsSlewing) {
-            //TODO:        HC.Add_Message(oLangDll.GetLangString(5027))
-            result = false;
-            return result;
-         }
 
          //TODO:    HC.EncoderTimer.Enabled = False
 
-         alignmentStarCount = settings.AlignmentStars.Count() + 1;
+         alignmentPointCount = settings.AlignmentPoints.Count() + 1;
 
          //    ' build alignment record
          eRA = SharedResources.Controller.MCGetAxisPosition(AxisId.Axis1_RA);  // EQGetMotorValues(0)

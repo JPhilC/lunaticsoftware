@@ -102,6 +102,9 @@ namespace Lunatic.SyntaController
       private const int EQMOUNT = 1;         // EQG Protocol 
       private const int AUTO_DETECT = 0;     // Detected Current Mount
 
+      private const int RA_AXIS = 0;
+      private const int DEC_AXIS = 1;
+      private const int BOTH_AXIS = 2;
       private const int RA_AUX_ENCODER = 3;
       private const int DEC_AUX_ENCODER = 4;
 
@@ -459,13 +462,13 @@ namespace Lunatic.SyntaController
                   // F
                   // interpeted as 0x00EFCDAB so 
                   //		PEC training in progress	= 0x00000010
-                  //		PEC on						= 0x00000020
-                  //		Dual Encoder				= 0x00000001
-                  //		PPEC						= 0x00000002
-                  //		Home Sensor					= 0x00000004
-                  //		EQ/AZ						= 0x00000008
+                  //		PEC on						   = 0x00000020
+                  //		Dual Encoder				   = 0x00000001
+                  //		PPEC						      = 0x00000002
+                  //		Home Sensor					   = 0x00000004
+                  //		EQ/AZ						      = 0x00000008
                   //		Polar Scope LED				= 0x00001000
-                  //		Independent Axes			= 0x00002000
+                  //		Independent Axes			   = 0x00002000
                   //		Half Current Tracking		= 0x00004000
                   //		Wireless Module				= 0x00008000
 
@@ -503,8 +506,6 @@ namespace Lunatic.SyntaController
                else {
                   result = Constants.MOUNT_COMCONNECTED;
                }
-
-               Interlocked.Increment(ref openConnections);
             }
             catch {
                result = Constants.MOUNT_COMERROR;

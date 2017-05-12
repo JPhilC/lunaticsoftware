@@ -10,6 +10,7 @@ using ASCOM.Lunatic.Telescope;
 using ASCOM.Lunatic.Telescope.Classes;
 using Lunatic.Core.Geometry;
 using Lunatic.SyntaController;
+using Lunatic.Core.Classes;
 
 /// <summary>
 /// The ASCOM ITelescopeV3 implimentation for the driver.
@@ -19,18 +20,49 @@ namespace ASCOM.Lunatic.Telescope
    partial class Telescope
    {
       #region Private members ...
-      private double[] EncoderHomePosition = new double[2];
-      private double[] EncoderZeroPosition = new double[2] { 0x800000, 0x800000 };  // Constants for zero Encoder positions.
+      /// <summary>
+      /// DEC HomePos - Varies with different mounts
+      /// </summary>
+      AxisPosition AxisHomePosition;
+      /// <summary>
+      /// 
+      /// </summary>
+      AxisPosition AxisZeroPosition;  // Constants for zero Encoder positions.
+      /// <summary>
+      /// Current polled positions (Radians)
+      /// </summary>
+      private AxisPosition CurrentAxisPosition;             // 
       private MountSpeed[] MoveAxisRate = new MountSpeed[2] { MountSpeed.LowSpeed, MountSpeed.LowSpeed };
+      private double[] LastGotoTarget = new double[2] { 0.0, 0.0 };
+      private int[] PulseDuration = new int[2] { 0, 0 };
+      private bool ProcessingPulseTimerTick = false;
+
+
+
+
       private int[] TotalStepsPer360 = new int[2];
       private double[] RateAdjustment = new double[2] { 0.0, 0.0 };                 // Rate adjustment (RA and DEC)
       private double MeridianWest;
       private double MeridianEast;
       private double MaximumSyncDifference;
 
-      private int[] EmulatorEncoderPosition = new int[2] { 0, 0 };
+      private int[] MotorStatus = new int[2] { 0, 0 };
+
+      /// <summary>
+      /// Radians
+      /// </summary>
+      private AxisPosition EmulatorAxisPosition;
+      /// <summary>
+      /// Radians
+      /// </summary>
+      private AxisPosition EmulatorAxisInitialPosition;
+
       private bool EmulatorOneShot;
       private bool EmulatorNudge;
+      private double EmulatorLastReadTime;
+      private double EmulatorRaRate;
+
+      private AlignmentPoint SelectedAlignmentPoint = null;
 
       #endregion
 
@@ -202,25 +234,6 @@ namespace ASCOM.Lunatic.Telescope
       }
 
       /// <summary>
-      /// Dispose the late-bound interface, if needed. Will release it via COM
-      /// if it is a COM object, else if native .NET will just dereference it
-      /// for GC.
-      /// </summary>
-      public new void Dispose()
-      {
-         System.Diagnostics.Trace.WriteLine("ASCOM.Lunatic.Telescope.Dispose() called.");
-         // Clean up the tracelogger and util objects
-         _Logger.Enabled = false;
-         _Logger.Dispose();
-         _Logger = null;
-         utilities.Dispose();
-         utilities = null;
-         astroUtilities.Dispose();
-         astroUtilities = null;
-         base.Dispose();
-      }
-
-      /// <summary>
       /// Set True to connect to the device hardware. Set False to disconnect from the device hardware.
       /// You can also read the property to check whether it is connected. This reports the current hardware state.
       /// </summary>
@@ -262,6 +275,24 @@ namespace ASCOM.Lunatic.Telescope
                   if (connectionResult == Core.Constants.MOUNT_SUCCESS) {
                      #region Initialise new mount instance ...
                      _MountVersion = _Mount.EQ_GetMountVersion();
+
+                     // Initialise some settings
+                     LastPECRate = 0;
+            // gCurrent_time = 0;
+            // gLast_time = 0;
+                     EmulatorAxisInitialPosition[RA_AXIS] = 0;
+
+                     // gAlignmentStars_count = 0
+
+
+                     PulseDuration[RA_AXIS] = 0;
+                     PulseDuration[DEC_AXIS] = 0;
+                     ProcessingPulseTimerTick = true;
+                     LastGotoTarget[RA_AXIS] = 0;
+                     LastGotoTarget[DEC_AXIS] = 0;
+
+                     MoveAxisRate[RA_AXIS] = MountSpeed.LowSpeed;
+                     MoveAxisRate[DEC_AXIS] = MountSpeed.LowSpeed;
 
                      // Initialise Meridian settings etc
                      InitialiseMeridians();
@@ -369,8 +400,13 @@ namespace ASCOM.Lunatic.Telescope
                      // If its an error then Initialize it
 
 
+                     // Initialise the axes at the home position
                      if (motorStatus == Core.Constants.MOUNT_MOTORINACTIVE) {
-                        _Mount.EQ_InitMotors((int)EncoderHomePosition[0], (int)EncoderHomePosition[1]);
+                        CurrentAxisPosition = AxisHomePosition;
+                        int result = _Mount.MCInitialiseAxes(CurrentAxisPosition);
+                        if (result != Core.Constants.MOUNT_SUCCESS) {
+                           throw new ASCOM.DriverException("There was an error initialising the mount axes. The mount returned: " + result.ToString());
+                        };
                      }
 
 
@@ -386,6 +422,8 @@ namespace ASCOM.Lunatic.Telescope
                      //HC.Add_Message(oLangDll.GetLangString(5133) & " " & printhex(EQ_GetMountVersion()) & " DLL Version:" & printhex(EQ_DriverVersion()))
                      //HC.Add_Message "Using " & CStr(gRAWormSteps) & "RAWormSteps"
                      //HC.EncoderTimer.Enabled = True
+                     ProcessingEncoderTimerTick = false;
+                     _EncoderTimer.Start();
                      //HC.EncoderTimerFlag = True
                      //gEQPulsetimerflag = True
                      //HC.Pulseguide_Timer.Enabled = False     'Enabled only during pulseguide session
@@ -403,8 +441,7 @@ namespace ASCOM.Lunatic.Telescope
                         // Read Park position
 
                         //  Preset the Encoder values to Park position
-                        _Mount.EQ_SetMotorValues(AxisId.Axis1_RA, Settings.RAEncoderUnparkPosition);
-                        _Mount.EQ_SetMotorValues(AxisId.Axis2_DEC, Settings.DECEncoderUnparkPosition);
+                        _Mount.MCSetAxisPosition(Settings.AxisUnparkPosition);
                      }
                      else {
                         // HC.Frame15.Caption = oLangDll.GetLangString(146) & " " & oLangDll.GetLangString(179)
@@ -433,6 +470,7 @@ namespace ASCOM.Lunatic.Telescope
                   }
                }
                else {
+                  _EncoderTimer.Stop();
                   _Mount.Disconnect();
                   _Logger.LogMessage("Connected", "Set - Disconnecting from port " + Settings.COMPort);
                   IsConnected = false;
@@ -557,7 +595,7 @@ namespace ASCOM.Lunatic.Telescope
             _IsSlewing = false;
             _IsMoveAxisSlewing = false;
             _Mount.EQ_MotorStop(AxisId.Both_Axes);
-            RAStatusSlew = false;
+            RAAxisSlewing = false;
 
             // restart tracking
             // TODO: RestartTracking
@@ -581,7 +619,6 @@ namespace ASCOM.Lunatic.Telescope
          }
       }
 
-      private double _Altitude;
       /// <summary>
       /// The Altitude above the local horizon of the telescope's current position(degrees, positive up)
       /// </summary>
@@ -590,8 +627,9 @@ namespace ASCOM.Lunatic.Telescope
       {
          get
          {
-            _Logger.LogMessage("Altitude", "Get - " + _Altitude.ToString());
-            return _Altitude;
+            double altitude = Settings.CurrentMountPosition.AltAzimuth.Altitude.Value;
+            _Logger.LogMessage("Altitude", "Get - " + AscomTools.Util.DegreesToDMS(altitude));
+            return altitude;
          }
       }
 
@@ -690,7 +728,6 @@ namespace ASCOM.Lunatic.Telescope
          return new AxisRates(Axis);
       }
 
-      private double _Azimuth;
       /// <summary>
       /// The azimuth at the local horizon of the telescope's current position(degrees, North-referenced, positive East/clockwise).
       /// </summary>
@@ -699,8 +736,9 @@ namespace ASCOM.Lunatic.Telescope
       {
          get
          {
-            _Logger.LogMessage("Azimuth", "Get - " + _Azimuth.ToString());
-            return _Azimuth;
+            double azimuth = Settings.CurrentMountPosition.AltAzimuth.Azimuth.Value;
+            _Logger.LogMessage("Azimuth", "Get - " + AscomTools.Util.DegreesToDMS(azimuth));
+            return azimuth;
          }
       }
 
@@ -991,7 +1029,6 @@ namespace ASCOM.Lunatic.Telescope
          }
       }
 
-      private double _Declination = 0.0;
       /// <summary>
       /// The declination (degrees) of the telescope's current equatorial coordinates, in the coordinate system given by the<see cref= "EquatorialSystem" /> property.
       /// Reading the property will raise an error if the value is unavailable. 
@@ -1003,8 +1040,19 @@ namespace ASCOM.Lunatic.Telescope
       {
          get
          {
-            _Logger.LogMessage("Declination", "Get - " + utilities.DegreesToDMS(_Declination, ":", ":"));
-            return _Declination;
+            // Note: If the CurrentMountPosition has not yet been calculated default
+            // to NCP/SCP
+            double declination = 90.0;
+            if (Settings.CurrentMountPosition != null) {
+               declination = Settings.CurrentMountPosition.Equatorial.Declination.Value;
+            }
+            else {
+               if (Hemisphere == HemisphereOption.Southern) {
+                  declination = -90.0;
+               }
+            }
+            _Logger.LogMessage("Declination", "Get - " + AscomTools.Util.DegreesToDMS(declination, ":", ":"));
+            return declination;
          }
       }
 
@@ -1044,12 +1092,12 @@ namespace ASCOM.Lunatic.Telescope
       {
          get
          {
-            _Logger.LogMessage("DeclinationRate", "Get - " + utilities.DegreesToDMS(_DeclinationRate, ":", ":"));
+            _Logger.LogMessage("DeclinationRate", "Get - " + AscomTools.Util.DegreesToDMS(_DeclinationRate, ":", ":"));
             return _DeclinationRate;
          }
          set
          {
-            _Logger.LogMessage("DeclinationRate", "Set" + utilities.DegreesToDMS(value, ":", ":"));
+            _Logger.LogMessage("DeclinationRate", "Set" + AscomTools.Util.DegreesToDMS(value, ":", ":"));
             _DecRateAdjust = value;
             if (Settings.ParkStatus == ParkStatus.Unparked) {
                if (value == 0 && _RaRateAdjust == 0) {
@@ -1415,7 +1463,19 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             double rightAscension = 0.0;
-            _Logger.LogMessage("RightAscension", "Get - " + utilities.HoursToHMS(rightAscension));
+            if (Settings.CurrentMountPosition != null) {
+               rightAscension = Settings.CurrentMountPosition.Equatorial.RightAscention.Value;
+            }
+            else {
+               // Assume we are looking at the NCP or SCP.
+               if (Hemisphere == HemisphereOption.Northern) {
+                  rightAscension = SiderealTime + 12.0;
+               }
+               else {
+                  rightAscension = SiderealTime - 12.0;
+               }
+            }
+            _Logger.LogMessage("RightAscension", "Get - " + AscomTools.Util.HoursToHMS(rightAscension));
             return rightAscension;
          }
       }
@@ -1472,7 +1532,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            _Logger.LogMessage("RightAscensionRate", "Set - " + utilities.DegreesToDMS(value, ":", ":"));
+            _Logger.LogMessage("RightAscensionRate", "Set - " + AscomTools.Util.DegreesToDMS(value, ":", ":"));
             _RaRateAdjust = value;
             // don't action this if we're parked!
             if (Settings.ParkStatus == ParkStatus.Unparked) {
@@ -1672,6 +1732,8 @@ namespace ASCOM.Lunatic.Telescope
             }
             else {
                _SiteElevation = value;
+               AscomTools.Transform.SiteElevation = value;
+               Settings.CurrentMountPosition.Refresh(AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
                RaisePropertyChanged();
             }
          }
@@ -1710,6 +1772,8 @@ namespace ASCOM.Lunatic.Telescope
             }
             else {
                _SiteLatitude = value;
+               AscomTools.Transform.SiteLatitude = value;
+               Settings.CurrentMountPosition.Refresh(AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
                RaisePropertyChanged();
             }
          }
@@ -1749,6 +1813,8 @@ namespace ASCOM.Lunatic.Telescope
             }
             else {
                _SiteLongitude = value;
+               AscomTools.Transform.SiteLongitude = value;
+               Settings.CurrentMountPosition.Refresh(AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
                RaisePropertyChanged();
             }
          }
@@ -2299,126 +2365,129 @@ namespace ASCOM.Lunatic.Telescope
       #region Helper methods ...
       public bool SyncToRADEC(double rightAscension, double declination, double longitude, HemisphereOption hemisphere)
       {
-         double targetRAEncoder;
-         double targetDECEncoder;
-         double currentRAEncoder;
-         double currentDECEncoder;
-         double saveRASync;
-         double saveDECSync;
+         //AxisPosition controllerAxisPosition;
+         //AxisPosition currentAxisPosition;
+         //AxisPosition targetAxisPosition;
+         //AxisPosition axisAdjustment;
+         //double saveRASync;
+         //double saveDECSync;
 
 
-         double tRA;
-         double tHA;
-         int tPier;
-         CarteseanCoordinate tmpCoord;
+         //double tRA;
+         //double tHA;
+         //int tPier;
+         //CarteseanCoordinate tmpCoord;
 
          bool result = true;
 
-         // If HC.ListSyncMode.ListIndex = 1 Then
-         if (SyncMode == SyncModeOption.AppendOnSync) {
-            //' Append via sync mode!
-            result = Alignment.EQ_NPointAppend(rightAscension, declination, longitude, hemisphere);
-            //Exit Function
-         }
-         else {
-            //' its an ascom sync - shift whole model
-            saveDECSync = Settings.DECSync01;
-            saveRASync = Settings.RASync01;
-            Settings.RASync01 = 0;
-            Settings.DECSync01 = 0;
+         //// If HC.ListSyncMode.ListIndex = 1 Then
+         //if (SyncMode == SyncModeOption.AppendOnSync) {
+         //   //' Append via sync mode!
+         //   if (!_IsSlewing) {
+         //      result = Alignment.EQ_NPointAppend(rightAscension, declination, longitude, hemisphere);
+         //   }
+         //   else {
+         //      result = false;
+         //   }
+         //   //Exit Function
+         //}
+         //else {
+         //   //' its an ascom sync - shift whole model
+         //   saveDECSync = Settings.DECSync01;
+         //   saveRASync = Settings.RASync01;
+         //   Settings.RASync01 = 0;
+         //   Settings.DECSync01 = 0;
 
-            //TODO: HC.EncoderTimer.Enabled = False
-            double raAxisPositon = SharedResources.Controller.MCGetAxisPosition(AxisId.Axis1_RA);
-            double decAxisPosition = SharedResources.Controller.MCGetAxisPosition(AxisId.Axis2_DEC);
-            if (!Settings.ThreeStarEnable) {
-               currentRAEncoder = raAxisPositon + Settings.RA1Star;
-               currentDECEncoder = decAxisPosition + Settings.DEC1Star;
-            }
-            else {
-               switch (SyncAlignmentMode) {
+         //   //TODO: HC.EncoderTimer.Enabled = False
+         //   controllerAxisPosition = new AxisPosition(SharedResources.Controller.MCGetAxisPosition(AxisId.Axis1_RA),
+         //                                                SharedResources.Controller.MCGetAxisPosition(AxisId.Axis2_DEC));
+         //   if (!Settings.ThreeStarEnable) {
+         //      currentAxisPosition = controllerAxisPosition + new AxisPosition(Settings.RA1Star, Settings.DEC1Star);
+         //   }
+         //   else {
+         //      switch (SyncAlignmentMode) {
 
-                  case SyncAlignmentModeOptions.NearestStar:
-                     //   Case 2
-                     // ' nearest
-                     tmpCoord = AstroConvert.DeltaSyncMatrixMap(raAxisPositon, decAxisPosition);
-                     currentRAEncoder = tmpCoord.X;
-                     currentDECEncoder = tmpCoord.Y;
-                     break;
+         //         case SyncAlignmentModeOptions.NearestStar:
+         //            //   Case 2
+         //            // ' nearest
+         //            tmpCoord = DeltaSyncMatrixMap(controllerAxisPosition);
+         //            CurrentAxisPosition = new AxisPosition(tmpCoord.X, tmpCoord.Y);
+         //            break;
 
-                  default:
-                     // 'n-star+nearest
-                     tmpCoord = AstroConvert.DeltaMatrixReverseMap(raAxisPositon, decAxisPosition);
-                     currentRAEncoder = tmpCoord.X;
-                     currentDECEncoder = tmpCoord.Y;
+         //         default:
+         //            // 'n-star+nearest
+         //            tmpCoord = DeltaMatrixReverseMap(raAxisPositon, decAxisPosition);
+         //            currentRAEncoder = tmpCoord.X;
+         //            currentDECEncoder = tmpCoord.Y;
 
-                     if (!tmpCoord.Flag) {
-                        tmpCoord = AstroConvert.DeltaSyncMatrixMap(raAxisPositon, decAxisPosition);
-                        currentRAEncoder = tmpCoord.X;
-                        currentDECEncoder = tmpCoord.Y;
-                     }
-                     break;
-               }
-            }
-
-
-            //TODO: HC.EncoderTimer.Enabled = True
-            tHA = AstroConvert.RangeHA(rightAscension - AstroConvert.LocalApparentSiderealTime(longitude));
-
-
-            if (tHA < 0) {
-               if (hemisphere == HemisphereOption.Northern) {
-                  tPier = 1;
-               }
-               else {
-                  tPier = 0;
-               }
-               tRA = AstroConvert.Range24(rightAscension - 12);
-            }
-            else {
-               if (hemisphere == HemisphereOption.Northern) {
-                  tPier = 0;
-               }
-               else {
-                  tPier = 1;
-               }
-               tRA = rightAscension;
-            }
-
-            //'Compute for Sync RA/DEC Encoder Values
+         //            if (!tmpCoord.Flag) {
+         //               tmpCoord = DeltaSyncMatrixMap(raAxisPositon, decAxisPosition);
+         //               currentRAEncoder = tmpCoord.X;
+         //               currentDECEncoder = tmpCoord.Y;
+         //            }
+         //            break;
+         //      }
+         //   }
 
 
-            targetRAEncoder = AstroConvert.RAAxisPositionFromRA(tRA, 0, longitude, global::Lunatic.Core.Constants.RAEncoder_Zero_pos, hemisphere);
-            targetDECEncoder = AstroConvert.DECAxisPositionFromDEC(declination, tPier, global::Lunatic.Core.Constants.DECEncoder_Zero_pos, hemisphere);
+         //   //TODO: HC.EncoderTimer.Enabled = True
+         //   tHA = AstroConvert.RangeHA(rightAscension - AstroConvert.LocalApparentSiderealTime(longitude));
 
 
-            if (Settings.DisableSyncLimit) {
-               Settings.RASync01 = targetRAEncoder - currentRAEncoder;
-               Settings.DECSync01 = targetDECEncoder - currentDECEncoder;
-            }
-            else {
-               if ((Math.Abs(targetRAEncoder - currentRAEncoder) > Settings.MaxSync) || (Math.Abs(targetDECEncoder - currentDECEncoder) > Settings.MaxSync)) {
-                  //TODO: Call HC.Add_Message(oLangDll.GetLangString(6004))
-                  Settings.DECSync01 = saveDECSync;
-                  Settings.RASync01 = saveRASync;
-                  //TODO: HC.Add_Message ("RA=" & FmtSexa(gRA, False) & " " & CStr(currentRAEncoder))
-                  //TODO: HC.Add_Message ("SyncRA=" & FmtSexa(RightAscension, False) & " " & CStr(targetRAEncoder))
-                  //TODO: HC.Add_Message ("DEC=" & FmtSexa(gDec, True) & " " & CStr(currentDECEncoder))
-                  //TODO: HC.Add_Message ("Sync   DEC=" & FmtSexa(Declination, True) & " " & CStr(targetDECEncoder))
-                  result = false;
-               }
-               else {
-                  Settings.RASync01 = targetRAEncoder - currentRAEncoder;
-                  Settings.DECSync01 = targetDECEncoder - currentDECEncoder;
-               }
-            }
+         //   if (tHA < 0) {
+         //      if (hemisphere == HemisphereOption.Northern) {
+         //         tPier = 1;
+         //      }
+         //      else {
+         //         tPier = 0;
+         //      }
+         //      tRA = AstroConvert.Range24(rightAscension - 12);
+         //   }
+         //   else {
+         //      if (hemisphere == HemisphereOption.Northern) {
+         //         tPier = 0;
+         //      }
+         //      else {
+         //         tPier = 1;
+         //      }
+         //      tRA = rightAscension;
+         //   }
+
+         //   //'Compute for Sync RA/DEC Encoder Values
 
 
-            //WriteSyncMap(); ==> Persist the values of RASync01 && RaSync02
-            SettingsProvider.Current.SaveSettings();
-            Settings.EmulOneShot = true;    // Re Sync Display
-                                            //TODO: HC.DxSalbl.Caption = Format$(str(gRASync01), "000000000")
-                                            //TODO: HC.DxSblbl.Caption = Format$(str(gDECSync01), "000000000")
-         }
+         //   targetRAEncoder = AstroConvert.RAAxisPositionFromRA(tRA, 0, longitude, global::Lunatic.Core.Constants.RAEncoder_Zero_pos, hemisphere);
+         //   targetDECEncoder = AstroConvert.DECAxisPositionFromDEC(declination, tPier, global::Lunatic.Core.Constants.DECEncoder_Zero_pos, hemisphere);
+
+
+         //   if (Settings.DisableSyncLimit) {
+         //      Settings.RASync01 = targetRAEncoder - currentRAEncoder;
+         //      Settings.DECSync01 = targetDECEncoder - currentDECEncoder;
+         //   }
+         //   else {
+         //      if ((Math.Abs(targetRAEncoder - currentRAEncoder) > Settings.MaxSync) || (Math.Abs(targetDECEncoder - currentDECEncoder) > Settings.MaxSync)) {
+         //         //TODO: Call HC.Add_Message(oLangDll.GetLangString(6004))
+         //         Settings.DECSync01 = saveDECSync;
+         //         Settings.RASync01 = saveRASync;
+         //         //TODO: HC.Add_Message ("RA=" & FmtSexa(gRA, False) & " " & CStr(currentRAEncoder))
+         //         //TODO: HC.Add_Message ("SyncRA=" & FmtSexa(RightAscension, False) & " " & CStr(targetRAEncoder))
+         //         //TODO: HC.Add_Message ("DEC=" & FmtSexa(gDec, True) & " " & CStr(currentDECEncoder))
+         //         //TODO: HC.Add_Message ("Sync   DEC=" & FmtSexa(Declination, True) & " " & CStr(targetDECEncoder))
+         //         result = false;
+         //      }
+         //      else {
+         //         Settings.RASync01 = targetRAEncoder - currentRAEncoder;
+         //         Settings.DECSync01 = targetDECEncoder - currentDECEncoder;
+         //      }
+         //   }
+
+
+         //   //WriteSyncMap(); ==> Persist the values of RASync01 && RaSync02
+         //   SettingsProvider.Current.SaveSettings();
+         //   Settings.EmulOneShot = true;    // Re Sync Display
+         //                                   //TODO: HC.DxSalbl.Caption = Format$(str(gRASync01), "000000000")
+         //                                   //TODO: HC.DxSblbl.Caption = Format$(str(gDECSync01), "000000000")
+         //}
          return result;
       }
 

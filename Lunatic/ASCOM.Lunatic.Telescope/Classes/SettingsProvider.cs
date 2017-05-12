@@ -168,8 +168,9 @@ namespace ASCOM.Lunatic.Telescope
       {
          lock (_Lock) {
             string settingsFile = Path.Combine(UserSettingsFolder, CONFIG_SETTINGS_FILENAME);
-            JsonSerializer serializer = new JsonSerializer();
+            JsonSerializer serializer = new JsonSerializer() ;
             serializer.NullValueHandling = NullValueHandling.Ignore;
+            serializer.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             using (StreamWriter sw = new StreamWriter(settingsFile))
             using (JsonWriter writer = new JsonTextWriter(sw)) {
                {

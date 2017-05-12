@@ -68,16 +68,14 @@ namespace ASCOM.Lunatic.Telescope
       internal static string traceStateProfileName = "Trace Level";
       internal static string traceStateDefault = "true";
 
+      private const int RA_AXIS = 0;
+      private const int DEC_AXIS = 1;
+
 
       /// <summary>
       /// Private variable to hold an ASCOM Utilities object
       /// </summary>
-      private Util utilities;
-
-      /// <summary>
-      /// Private variable to hold an ASCOM AstroUtilities object to provide the Range method
-      /// </summary>
-      private AstroUtils astroUtilities;
+      private AscomTools AscomTools;
 
       /// <summary>
       /// Private variable to hold the trace logger object (creates a diagnostic log file with information that you specify)
@@ -93,7 +91,13 @@ namespace ASCOM.Lunatic.Telescope
       private int[] WormPeriod = new int[2];
       private double[] LowSpeedSlewRate = new double[2];         // [0] = LowSpeed, [1] = HighSpeed.
 
-      private bool RAStatusSlew = false;
+      private bool RAAxisSlewing = false;
+      private bool AllowCounterWeightUpSlewing = false;    // gCWUP
+      private GotoParameters GotoParameters = new GotoParameters();  // gGotoParams
+
+      private double[] CustomTrackingRate = new double[2];      // Custom tracking rates (RA/DEC)
+      private string CustomTrackFile = string.Empty;           // 
+      private TrackDefinition CustomTrackDefinition = null;
 
       #region Internal properties ...
 
@@ -131,6 +135,22 @@ namespace ASCOM.Lunatic.Telescope
          }
       }
 
+      public int RAEncoder
+      {
+         get
+         {
+            return EQGetMotorValues(AxisId.Aux_RA_Encoder);
+         }
+      }
+
+      public int DecEncoder
+      {
+         get
+         {
+            return EQGetMotorValues(AxisId.Aux_DEC_Encoder);
+         }
+      }
+
       #endregion
 
 
@@ -144,6 +164,7 @@ namespace ASCOM.Lunatic.Telescope
          if (Settings == null) {
             throw new ASCOM.DriverException("Unable to load configuration settings");
          }
+         // Initialise current mount position to NCP
 
          _Logger = new TraceLogger("", "Winforms");
          _Logger.Enabled = Settings.IsTracing;       /// NOTE: This line triggers a load of the current settings
@@ -151,21 +172,57 @@ namespace ASCOM.Lunatic.Telescope
 
          DRIVER_ID = Marshal.GenerateProgIdForType(this.GetType());
 
-         utilities = new Util(); //Initialise util object
-         astroUtilities = new AstroUtils(); // Initialise astro utilities object
-                                            //TODO: Implement your additional construction here
+         AscomTools = new AscomTools();   // Capture a reference to the AscomTools static class
 
          _AlignmentMode = AlignmentModes.algGermanPolar;
          _TrackingRates = new TrackingRates();
 
-
+         // Initialise the current mount position using Greenwich Observatory position
+         InitialiseCurrentMountPosition();
          _Mount = SharedResources.Controller;
+
+         _EncoderTimer = new System.Timers.Timer(Settings.EncoderTimerInterval);
+         _EncoderTimer.Elapsed += _EncoderTimer_Elapsed;
+         // EncoderTimer is started in the Connected property code.
 
          _Logger.LogMessage("Telescope", "Completed initialisation");
 
          MaximumSyncDifference = (2 * Math.PI) / 8.0;    // Allow a 45.0 (360/8) but in degrees discrepancy in Radians.
       }
 
+
+      /// <summary>
+      /// Dispose the late-bound interface, if needed. Will release it via COM
+      /// if it is a COM object, else if native .NET will just dereference it
+      /// for GC.
+      /// </summary>
+      public new void Dispose()
+      {
+         System.Diagnostics.Trace.WriteLine("ASCOM.Lunatic.Telescope.Dispose() called.");
+         // Save the current settings one last time
+         SettingsProvider.Current.SaveSettings();
+         // Clean up the tracelogger and util objects
+         _Logger.Enabled = false;
+         _Logger.Dispose();
+         _Logger = null;
+         AscomTools.Dispose();
+         AscomTools = null;
+         base.Dispose();
+      }
+
+      /// <summary>
+      /// Initialises the current mount position to the NCP from Greenwich
+      /// </summary>
+      private void InitialiseCurrentMountPosition()
+      {
+         AscomTools.Transform.SiteLatitude = 51.4769;
+         AscomTools.Transform.SiteLongitude = -0.0005;
+         AscomTools.Transform.SiteElevation = 46.0;
+         double ra = AstroConvert.LocalApparentSiderealTime(AscomTools.Transform.SiteLongitude) + 12.0;
+         double dec = 90.0;
+         Settings.CurrentMountPosition = new Core.Geometry.MountCoordinate(new Core.Geometry.EquatorialCoordinate(ra, dec),
+            AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
+      }
 
       private TrackingStatus TrackingState { get; set; }
 
@@ -307,10 +364,14 @@ namespace ASCOM.Lunatic.Telescope
       {
          TotalStepsPer360[0] = _Mount.EQ_GetTotal360microstep(AxisId.Axis1_RA);
          TotalStepsPer360[1] = _Mount.EQ_GetTotal360microstep(AxisId.Axis2_DEC);
-         MeridianWest = EncoderZeroPosition[0] + (TotalStepsPer360[0] / 4);
-         MeridianEast = EncoderZeroPosition[0] - (TotalStepsPer360[0] / 4);
-         EncoderHomePosition[1] = (TotalStepsPer360[1] / 4) + EncoderZeroPosition[1];    // totstep/4 + Homepos
-         MaximumSyncDifference = TotalStepsPer360[0] / 16;             // totalstep /16 = 22.5 degree field
+         //MeridianWest = EncoderZeroPosition[0] + (TotalStepsPer360[0] / 4);
+         //MeridianEast = EncoderZeroPosition[0] - (TotalStepsPer360[0] / 4);
+         //EncoderHomePosition[DEC_AXIS] = (TotalStepsPer360[1] / 4) + EncoderZeroPosition[1];    // totstep/4 + Homepos
+         //MaximumSyncDifference = TotalStepsPer360[0] / 16;             // totalstep /16 = 22.5 degree field
+         MeridianWest = AxisZeroPosition[RA_AXIS] + Core.Constants.HALF_PI;
+         MeridianEast = AxisZeroPosition[RA_AXIS] - Core.Constants.HALF_PI;
+         AxisHomePosition[DEC_AXIS] = Core.Constants.HALF_PI + AxisZeroPosition[DEC_AXIS];
+         MaximumSyncDifference = Core.Constants.TWO_PI / 16;
       }
       #endregion
 
@@ -417,6 +478,19 @@ namespace ASCOM.Lunatic.Telescope
       }
       #endregion
 
+      #region Mount helper functions ...
+      public int EQGetMotorValues(AxisId axisId)
+      {
+         int result = 0;
+         try {
+            result = _Mount.EQ_GetMotorValues(axisId);
+         }
+         catch {
+            result = Core.Constants.DRIVER_INVALID;
+         }
+         return result;
+      }
+      #endregion
 
    }
 

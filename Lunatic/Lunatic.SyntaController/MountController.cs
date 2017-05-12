@@ -11,6 +11,7 @@ using TA.Ascom.ReactiveCommunications;
 using TA.Ascom.ReactiveCommunications.Transactions;
 using Lunatic.SyntaController.Transactions;
 using ASCOM.DeviceInterface;
+using Lunatic.Core.Geometry;
 
 namespace Lunatic.SyntaController
 {
@@ -19,6 +20,10 @@ namespace Lunatic.SyntaController
    {
       public const double MAX_SLEW_SPEED = (800 * Constants.SIDEREAL_RATE_DEGREES);           //?
       public const double LOW_SPEED_MARGIN = (128.0 * Constants.SIDEREAL_RATE_DEGREES);
+      /// <summary>
+      /// Maximum error allowed when comparing Axis positions in radians (roughly 0.5 seconds)
+      /// </summary>
+      private const double AXIS_ERROR_TOLERANCE = 3.5E-5;
 
       #region Singleton code ...
       private static MountController _Instance = null;
@@ -130,10 +135,7 @@ namespace Lunatic.SyntaController
          }
       }
 
-      /// <summary>
-      /// The number of open connections.
-      /// </summary>
-      private int openConnections;
+      private int OpenConnections;
 
       #endregion
       /// <summary>
@@ -224,7 +226,7 @@ namespace Lunatic.SyntaController
 
          lock (lockObject) {
             int result = EQ_Init(ComPort, baud, timeout, retry);
-            Interlocked.Increment(ref openConnections);
+            Interlocked.Increment(ref OpenConnections);
             return result;
          }
       }
@@ -243,17 +245,74 @@ namespace Lunatic.SyntaController
       {
          lock (lockObject) {
             int result = 0;
-            Interlocked.Decrement(ref openConnections);
-            if (openConnections <= 0) {
+            Interlocked.Decrement(ref OpenConnections);
+            if (OpenConnections <= 0) {
                EndPoint = null;
                ConnectionString = string.Empty;
                EQ_End();
             }
+            SettingsManager.SaveSettings();
             return result;
          }
       }
 
+      /// <summary>
+      /// Initialize RA/DEC Motors and activate Motor Driver Coils
+      /// </summary>
+      /// <param name="raAxisValue">Initial RA axis position (Radians)</param>
+      /// <param name="decAxisValue">Initial Dec axis position (Radians)</param>
+      /// <returns>      
+      ///   000 - Success
+      ///   001 - COM PORT Not available
+      ///   003 - COM Timeout Error
+      ///   006 - RA Motor still running
+      ///   007 - DEC Motor still running
+      ///   008 - Error Initializing RA Motor
+      ///   009 - Error Initilizing DEC Motor
+      ///   010 - Cannot execute command at the current stepper controller state
+      /// </returns>
+      public int MCInitialiseAxes(AxisPosition axisPosition)
+      {
+         if (!MountActive) {
+            return Constants.MOUNT_NOCOMPORT;
+         }
+         // Check if Both Motors are at rest
+         AxisStatus axisStatus = MCGetAxisStatus(AxisId.Axis1_RA); // Get RA Motor Status
+         if (!axisStatus.NotInitialized) {
+            // ra motor is apprently moving -don't reinitialise
+            return Constants.MOUNT_RARUNNING;
+         }
 
+         axisStatus = MCGetAxisStatus(AxisId.Axis2_DEC);          // Get DEC Motor Status
+         if (!axisStatus.NotInitialized) {
+            // dec motor is apprently moving - don't reiitialise
+            return Constants.MOUNT_DECRUNNING;
+         }
+
+         // Set RA
+         MCSetAxisPosition(axisPosition);
+
+         // Confirm RA
+         double confirmationPosition = MCGetAxisPosition(AxisId.Axis1_RA);
+         if (Math.Abs(confirmationPosition - axisPosition[RA_AXIS]) > AXIS_ERROR_TOLERANCE) {
+            return Constants.MOUNT_RAERROR;
+         }
+
+         // Confirm DEC
+         confirmationPosition = MCGetAxisPosition(AxisId.Axis2_DEC);
+         if (Math.Abs(confirmationPosition - axisPosition[DEC_AXIS]) > AXIS_ERROR_TOLERANCE) {
+            return Constants.MOUNT_DECERROR;
+         }
+
+         // Activate RA  Motor
+         TalkWithAxis(AxisId.Axis1_RA, 'F', null);
+
+         // Activate DEC Motor
+         TalkWithAxis(AxisId.Axis2_DEC, 'F', null);
+
+         return Constants.MOUNT_SUCCESS;
+
+      }
 
       /// <summary>
       /// Slew about a given axis
@@ -375,16 +434,28 @@ namespace Lunatic.SyntaController
          AxesStatus[(int)Axis].SetFullStop();
       }
 
-      //public void MCSetAxisPosition(AxisId Axis, double NewValue)
-      //{
-      //   int NewStepIndex = AngleToStep(Axis, NewValue);
-      //   NewStepIndex += 0x800000;
+      /// <summary>
+      /// Set the Axis position using radians.
+      /// </summary>
+      /// <param name="Axis"></param>
+      /// <param name="NewValue"></param>
+      public void MCSetAxisPosition(AxisId Axis, double NewValue)
+      {
+         int NewStepIndex = AngleToStep(Axis, NewValue);
+         NewStepIndex += 0x800000;
 
-      //   string szCmd = intTo6BitHEX(NewStepIndex);
-      //   TalkWithAxis(Axis, 'E', szCmd);
+         string szCmd = intTo6BitHEX(NewStepIndex);
+         TalkWithAxis(Axis, 'E', szCmd);
 
-      //   Positions[(int)Axis] = NewValue;
-      //}
+         Positions[(int)Axis] = NewValue;
+      }
+
+
+      public void MCSetAxisPosition(AxisPosition axisPosition)
+      {
+         MCSetAxisPosition(AxisId.Axis1_RA, axisPosition[RA_AXIS]);
+         MCSetAxisPosition(AxisId.Axis2_DEC, axisPosition[DEC_AXIS]);
+      }
 
       public double MCGetAxisPosition(AxisId Axis)
       {
@@ -630,23 +701,26 @@ namespace Lunatic.SyntaController
          catch { }
       }
 
-      //// Set initialization done ":F3", where '3'= Both CH1 and CH2.
-      //private void InitializeMC()
-      //{
-      //   TalkWithAxis(AxisId.Axis1_RA, 'F', null);
-      //   TalkWithAxis(AxisId.Axis2_DEC, 'F', null);
-      //}
+      // Set initialization done ":F3", where '3'= Both CH1 and CH2.
+      private void InitializeMC()
+      {
+         TalkWithAxis(AxisId.Axis1_RA, 'F', null);
+         TalkWithAxis(AxisId.Axis2_DEC, 'F', null);
+      }
+
       private void SetMotionMode(AxisId Axis, char func, char direction)
       {
          string szCmd = "" + func + direction;
          TalkWithAxis(Axis, 'G', szCmd);
       }
+
       //private void SetGotoTargetIncrement(AxisId Axis, int StepsCount)
       //{
       //   string cmd = intTo6BitHEX(StepsCount);
 
       //   TalkWithAxis(Axis, 'H', cmd);
       //}
+
       //private void SetBreakPointIncrement(AxisId Axis, int StepsCount)
       //{
       //   string szCmd = intTo6BitHEX(StepsCount);
@@ -658,6 +732,7 @@ namespace Lunatic.SyntaController
       //   string szCmd = intTo6BitHEX(NewBrakeSteps);
       //   TalkWithAxis(Axis, 'U', szCmd);
       //}
+
       private void SetStepPeriod(AxisId Axis, int StepsCount)
       {
          System.Diagnostics.Debug.WriteLine(String.Format("SetStepPeriod({0}, {1})", Axis, StepsCount));
@@ -670,7 +745,7 @@ namespace Lunatic.SyntaController
       }
       #endregion
 
-      #region Skywaterch Helper functions ...
+      #region Skywatcher Helper functions ...
       private bool IsHEXChar(char tmpChar)
       {
          return ((tmpChar >= '0') && (tmpChar <= '9')) || ((tmpChar >= 'A') && (tmpChar <= 'F'));

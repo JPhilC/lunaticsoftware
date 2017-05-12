@@ -155,7 +155,7 @@ namespace Lunatic.Core.Classes
       #endregion
 
       #region Queries ...
-      public AlignmentTriangle GetNearest3Points(AltAzCoordinate targetAltAz, Angle latitude, PointFilterOption filterOption, bool localToPier, bool affineTaki)
+      public AlignmentTriangle GetNearest3Points(AltAzCoordinate targetAltAz, PointFilterOption filterOption, bool localToPier, bool affineTaki)
       {
          AlignmentTriangle triangle = new AlignmentTriangle();
          if (base.Items.Count == 0) {
@@ -251,6 +251,53 @@ namespace Lunatic.Core.Classes
          return triangle;
       }
 
+      public AlignmentPoint GetNearestPoint(AltAzCoordinate targetAltAz, PointFilterOption filterOption)
+      {
+         AlignmentPoint nearest = null;
+         if (base.Items.Count == 0) {
+            return nearest;
+         }
+         if (base.Items.Count < 2) {
+            nearest = base.Items.First();
+         }
+         else {
+            // Convert RADec to Carteasean
+            CarteseanCoordinate tmpCoord = targetAltAz.ToCartesean();
+            Quadrant tmpQuadrant = tmpCoord.Quadrant;
+            List<AlignmentPointDistance> pointsToConsider = new List<AlignmentPointDistance>();
+            // first find out the distances to the alignment points
+            foreach (AlignmentPoint alignPt in Items) {
+               switch (filterOption) {
+                  case PointFilterOption.LocalQuadrant:
+                     // Only consider the points in the same quadrant
+                     if (alignPt.TargetCartesean.Quadrant != tmpQuadrant) {
+                        continue;
+                     }
+                     break;
+                  case PointFilterOption.MeridianSide:
+                     // Only consider points on the same side of the meridian
+                     if (alignPt.TargetCartesean.Y * tmpCoord.Y < 0) {
+                        continue;
+                     }
+                     break;
+                  default:    // All points considered
+                     break;
+               }
+
+               double distance;
+               distance = Math.Pow(alignPt.TargetCartesean.X - tmpCoord.X, 2) + Math.Pow(alignPt.TargetCartesean.Y - tmpCoord.Y, 2);
+               pointsToConsider.Add(new AlignmentPointDistance(alignPt, distance));
+            }  // foreach
+            if (pointsToConsider.Count == 1) {
+               nearest = pointsToConsider.First().AlignmentPoint;
+            }
+            else if (pointsToConsider.Count > 1) {
+               // iterate through all the triangles posible using the nearest alignment points
+               nearest = pointsToConsider.OrderBy(apd => apd.Distance).First().AlignmentPoint;
+            }
+         }
+         return nearest;
+      }
 
       private bool CheckPointInTargetTriangle(double targetX, double targetY, AlignmentPoint p1, AlignmentPoint p2, AlignmentPoint p3)
       {

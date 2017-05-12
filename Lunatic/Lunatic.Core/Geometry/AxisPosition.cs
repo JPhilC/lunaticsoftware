@@ -37,6 +37,7 @@ namespace Lunatic.Core.Geometry
             return 2;
          }
       }
+
       /// <summary>
       /// Initialise the Axis positions
       /// </summary>

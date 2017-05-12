@@ -43,11 +43,20 @@ namespace ASCOM.Lunatic.Telescope
                Settings.TrackUsingPEC = Convert.ToBoolean(actionParameters);
                break;
 
+            case "Lunatic:SetCheckRASync":
+               Settings.CheckRASync = Convert.ToBoolean(actionParameters);
+               break;
+
             case "Lunatic:SetAutoGuiderPortRates":
                Settings.RAAutoGuiderPortRate = (AutoguiderPortRate)Convert.ToInt32(values[0]);
                Settings.DECAutoGuiderPortRate = (AutoguiderPortRate)Convert.ToInt32(values[1]);
                _Mount.EQ_SetAutoguiderPortRate(AxisId.Axis1_RA, Settings.RAAutoGuiderPortRate);
                _Mount.EQ_SetAutoguiderPortRate(AxisId.Axis2_DEC, Settings.DECAutoGuiderPortRate);
+               break;
+
+            case "Lunatic:SetCustomTrackingRates":
+               CustomTrackingRate[0] = Convert.ToDouble(values[0]);
+               CustomTrackingRate[1] = Convert.ToDouble(values[1]);
                break;
 
             default:
