@@ -1,7 +1,7 @@
 // Uncomment the line below to instantiate the driver directly
 // rather than using the ASCOM Local Server (i.e. while developing).
 // Look at the PopSettings() method to see what is affected.
-#define INSTANTIATE_DIRECT    // NOTE: When commenting this line out you can
+// #define INSTANTIATE_DIRECT    // NOTE: When commenting this line out you can
                               // also remove the project reference to 
                               // ASCOM.Lunatic.TelescopeServer
 
@@ -666,7 +666,7 @@ End Property
                // Driver.SiteElevation = 
             }
             catch (Exception ex) {
-               _DriverId = string.Empty;5
+               _DriverId = string.Empty;
                StatusMessage = "Failed select previous telescope driver";
             }
          }
