@@ -4,7 +4,7 @@
 // #define INSTANTIATE_DIRECT    // NOTE: When commenting this line out you can
                               // also remove the project reference to 
                               // ASCOM.Lunatic.TelescopeServer
-
+// NOTE: The above is now handled via Visual Studio configurations.
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System;

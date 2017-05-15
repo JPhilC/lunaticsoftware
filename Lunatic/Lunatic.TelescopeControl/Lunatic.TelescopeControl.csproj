@@ -58,6 +58,26 @@
   <PropertyGroup>
     <ApplicationIcon>LunaticMoon.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug %28Driver Direct%29|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug %28Driver Direct%29\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;INSTANTIATE_DIRECT</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug %28Driver Direct%29|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug %28Driver Direct%29\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="ASCOM.DeviceInterfaces, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -302,6 +322,17 @@
       <Name>Lunatic.Core</Name>
     </ProjectReference>
   </ItemGroup>
+  <Choose>
+    <When Condition="$(DefineConstants.Contains('INSTANTIATE_DIRECT'))">
+      <ItemGroup>
+        <ProjectReference Include="..\ASCOM.Lunatic.TelescopeServer\ASCOM.Lunatic.TelescopeServer.csproj">
+          <Project>{c2f85c09-caf9-49fd-8bdc-80a8136d3af3}</Project>
+          <Name>ASCOM.Lunatic.TelescopeServer</Name>
+        </ProjectReference>
+      </ItemGroup>
+    </When>
+    <Otherwise></Otherwise>
+  </Choose>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
