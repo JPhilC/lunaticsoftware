@@ -293,6 +293,10 @@
     <Resource Include="LunaticMoon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ASCOM.Lunatic.TelescopeServer\ASCOM.Lunatic.TelescopeServer.csproj">
+      <Project>{c2f85c09-caf9-49fd-8bdc-80a8136d3af3}</Project>
+      <Name>ASCOM.Lunatic.TelescopeServer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ASCOM.Lunatic.Telescope\ASCOM.Lunatic.TelescopeDriver.csproj">
       <Project>{E85B3304-41BD-4FA7-AD06-65BFA46B85EC}</Project>
       <Name>ASCOM.Lunatic.TelescopeDriver</Name>

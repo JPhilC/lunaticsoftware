@@ -218,7 +218,7 @@ namespace ASCOM.Lunatic.Telescope
          AscomTools.Transform.SiteLatitude = 51.4769;
          AscomTools.Transform.SiteLongitude = -0.0005;
          AscomTools.Transform.SiteElevation = 46.0;
-         double ra = AstroConvert.LocalApparentSiderealTime(AscomTools.Transform.SiteLongitude) + 12.0;
+         double ra = AstroConvert.Range24(AstroConvert.LocalApparentSiderealTime(AscomTools.Transform.SiteLongitude) + 12.0);
          double dec = 90.0;
          Settings.CurrentMountPosition = new Core.Geometry.MountCoordinate(new Core.Geometry.EquatorialCoordinate(ra, dec),
             AscomTools.Transform, AscomTools.LocalJulianTimeUTC);

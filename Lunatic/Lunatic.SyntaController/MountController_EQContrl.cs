@@ -2215,9 +2215,9 @@ namespace Lunatic.SyntaController
          var cmdTransaction = new EQContrlTransaction(cmdString) { Timeout = TimeSpan.FromSeconds(TimeOut) };
 
 
-         using (ICommunicationChannel channel = new SerialCommunicationChannel(EndPoint)) {
+         using (ICommunicationChannel channel = new SerialCommunicationChannel(EndPoint))
+         using (var processor = new ReactiveTransactionProcessor()) {
             var transactionObserver = new TransactionObserver(channel);
-            var processor = new ReactiveTransactionProcessor();
             processor.SubscribeTransactionObserver(transactionObserver);
             try {
                channel.Open();

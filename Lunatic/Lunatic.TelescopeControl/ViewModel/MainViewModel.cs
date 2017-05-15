@@ -1,3 +1,10 @@
+// Uncomment the line below to instantiate the driver directly
+// rather than using the ASCOM Local Server (i.e. while developing).
+// Look at the PopSettings() method to see what is affected.
+#define INSTANTIATE_DIRECT    // NOTE: When commenting this line out you can
+                              // also remove the project reference to 
+                              // ASCOM.Lunatic.TelescopeServer
+
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System;
@@ -10,6 +17,7 @@ using System.ComponentModel;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 using Lunatic.TelescopeControl.Controls;
 using ASCOM.Lunatic.Telescope;
+
 
 namespace Lunatic.TelescopeControl.ViewModel
 {
@@ -101,7 +109,27 @@ namespace Lunatic.TelescopeControl.ViewModel
       #endregion
 
       #region Telescope driver selection etc ...
+#if INSTANTIATE_DIRECT
+      private ASCOM.DeviceInterface.ITelescopeV3 _Driver;
+      private ASCOM.DeviceInterface.ITelescopeV3 Driver
+      {
+         get
+         {
+            return _Driver;
+         }
+         set
+         {
+            if (ReferenceEquals(_Driver, value)) {
+               return;
+            }
+            if (_Driver != null) {
+               _Driver.Dispose();
+            }
+            _Driver = value;
+         }
+      }
 
+#else
       private ASCOM.DriverAccess.Telescope _Driver;
 
       private ASCOM.DriverAccess.Telescope Driver
@@ -121,7 +149,7 @@ namespace Lunatic.TelescopeControl.ViewModel
             _Driver = value;
          }
       }
-
+#endif
 
       public bool IsConnected
       {
@@ -219,7 +247,7 @@ namespace Lunatic.TelescopeControl.ViewModel
          }
       }
 
-      #endregion
+#endregion
 
       private string _StatusMessage = "Not connected.";
       public string StatusMessage
@@ -234,9 +262,9 @@ namespace Lunatic.TelescopeControl.ViewModel
          }
       }
 
-      #endregion
+#endregion
 
-      #region Visibility display properties ...
+#region Visibility display properties ...
 
       /// <summary>
       /// Used to control the main form component visiblity
@@ -353,9 +381,9 @@ namespace Lunatic.TelescopeControl.ViewModel
          RaisePropertyChanged("PulseGuidingVisibility");
       }
 
-      #endregion
+#endregion
 
-      #region Telescope driver properties
+#region Telescope driver properties
       private TimeSpan _LocalSiderealTime;
 
       public TimeSpan LocalSiderealTime
@@ -370,8 +398,61 @@ namespace Lunatic.TelescopeControl.ViewModel
          }
       }
 
+      private double _RightAscension;
 
+      public double RightAscension
+      {
+         get
+         {
+            return _RightAscension;
+         }
+         set
+         {
+            Set<double>("RightAscension", ref _RightAscension, value);
+         }
+      }
 
+      private double _Declination;
+
+      public double Declination
+      {
+         get
+         {
+            return _Declination;
+         }
+         set
+         {
+            Set<double>("Declination", ref _Declination, value);
+         }
+      }
+
+      private double _Altitude;
+
+      public double Altitude
+      {
+         get
+         {
+            return _Altitude;
+         }
+         set
+         {
+            Set<double>("Altitude", ref _Altitude, value);
+         }
+      }
+
+      private double _Azimuth;
+
+      public double Azimuth
+      {
+         get
+         {
+            return _Azimuth;
+         }
+         set
+         {
+            Set<double>("Azimuth", ref _Azimuth, value);
+         }
+      }
 
       #region GuideRateDeclination ...
       // TODO: Migrate GuideRateDeclination and just pass the value to the driver
@@ -424,10 +505,10 @@ namespace Lunatic.TelescopeControl.ViewModel
          }
       }
        */
-      #endregion
+#endregion
 
 
-      #region GuideRateRightAscension ...
+#region GuideRateRightAscension ...
       // TODO: Migrate GuideRateRightAscension and just pass the value to the driver
       private double _GuideRateRightAscension;
       public double GuideRateRightAscension
@@ -504,33 +585,29 @@ Public Property Let GuideRateRightAscension(ByVal newval As Double)
  End If
 End Property
        */
-      #endregion
+#endregion
 
 
-      #endregion
+#endregion
 
       /// <summary>
       /// Initializes a new instance of the MainViewModel class.
       /// </summary>
       public MainViewModel(ISettingsProvider<TelescopeControlSettings> settingsProvider)
       {
-         _SettingsProvider = settingsProvider;
-         _Settings = settingsProvider.Settings;
-         PopSettings();
 
-         ////if (IsInDesignMode)
-         ////{
-         ////    // Code runs in Blend --> create design time data.
-         ////}
-         ////else
-         ////{
-         ////    // Code runs "for real"
-         ////}
-
-         _EncoderTimer = new DispatcherTimer();
-         _EncoderTimer.Interval = new TimeSpan(0, 0, 1);
-         _EncoderTimer.Tick += new EventHandler(this.EncoderTime_Tick);
-
+         if (IsInDesignMode) {
+            // Code runs in Blend --> create design time data.
+         }
+         else {
+            // Code runs "for real"
+            _SettingsProvider = settingsProvider;
+            _Settings = settingsProvider.Settings;
+            PopSettings();
+            _DisplayTimer = new DispatcherTimer();
+            _DisplayTimer.Interval = TimeSpan.FromMilliseconds(500);
+            _DisplayTimer.Tick += new EventHandler(this.DisplayTimer_Tick);
+         }
 
       }
 
@@ -541,51 +618,32 @@ End Property
          base.Cleanup();
       }
 
-      #region Timers ...
+#region Timers ...
       // This code creates a new DispatcherTimer with an interval of 15 seconds.
-      private DispatcherTimer _EncoderTimer;
-      private bool _ProcessingEncoderTimerTick = false;
-      private void EncoderTime_Tick(object state, EventArgs e)
+      private DispatcherTimer _DisplayTimer;
+      private bool _ProcessingDisplayTimerTick = false;
+      private void DisplayTimer_Tick(object state, EventArgs e)
       {
-         if (!_ProcessingEncoderTimerTick) {
-            _ProcessingEncoderTimerTick = true;
-            LocalSiderealTime = TimeSpan.FromHours(_Driver.SiderealTime);
+         if (Driver != null && !_ProcessingDisplayTimerTick) {
+            _ProcessingDisplayTimerTick = true;
+            LocalSiderealTime = TimeSpan.FromHours(Driver.SiderealTime);
+            RightAscension = Driver.RightAscension;
+            Declination = Driver.Declination;
+            Altitude = Driver.Altitude;
+            Azimuth = Driver.Azimuth;
 
-            if (_Driver.AtPark != IsParked) {
+            if (Driver.AtPark != IsParked) {
                RaisePropertyChanged("IsParked");
                UnparkCommand.RaiseCanExecuteChanged();
                ParkCommand.RaiseCanExecuteChanged();
             }
 
-            _ProcessingEncoderTimerTick = false;
+            _ProcessingDisplayTimerTick = false;
          }
-
-         // double rightAscension;
-         // double declination;
-         // double altitude;
-         // double azimuth;
-         // int ra;
-         // int dec;
-         // Coordt coord;
-
-         // if (!_ProcessingEncoderTimerTick) {
-         //    _ProcessingEncoderTimerTick = true;
-         //    // If(gEmulOneShot = True) Or(gEmulNudge = True) Or(gSlewStatus = True) Or(HC.CheckRASync.Value = 1) Then
-
-         //    // Else
-         //    //    ' emulate RA motor position
-         //    //    gEmulRA = GetEmulRA()
-         //    // End If
-
-         //    if 
-         //_ProcessingEncoderTimerTick = false;
-         // }
-
-
       }
-      #endregion
+#endregion
 
-      #region Settings ...
+#region Settings ...
       private void PopSettings()
       {
          _DriverId = _Settings.DriverId;
@@ -594,6 +652,10 @@ End Property
          // Sites are updated directly
          // _Settings.Sites.CurrentSiteChanged += Sites_CurrentSiteChanged;
          _Settings.Sites.PropertyChanged += Sites_PropertyChanged;
+#if INSTANTIATE_DIRECT
+         Driver = new Telescope();
+         OnDriverChanged(false);
+#else
          // Better try to instantiate the driver as well if we have a driver ID
          if (!string.IsNullOrWhiteSpace(_DriverId)) {
             try {
@@ -604,10 +666,11 @@ End Property
                // Driver.SiteElevation = 
             }
             catch (Exception ex) {
-               _DriverId = string.Empty;
+               _DriverId = string.Empty;5
                StatusMessage = "Failed select previous telescope driver";
             }
          }
+#endif
       }
 
       private void Sites_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -634,9 +697,9 @@ End Property
          _SettingsProvider.SaveSettings();
       }
 
-      #endregion
+#endregion
 
-      #region Relay commands ...
+#region Relay commands ...
       private RelayCommand<DisplayMode> _DisplayModeCommand;
 
       /// <summary>
@@ -653,7 +716,7 @@ End Property
          }
       }
 
-      #region Setup Relay commands ...
+#region Setup Relay commands ...
       private RelayCommand<SiteCollection> _AddSiteCommand;
 
       /// <summary>
@@ -713,10 +776,10 @@ End Property
                                       ));
          }
       }
-      #endregion
+#endregion
 
 
-      #region Choose, Connect, Disconnect etc ...
+#region Choose, Connect, Disconnect etc ...
       private RelayCommand _ChooseCommand;
 
       public RelayCommand ChooseCommand
@@ -725,11 +788,16 @@ End Property
          {
             return _ChooseCommand
                ?? (_ChooseCommand = new RelayCommand(() => {
+#if INSTANTIATE_DIRECT
+                  Driver = new Telescope();
+
+#else
                   string driverId = ASCOM.DriverAccess.Telescope.Choose(DriverId);
                   if (driverId != null) {
                      Driver = new ASCOM.DriverAccess.Telescope(driverId);
                      DriverId = driverId; // Triggers a refresh of menu options etc
                   }
+#endif
                   RaiseCanExecuteChanged();
                }, () => { return !IsConnected; }));
          }
@@ -763,15 +831,14 @@ End Property
             // Check to see if the driver is already connected
             bool initialiseNeeded = !Driver.CommandBool("Lunatic:IsInitialised", false);
             Driver.Connected = true;
-            // Start the timer.  Note that this call can be made from any thread.
-            _ProcessingEncoderTimerTick = false;
-            _EncoderTimer.Start();
             if (initialiseNeeded) {
                // Transfer location any other initialisation needed.
                Driver.SiteElevation = Settings.CurrentSite.Elevation;
                Driver.SiteLatitude = Settings.CurrentSite.Latitude;
                Driver.SiteLongitude = Settings.CurrentSite.Longitude;
             }
+            _ProcessingDisplayTimerTick = false;
+            _DisplayTimer.Start();
          }
          catch (Exception ex) {
             StatusMessage = ex.Message;
@@ -780,10 +847,11 @@ End Property
 
       private void Disconnect()
       {
-         _EncoderTimer.Stop();
-         _ProcessingEncoderTimerTick = false;
+         _DisplayTimer.Stop();
+         _ProcessingDisplayTimerTick = false;
          if (Driver != null) {
             Driver.Connected = false;
+            Driver = null;
          }
       }
 
@@ -800,9 +868,9 @@ End Property
          }
       }
 
-      #endregion
+#endregion
 
-      #region Slewing commands ...
+#region Slewing commands ...
       private RelayCommand<SlewButton> _StartSlewCommand;
 
       public RelayCommand<SlewButton> StartSlewCommand
@@ -870,9 +938,9 @@ End Property
                }, (button) => { return (IsConnected); }));   // Check that we are connected
          }
       }
-      #endregion
+#endregion
 
-      #region Parking and unparking commands ...
+#region Parking and unparking commands ...
       private RelayCommand _ParkCommand;
 
       public RelayCommand ParkCommand
@@ -899,9 +967,9 @@ End Property
                }, () => { return (IsConnected && IsParked); }));   // Check that we are connected
          }
       }
-      #endregion
+#endregion
 
-      #endregion
+#endregion
 
 
       private void RaiseCanExecuteChanged()
