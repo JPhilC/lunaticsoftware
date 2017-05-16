@@ -26,6 +26,7 @@ using System.Security.Principal;
 using System.Diagnostics;
 using ASCOM;
 using System.Windows.Threading;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ASCOM.Lunatic
 {
@@ -85,10 +86,12 @@ namespace ASCOM.Lunatic
 
       // CoInitializeEx() can be used to set the apartment model
       // of individual threads.
+      [SuppressMessage("Microsoft.Design", "CA1060: Move P / Invokes to NativeMethods class")]
       [DllImport("ole32.dll")]
       static extern int CoInitializeEx(IntPtr pvReserved, uint dwCoInit);
 
       // CoUninitialize() is used to uninitialize a COM thread.
+      [SuppressMessage("Microsoft.Design", "CA1060: Move P / Invokes to NativeMethods class")]
       [DllImport("ole32.dll")]
       static extern void CoUninitialize();
 
@@ -97,6 +100,7 @@ namespace ASCOM.Lunatic
       // We will need this API to post a WM_QUIT message to the main 
       // thread in order to terminate this application.
       [DllImport("user32.dll")]
+      [SuppressMessage("Microsoft.Design", "CA1060: Move P / Invokes to NativeMethods class")]
       static extern bool PostThreadMessage(uint idThread, uint Msg, UIntPtr wParam,
          IntPtr lParam);
 
@@ -104,6 +108,7 @@ namespace ASCOM.Lunatic
       // calling thread. This allows us to post the WM_QUIT message to
       // the main thread.
       [DllImport("kernel32.dll")]
+      [SuppressMessage("Microsoft.Design", "CA1060: Move P / Invokes to NativeMethods class")]
       static extern uint GetCurrentThreadId();
       #endregion
 
@@ -615,6 +620,7 @@ namespace ASCOM.Lunatic
             // Now stop the Garbage Collector thread.
             GarbageCollector.StopThread();
             GarbageCollector.WaitForThreadToStop();
+            GarbageCollector.Dispose();
          }
       }
 

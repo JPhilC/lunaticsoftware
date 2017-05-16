@@ -50,8 +50,6 @@ namespace Lunatic.Core.Geometry
       }
       public AxisPosition(double raRadians, double decRadians)
       {
-         if (raRadians < 0 || raRadians >= Constants.TWO_PI) { throw new ArgumentOutOfRangeException("RaAxis position must be between 0 and 2*PI"); }
-         if (decRadians < 0 || decRadians > Constants.TWO_PI) { throw new ArgumentOutOfRangeException("DecPosition must be between 0 and 2*PI."); }
          _RAAxis = new Angle() { Radians = raRadians };
          _DecAxis = new Angle() { Radians = decRadians };
       }

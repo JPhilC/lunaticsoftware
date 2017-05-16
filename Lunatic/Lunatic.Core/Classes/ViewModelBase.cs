@@ -5,9 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using System.Runtime.InteropServices;
 
 namespace Lunatic.Core
 {
+   [ComVisible(false)]
    public abstract class LunaticViewModelBase : ViewModelBase
    {
 

@@ -1,9 +1,11 @@
 ﻿using Lunatic.Core.Services;
 using System;
+using System.Runtime.InteropServices;
 using System.Windows.Markup;
 
 namespace ASCOM.Lunatic.Telescope
 {
+   [ComVisible(false)]
    public class COMPortBindingSourceExtension : MarkupExtension
    {
 

@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 
@@ -164,6 +165,7 @@ namespace ASCOM.Lunatic.Telescope
       /// <summary>
       /// Saves the current settings to user storage
       /// </summary>
+      [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
       public void SaveSettings()
       {
          lock (_Lock) {

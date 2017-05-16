@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
 using Lunatic.Core;
+using Core = Lunatic.Core;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -9,11 +10,12 @@ using System.Collections.Generic;
 using Lunatic.SyntaController;
 using Lunatic.Core.Classes;
 using Lunatic.Core.Geometry;
+using Newtonsoft.Json;
+using System.Runtime.InteropServices;
 
 namespace ASCOM.Lunatic.Telescope
 {
-
-   public class DevelopmentOptions : DataObjectBase
+   public class DevelopmentOptions
    {
       public bool ShowAdvancedOptions { get; set; }
       public bool ShowPolarAlign { get; set; }
@@ -31,7 +33,7 @@ namespace ASCOM.Lunatic.Telescope
       public bool ListDisplayMode { get; set; }
    }
 
-   public class CustomMount : DataObjectBase
+   public class CustomMount
    {
       //CUSTOM_TRACKING_OFFSET_DEC=0
       public int TrackingDecOffset { get; set; }
@@ -56,14 +58,18 @@ namespace ASCOM.Lunatic.Telescope
       Custom
    }
 
-
-   public class Settings : DataObjectBase
+   public class Settings 
    {
       /// <summary>
       /// The encoder timer interval in milliseconds. Controls
       /// how ofen the mount is queried for it's current position.
       /// </summary>
       public int EncoderTimerInterval { get; set; }
+
+      /// <summary>
+      /// The pulse timer interval in milliseconds.
+      /// </summary>
+      public int PulseTimerInterval { get; set; }
 
       //CUSTOM_MOUNT=0
       public CustomMount CustomMount { get; set; }
@@ -83,72 +89,27 @@ namespace ASCOM.Lunatic.Telescope
       public BaudRate BaudRate { get; set; }
 
       //Port=COM4
-      private string _COMPort = string.Empty;
-      public string COMPort
-      {
-         get
-         {
-            return _COMPort;
-         }
-         set
-         {
-            if (value == _COMPort) {
-               return;
-            }
-            _COMPort = value;
-            RaisePropertyChanged();
-         }
-      }
+      public string COMPort { get; set; }
 
       // TRACE_STATE
-      private bool _IsTracing = false;
-      public bool IsTracing
-      {
-         get
-         {
-            return _IsTracing;
-         }
-         set
-         {
-            if (value == _IsTracing) {
-               return;
-            }
-            _IsTracing = value;
-            RaisePropertyChanged();
-         }
-      }
+      public bool IsTracing { get; set; }
 
       //EQPARKSTATUS=parked
-      private ParkStatus _ParkStatus;
-      public ParkStatus ParkStatus
-      {
-         get
-         {
-            return _ParkStatus;
-         }
-         set
-         {
-            if (value == _ParkStatus) {
-               return;
-            }
-            _ParkStatus = value;
-            RaisePropertyChanged();
-         }
-      }
+      public ParkStatus ParkStatus { get; set; }
 
       public AxisPosition AxisUnparkPosition { get; set; }
 
 
-      [Obsolete("Use AxisUnparkPosition")]
+      [Obsolete("Use AxisUnparkPosition"), JsonIgnore()]
       public int RAEncoderUnparkPosition { get; set; }
-      [Obsolete("Use AxisUnparkPosition")]
+      [Obsolete("Use AxisUnparkPosition"), JsonIgnore()]
       public int DECEncoderUnparkPosition { get; set; }
 
       public AxisPosition AxisParkPosition { get; set; }
 
-      [Obsolete("Use AxisParkPosition")]
+      [Obsolete("Use AxisParkPosition"), JsonIgnore()]
       public int RAEncoderParkPosition { get; set; }
-      [Obsolete("Use AxisParkPosition")]
+      [Obsolete("Use AxisParkPosition"), JsonIgnore()]
       public int DECEncoderParkPosition { get; set; }
 
       public AutoguiderPortRate RAAutoGuiderPortRate { get; set; }
@@ -168,30 +129,32 @@ namespace ASCOM.Lunatic.Telescope
       public bool DisableSyncLimit { get; set; }
 
 
+      public AxisPosition AxisHomePosition { get; set; }
+
 
       public MountCoordinate CurrentMountPosition { get; set; }
       /// <summary>
       /// The RA Axis position in Radians
       /// </summary>
-      [Obsolete("Use CurrentMountPosition instead")]
+      [Obsolete("Use CurrentMountPosition instead"), JsonIgnore()]
       public double RAAxisPosition { get; set; }
 
       /// <summary>
       /// The DEC Axis position in Radians
       /// </summary>
-      [Obsolete("Use CurrentMountPosition instead")]
+      [Obsolete("Use CurrentMountPosition instead"), JsonIgnore()]
       public double DECAxisPosition { get; set; }
 
       /// <summary>
       /// Initial RA sync adjustment (Radians)
       /// </summary>
-      [Obsolete("Use InitialAxisSyncAdjustment instead")]
+      [Obsolete("Use InitialAxisSyncAdjustment instead"), JsonIgnore()]
       public double RASync01 { get; set; }
 
       /// <summary>
       /// Initial DEC sync adjustment (Radians)
       /// </summary>
-      [Obsolete("Use InitialAxisSyncAdjustment instead")]
+      [Obsolete("Use InitialAxisSyncAdjustment instead"), JsonIgnore()]
       public double DECSync01 { get; set; }
 
 
@@ -203,13 +166,13 @@ namespace ASCOM.Lunatic.Telescope
       /// <summary>
       /// Initial RA Alignment adjustment (Radians)
       /// </summary>
-      [Obsolete("Use InitialAxisAlignmentAdjustment instead")]
+      [Obsolete("Use InitialAxisAlignmentAdjustment instead"), JsonIgnore()]
       public double RA1Star { get; set; }
 
       /// <summary>
       /// Initial DEC Alignment adjustment (Radians)
       /// </summary>
-      [Obsolete("Use InitialAxisAlignmentAdjustment instead")]
+      [Obsolete("Use InitialAxisAlignmentAdjustment instead"), JsonIgnore()]
       public double DEC1Star { get; set; }
 
       /// <summary>
@@ -265,8 +228,11 @@ namespace ASCOM.Lunatic.Telescope
          this.DevelopmentOptions.GotoResolution = 20;
          this.DevelopmentOptions.GotoRACompensation = 40;
          this.EncoderTimerInterval = 200; // Default to 200 milliseconds.
+         this.PulseTimerInterval = 1000;  // Default to 1000 milliseconds.
          // Default the current mount position to NCP from Greenwich Observatory (as good as anywhere).
          this.CurrentMountPosition = new MountCoordinate(new AltAzCoordinate(51.4769, 0.0));
+         // Default the axis home position to 0 RA, 90 degrees DEC (but in radians)
+         this.AxisHomePosition = new AxisPosition(0, Core.Constants.HALF_PI);
       }
    }
 }

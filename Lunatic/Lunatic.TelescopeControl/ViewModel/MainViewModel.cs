@@ -2,8 +2,8 @@
 // rather than using the ASCOM Local Server (i.e. while developing).
 // Look at the PopSettings() method to see what is affected.
 // #define INSTANTIATE_DIRECT    // NOTE: When commenting this line out you can
-                              // also remove the project reference to 
-                              // ASCOM.Lunatic.TelescopeServer
+// also remove the project reference to 
+// ASCOM.Lunatic.TelescopeServer
 // NOTE: The above is now handled via Visual Studio configurations.
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
@@ -37,7 +37,7 @@ namespace Lunatic.TelescopeControl.ViewModel
    [CategoryOrder("Site Information", 2)]
    [CategoryOrder("Gamepad", 3)]
    [CategoryOrder("General", 4)]
-   public class MainViewModel : LunaticViewModelBase
+   public class MainViewModel : LunaticViewModelBase, IDisposable
    {
 
       #region Properties ....
@@ -163,7 +163,55 @@ namespace Lunatic.TelescopeControl.ViewModel
       {
          get
          {
-            return ((_Driver != null) && _Driver.AtPark);
+            if (IsInDesignMode) {
+               // Code runs in Blend --> create design time data.
+               return true;
+            }
+            else {
+               return ((_Driver != null) && _Driver.AtPark);
+            }
+         }
+      }
+
+      private ParkStatus _ParkStatus;
+
+      public ParkStatus ParkStatus
+      {
+         get
+         {
+            return _ParkStatus;
+         }
+         set
+         {
+            Set<ParkStatus>("ParkStatus", ref _ParkStatus, value);
+         }
+      }
+
+      private string _ParkCaption;
+
+      public string ParkCaption
+      {
+         get
+         {
+            return _ParkCaption;
+         }
+         set
+         {
+            Set<string>("ParkCaption", ref _ParkCaption, value);
+         }
+      }
+
+      private string _ParkStatusPosition;
+
+      public string ParkStatusPosition
+      {
+         get
+         {
+            return _ParkStatusPosition;
+         }
+         set
+         {
+            Set<string>("ParkStatusPosition", ref _ParkStatusPosition, value);
          }
       }
 
@@ -206,6 +254,7 @@ namespace Lunatic.TelescopeControl.ViewModel
          }
       }
 
+
       public string SetupMenuHeader
       {
          get
@@ -241,13 +290,9 @@ namespace Lunatic.TelescopeControl.ViewModel
          RaisePropertyChanged("DisconnectMenuHeader");
          RaisePropertyChanged("ConnectMenuHeader");
          StatusMessage = (DriverSelected ? DriverName + " selected." : "Telescope driver not selected");
-         if (DriverSelected) {
-            // Update the site settings
-            // TODO: UpdateDriverSiteDetails();
-         }
       }
 
-#endregion
+      #endregion
 
       private string _StatusMessage = "Not connected.";
       public string StatusMessage
@@ -262,9 +307,9 @@ namespace Lunatic.TelescopeControl.ViewModel
          }
       }
 
-#endregion
+      #endregion
 
-#region Visibility display properties ...
+      #region Visibility display properties ...
 
       /// <summary>
       /// Used to control the main form component visiblity
@@ -381,12 +426,12 @@ namespace Lunatic.TelescopeControl.ViewModel
          RaisePropertyChanged("PulseGuidingVisibility");
       }
 
-#endregion
+      #endregion
 
-#region Telescope driver properties
-      private TimeSpan _LocalSiderealTime;
+      #region Telescope driver properties
+      private double _LocalSiderealTime;
 
-      public TimeSpan LocalSiderealTime
+      public double LocalSiderealTime
       {
          get
          {
@@ -394,7 +439,7 @@ namespace Lunatic.TelescopeControl.ViewModel
          }
          set
          {
-            Set<TimeSpan>(ref _LocalSiderealTime, value);
+            Set<double>(ref _LocalSiderealTime, value);
          }
       }
 
@@ -505,10 +550,10 @@ namespace Lunatic.TelescopeControl.ViewModel
          }
       }
        */
-#endregion
+      #endregion
 
 
-#region GuideRateRightAscension ...
+      #region GuideRateRightAscension ...
       // TODO: Migrate GuideRateRightAscension and just pass the value to the driver
       private double _GuideRateRightAscension;
       public double GuideRateRightAscension
@@ -585,10 +630,10 @@ Public Property Let GuideRateRightAscension(ByVal newval As Double)
  End If
 End Property
        */
-#endregion
+      #endregion
 
 
-#endregion
+      #endregion
 
       /// <summary>
       /// Initializes a new instance of the MainViewModel class.
@@ -618,7 +663,7 @@ End Property
          base.Cleanup();
       }
 
-#region Timers ...
+      #region Timers ...
       // This code creates a new DispatcherTimer with an interval of 15 seconds.
       private DispatcherTimer _DisplayTimer;
       private bool _ProcessingDisplayTimerTick = false;
@@ -626,7 +671,7 @@ End Property
       {
          if (Driver != null && !_ProcessingDisplayTimerTick) {
             _ProcessingDisplayTimerTick = true;
-            LocalSiderealTime = TimeSpan.FromHours(Driver.SiderealTime);
+            LocalSiderealTime = Driver.SiderealTime;
             RightAscension = Driver.RightAscension;
             Declination = Driver.Declination;
             Altitude = Driver.Altitude;
@@ -634,40 +679,61 @@ End Property
 
             if (Driver.AtPark != IsParked) {
                RaisePropertyChanged("IsParked");
-               UnparkCommand.RaiseCanExecuteChanged();
                ParkCommand.RaiseCanExecuteChanged();
             }
+            RefreshParkStatus();
 
+            RaisePropertyChanged("IsSlewing");
             _ProcessingDisplayTimerTick = false;
          }
       }
-#endregion
 
-#region Settings ...
+      private void RefreshParkStatus()
+      {
+         try {
+            string result = Driver.CommandString("Lunatic:GetParkStatus", false);
+            int parkStatus;
+            if (int.TryParse(result, out parkStatus)) {
+               ParkStatus = (ParkStatus)parkStatus;
+               if (ParkStatus == ParkStatus.Parked) {
+                  ParkCaption = "Unpark";
+                  ParkStatusPosition = "HOME";
+               }
+               else {
+                  ParkCaption = "Park: HOME";
+                  ParkStatusPosition = "";
+               }
+            }
+            else {
+               StatusMessage = "Invalid park status returned.";
+            }
+         }
+         catch (Exception ex) {
+            // TODO: Sort out better error message display
+            StatusMessage = ex.Message;
+         }
+      }
+
+      #endregion
+
+      #region Settings ...
       private void PopSettings()
       {
          _DriverId = _Settings.DriverId;
-         DisplayMode = _Settings.DisplayMode;
+         _DisplayMode = _Settings.DisplayMode;
 
-         // Sites are updated directly
-         // _Settings.Sites.CurrentSiteChanged += Sites_CurrentSiteChanged;
          _Settings.Sites.PropertyChanged += Sites_PropertyChanged;
 #if INSTANTIATE_DIRECT
-         Driver = new Telescope();
-         OnDriverChanged(false);
+         _Driver = new Telescope();
 #else
          // Better try to instantiate the driver as well if we have a driver ID
          if (!string.IsNullOrWhiteSpace(_DriverId)) {
             try {
-               Driver = new ASCOM.DriverAccess.Telescope(_DriverId);
-               OnDriverChanged(false);   // Update menu options and stuff for telescope.
-
-               // Update Driver properties
-               // Driver.SiteElevation = 
+               _Driver = new ASCOM.DriverAccess.Telescope(_DriverId);
             }
-            catch (Exception ex) {
+            catch (Exception) {
                _DriverId = string.Empty;
-               StatusMessage = "Failed select previous telescope driver";
+               _StatusMessage = "Failed select previous telescope driver";
             }
          }
 #endif
@@ -678,6 +744,7 @@ End Property
          if (e.PropertyName == "CurrentSite") {
             RaisePropertyChanged("CurrentSite");
             SaveSettings();
+            UpdateDriverSiteDetails();
          }
       }
 
@@ -697,9 +764,9 @@ End Property
          _SettingsProvider.SaveSettings();
       }
 
-#endregion
+      #endregion
 
-#region Relay commands ...
+      #region Relay commands ...
       private RelayCommand<DisplayMode> _DisplayModeCommand;
 
       /// <summary>
@@ -716,7 +783,7 @@ End Property
          }
       }
 
-#region Setup Relay commands ...
+      #region Site Relay commands ...
       private RelayCommand<SiteCollection> _AddSiteCommand;
 
       /// <summary>
@@ -776,10 +843,20 @@ End Property
                                       ));
          }
       }
-#endregion
+
+      private void UpdateDriverSiteDetails()
+      {
+         if (Driver != null) {
+            // Transfer location any other initialisation needed.
+            Driver.SiteElevation = Settings.CurrentSite.Elevation;
+            Driver.SiteLatitude = Settings.CurrentSite.Latitude;
+            Driver.SiteLongitude = Settings.CurrentSite.Longitude;
+         }
+      }
+      #endregion
 
 
-#region Choose, Connect, Disconnect etc ...
+      #region Choose, Connect, Disconnect etc ...
       private RelayCommand _ChooseCommand;
 
       public RelayCommand ChooseCommand
@@ -832,10 +909,7 @@ End Property
             bool initialiseNeeded = !Driver.CommandBool("Lunatic:IsInitialised", false);
             Driver.Connected = true;
             if (initialiseNeeded) {
-               // Transfer location any other initialisation needed.
-               Driver.SiteElevation = Settings.CurrentSite.Elevation;
-               Driver.SiteLatitude = Settings.CurrentSite.Latitude;
-               Driver.SiteLongitude = Settings.CurrentSite.Longitude;
+               UpdateDriverSiteDetails();
             }
             _ProcessingDisplayTimerTick = false;
             _DisplayTimer.Start();
@@ -868,9 +942,9 @@ End Property
          }
       }
 
-#endregion
+      #endregion
 
-#region Slewing commands ...
+      #region Slewing commands ...
       private RelayCommand<SlewButton> _StartSlewCommand;
 
       public RelayCommand<SlewButton> StartSlewCommand
@@ -938,9 +1012,9 @@ End Property
                }, (button) => { return (IsConnected); }));   // Check that we are connected
          }
       }
-#endregion
+      #endregion
 
-#region Parking and unparking commands ...
+      #region Parking and unparking commands ...
       private RelayCommand _ParkCommand;
 
       public RelayCommand ParkCommand
@@ -949,27 +1023,19 @@ End Property
          {
             return _ParkCommand
                ?? (_ParkCommand = new RelayCommand(() => {
-                  Driver.Park();
-               }, () => { return (IsConnected && !IsParked && !IsSlewing); }));   // Check that we are connected
+                  if (IsParked) {
+                     Driver.Unpark();
+                  }
+                  else {
+                     Driver.Park();
+                  }
+               }, () => { return (IsConnected && !IsSlewing); }));   // Check that we are connected
          }
       }
 
+      #endregion
 
-      private RelayCommand _UnparkCommand;
-
-      public RelayCommand UnparkCommand
-      {
-         get
-         {
-            return _UnparkCommand
-               ?? (_UnparkCommand = new RelayCommand(() => {
-                  Driver.Unpark();
-               }, () => { return (IsConnected && IsParked); }));   // Check that we are connected
-         }
-      }
-#endregion
-
-#endregion
+      #endregion
 
 
       private void RaiseCanExecuteChanged()
@@ -978,6 +1044,24 @@ End Property
          ConnectCommand.RaiseCanExecuteChanged();
          StartSlewCommand.RaiseCanExecuteChanged();
          StopSlewCommand.RaiseCanExecuteChanged();
+         ParkCommand.RaiseCanExecuteChanged();
       }
+
+      #region IDisposable ...
+      public void Dispose()
+      {
+         Dispose(true);
+         GC.SuppressFinalize(this);
+      }
+
+      protected virtual void Dispose(bool disposing)
+      {
+         if (disposing) {
+            if (_Driver != null) {
+               _Driver.Dispose();
+            }
+         }
+      }
+      #endregion
    }
 }

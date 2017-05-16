@@ -191,7 +191,7 @@
     <Compile Include="Classes\Driver_CustomActions.cs">
       <DependentUpon>Driver.cs</DependentUpon>
     </Compile>
-    <Compile Include="Classes\Driver_EncoderTimer.cs">
+    <Compile Include="Classes\Driver_Timers.cs">
       <DependentUpon>Driver.cs</DependentUpon>
     </Compile>
     <Compile Include="Classes\Driver_PEC.cs">

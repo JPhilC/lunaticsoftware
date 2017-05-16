@@ -2,6 +2,7 @@
 
 namespace Lunatic.SyntaController
 {
+   [Serializable]
    public class MountControllerException : Exception
    {
       private ErrorCode ErrCode;

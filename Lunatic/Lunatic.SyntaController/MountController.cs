@@ -72,7 +72,6 @@ namespace Lunatic.SyntaController
       const char cErrChar = '!';              // Leading charactor of an ABNORMAL response.
       const char cEndChar = (char)13;         // Tailing charactor of command and response.
 
-      private char dir = '0'; // direction
                               // Mount code: 0x00=EQ6, 0x01=HEQ5, 0x02=EQ5, 0x03=EQ3
                               //             0x80=GT,  0x81=MF,   0x82=114GT
                               //             0x90=DOB
@@ -98,8 +97,6 @@ namespace Lunatic.SyntaController
       private int[] CurrentPosition = new int[2];
       private int[] GuideRateOffset = new int[2];
 
-      private bool IsDCMotor;                // Ture: The motor controller is a DC motor controller. It uses TX/RX line is bus topology.
-                                             // False: The motor controller is a stepper motor controller. TX/RX lines are seperated.
       private bool InstantStop;              // Use InstantStop command for MCAxisStop
 
       private bool HasPolarscopeLED;
@@ -771,7 +768,7 @@ namespace Lunatic.SyntaController
             // Log.d(TAG,"BCDstr2int " + response + ","+value);
             return value;
          }
-         catch (FormatException e) {
+         catch (FormatException) {
             throw new MountControllerException(ErrorCode.ERR_INVALID_DATA,
                             "Parse BCD Failed");
          }

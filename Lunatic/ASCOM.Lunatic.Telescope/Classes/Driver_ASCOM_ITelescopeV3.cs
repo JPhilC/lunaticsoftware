@@ -11,6 +11,7 @@ using ASCOM.Lunatic.Telescope.Classes;
 using Lunatic.Core.Geometry;
 using Lunatic.SyntaController;
 using Lunatic.Core.Classes;
+using System.Diagnostics.CodeAnalysis;
 
 /// <summary>
 /// The ASCOM ITelescopeV3 implimentation for the driver.
@@ -20,10 +21,6 @@ namespace ASCOM.Lunatic.Telescope
    partial class Telescope
    {
       #region Private members ...
-      /// <summary>
-      /// DEC HomePos - Varies with different mounts
-      /// </summary>
-      AxisPosition AxisHomePosition;
       /// <summary>
       /// 
       /// </summary>
@@ -35,7 +32,6 @@ namespace ASCOM.Lunatic.Telescope
       private MountSpeed[] MoveAxisRate = new MountSpeed[2] { MountSpeed.LowSpeed, MountSpeed.LowSpeed };
       private double[] LastGotoTarget = new double[2] { 0.0, 0.0 };
       private int[] PulseDuration = new int[2] { 0, 0 };
-      private bool ProcessingPulseTimerTick = false;
 
 
 
@@ -225,12 +221,11 @@ namespace ASCOM.Lunatic.Telescope
       /// <remarks><p style="color:red"><b>Can throw a not implemented exception</b></p> </remarks>
       public string CommandString(string command, bool raw)
       {
-         CheckConnected("CommandString");
+         _Logger.LogMessage("CommandString", string.Format("({0}, {1})", command, raw));
          // it's a good idea to put all the low level communication with the device here,
          // then all communication calls this function
          // you need something to ensure that only one command is in progress at a time
-
-         throw new ASCOM.MethodNotImplementedException("CommandString");
+         return ProcessCommandString(command, raw);
       }
 
       /// <summary>
@@ -278,8 +273,8 @@ namespace ASCOM.Lunatic.Telescope
 
                      // Initialise some settings
                      LastPECRate = 0;
-            // gCurrent_time = 0;
-            // gLast_time = 0;
+                     // gCurrent_time = 0;
+                     // gLast_time = 0;
                      EmulatorAxisInitialPosition[RA_AXIS] = 0;
 
                      // gAlignmentStars_count = 0
@@ -402,7 +397,7 @@ namespace ASCOM.Lunatic.Telescope
 
                      // Initialise the axes at the home position
                      if (motorStatus == Core.Constants.MOUNT_MOTORINACTIVE) {
-                        CurrentAxisPosition = AxisHomePosition;
+                        CurrentAxisPosition = Settings.AxisHomePosition;
                         int result = _Mount.MCInitialiseAxes(CurrentAxisPosition);
                         if (result != Core.Constants.MOUNT_SUCCESS) {
                            throw new ASCOM.DriverException("There was an error initialising the mount axes. The mount returned: " + result.ToString());
@@ -435,7 +430,7 @@ namespace ASCOM.Lunatic.Telescope
                      //gEQparkstatus = readparkStatus()
 
 
-                     if (ParkStatus == ParkStatus.Parked) {
+                     if (Settings.ParkStatus == ParkStatus.Parked) {
                         //  currently parked
                         // HC.Frame15.Caption = oLangDll.GetLangString(146) & " " & oLangDll.GetLangString(177)
                         // Read Park position
@@ -586,7 +581,7 @@ namespace ASCOM.Lunatic.Telescope
       {
          System.Diagnostics.Debug.WriteLine("AbortSlew()");
          _Logger.LogMessage("Command", "AbortSlew");
-         if (ParkStatus == ParkStatus.Parked) {
+         if (Settings.ParkStatus == ParkStatus.Parked) {
             // no move axis if parked or parking!
             throw new ASCOM.ParkedException("AbortSlew");
          }
@@ -640,6 +635,7 @@ namespace ASCOM.Lunatic.Telescope
       /// This is only available for telescope InterfaceVersions 2 and 3
       /// </remarks>
       /// <exception cref="PropertyNotImplementedException">If the property is not implemented</exception>
+      [SuppressMessage("Microsoft.Design", "CA1065: Do not raise exceptions in unexpected locations")]
       public double ApertureArea
       {
          get
@@ -656,6 +652,7 @@ namespace ASCOM.Lunatic.Telescope
       /// This is only available for telescope InterfaceVersions 2 and 3
       /// </remarks>
       /// <exception cref="PropertyNotImplementedException">If the property is not implemented</exception>
+      [SuppressMessage("Microsoft.Design", "CA1065: Do not raise exceptions in unexpected locations")]
       public double ApertureDiameter
       {
          get
@@ -1162,6 +1159,7 @@ namespace ASCOM.Lunatic.Telescope
       /// </list>
       /// </para>
       /// </remarks>
+      [SuppressMessage("Microsoft.Design", "CA1065: Do not raise exceptions in unexpected locations")]
       public bool DoesRefraction
       {
          get
@@ -1240,6 +1238,7 @@ namespace ASCOM.Lunatic.Telescope
       /// This property may be used by clients to calculate telescope field of view and plate scale when combined with detector pixel size and geometry. 
       /// <para>This is only available for telescope InterfaceVersions 2 and 3</para>
       /// </remarks>
+      [SuppressMessage("Microsoft.Design", "CA1065: Do not raise exceptions in unexpected locations")]
       public double FocalLength
       {
          get
@@ -1280,7 +1279,7 @@ namespace ASCOM.Lunatic.Telescope
 
          set
          {
-            Set<double>(ref _GuideRateDeclination, value);
+            _GuideRateDeclination = value;
             _Logger.LogMessage("GuideRateDeclination", "Set - " + _GuideRateDeclination.ToString());
          }
       }
@@ -1315,7 +1314,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            Set<double>(ref _GuideRateRightAscension, value);
+            _GuideRateRightAscension = value;
             _Logger.LogMessage("GuideRateRightAscension", "Set - " + _GuideRateRightAscension.ToString());
          }
       }
@@ -1329,6 +1328,7 @@ namespace ASCOM.Lunatic.Telescope
       /// <remarks>
       /// Raises an error if the value of the <see cref="CanPulseGuide" /> property is false (the driver does not support the <see cref="PulseGuide" /> method). 
       /// </remarks>
+      [SuppressMessage("Microsoft.Design", "CA1065: Do not raise exceptions in unexpected locations")]
       public bool IsPulseGuiding
       {
          get
@@ -1414,8 +1414,21 @@ namespace ASCOM.Lunatic.Telescope
       /// </remarks>
       public void Park()
       {
-         _Logger.LogMessage("Park", "Not implemented");
-         throw new ASCOM.MethodNotImplementedException("Park");
+         _Logger.LogMessage("Command", "Park");
+         if (Settings.ParkStatus == ParkStatus.Unparked) {
+            lock (_Lock) {
+               Settings.ParkStatus = ParkStatus.Parking;
+               if (Settings.AscomCompliance.UseSynchronousParking) {
+                  ParkScope();
+               }
+               else {
+                  ParkScopeAsync();
+               }
+               Settings.ParkStatus = ParkStatus.Parked;
+            }
+         }
+
+         // TODO: Properly implement park
       }
 
       /// <summary>
@@ -1711,6 +1724,7 @@ namespace ASCOM.Lunatic.Telescope
       /// Reading the property will raise an error if the value has never been set or is otherwise unavailable. 
       /// <para>This is only available for telescope InterfaceVersions 2 and 3</para>
       /// </remarks>
+      [SuppressMessage("Microsoft.Design", "CA1065: Do not raise exceptions in unexpected locations")]
       public double SiteElevation
       {
          get
@@ -1734,7 +1748,6 @@ namespace ASCOM.Lunatic.Telescope
                _SiteElevation = value;
                AscomTools.Transform.SiteElevation = value;
                Settings.CurrentMountPosition.Refresh(AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
-               RaisePropertyChanged();
             }
          }
       }
@@ -1751,6 +1764,7 @@ namespace ASCOM.Lunatic.Telescope
       /// Reading the property will raise an error if the value has never been set or is otherwise unavailable. 
       /// <para>This is only available for telescope InterfaceVersions 2 and 3</para>
       /// </remarks>
+      [SuppressMessage("Microsoft.Design", "CA1065: Do not raise exceptions in unexpected locations")]
       public double SiteLatitude
       {
          get
@@ -1774,7 +1788,6 @@ namespace ASCOM.Lunatic.Telescope
                _SiteLatitude = value;
                AscomTools.Transform.SiteLatitude = value;
                Settings.CurrentMountPosition.Refresh(AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
-               RaisePropertyChanged();
             }
          }
       }
@@ -1792,6 +1805,7 @@ namespace ASCOM.Lunatic.Telescope
       /// Note that West is negative! 
       /// <para>This is only available for telescope InterfaceVersions 2 and 3</para>
       /// </remarks>
+      [SuppressMessage("Microsoft.Design", "CA1065: Do not raise exceptions in unexpected locations")]
       public double SiteLongitude
       {
          get
@@ -1815,7 +1829,6 @@ namespace ASCOM.Lunatic.Telescope
                _SiteLongitude = value;
                AscomTools.Transform.SiteLongitude = value;
                Settings.CurrentMountPosition.Refresh(AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
-               RaisePropertyChanged();
             }
          }
       }
@@ -2091,6 +2104,7 @@ namespace ASCOM.Lunatic.Telescope
       /// <remarks>
       /// Setting this property will raise an error if the given value is outside the range -90 to +90 degrees. Reading the property will raise an error if the value has never been set or is otherwise unavailable. 
       /// </remarks>
+      [SuppressMessage("Microsoft.Design", "CA1065: Do not raise exceptions in unexpected locations")]
       public double TargetDeclination
       {
          get
@@ -2113,7 +2127,6 @@ namespace ASCOM.Lunatic.Telescope
                throw new ASCOM.InvalidValueException("TargetDeclination", value.ToString(), "-90 to 90");
             }
             _TargetDeclination = value;
-            RaisePropertyChanged();
          }
       }
 
@@ -2127,6 +2140,7 @@ namespace ASCOM.Lunatic.Telescope
       /// <remarks>
       /// Setting this property will raise an error if the given value is outside the range 0 to 24 hours. Reading the property will raise an error if the value has never been set or is otherwise unavailable. 
       /// </remarks>
+      [SuppressMessage("Microsoft.Design", "CA1065: Do not raise exceptions in unexpected locations")]
       public double TargetRightAscension
       {
          get
@@ -2149,7 +2163,6 @@ namespace ASCOM.Lunatic.Telescope
                throw new ASCOM.InvalidValueException("TargetRightAscension", value.ToString(), "0 to 24");
             }
             _TargetRightAscension = value;
-            RaisePropertyChanged();
          }
       }
 
@@ -2176,7 +2189,7 @@ namespace ASCOM.Lunatic.Telescope
          set
          {
             _Logger.LogMessage("Tracking", "Set - " + value.ToString());
-            if (ParkStatus == ParkStatus.Unparked || (ParkStatus == ParkStatus.Parked && value)) {
+            if (Settings.ParkStatus == ParkStatus.Unparked || (Settings.ParkStatus == ParkStatus.Parked && value)) {
                if (value) {
                   if (RateAdjustment[0] == 0 && RateAdjustment[1] == 0) {
                      // track at sidereal
@@ -2310,7 +2323,7 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             DateTime utcDate = DateTime.UtcNow;
-            _Logger.LogMessage("TrackingRates", "Get - " + String.Format("MM/dd/yy HH:mm:ss", utcDate));
+            _Logger.LogMessage("TrackingRates", "Get - " + String.Format("{0:MM/dd/yy HH:mm:ss}", utcDate));
             return utcDate;
          }
          set
@@ -2332,16 +2345,21 @@ namespace ASCOM.Lunatic.Telescope
       public void Unpark()
       {
          _Logger.LogMessage("COMMAND", "Unpark");
-
-         // ASCOM, in their wisdom (or lack of it), require that park blocks the client until completion.
-         // This is rather poor and we have chosen to ignor that part of the spec believing that
-         // non blocking asynchronous methods are a much better solution. However some clients may
-         // require a blocking function so we've provided an option to allow this.
-         if (Settings.AscomCompliance.UseSynchronousParking) {
-            UnparkScope();
-         }
-         else {
-            UnparkScopeAsync();
+         if (Settings.ParkStatus == ParkStatus.Parked) {
+            lock(_Lock) {
+               Settings.ParkStatus = ParkStatus.Unparking;
+               // ASCOM, in their wisdom (or lack of it), require that park blocks the client until completion.
+               // This is rather poor and we have chosen to ignor that part of the spec believing that
+               // non blocking asynchronous methods are a much better solution. However some clients may
+               // require a blocking function so we've provided an option to allow this.
+               if (Settings.AscomCompliance.UseSynchronousParking) {
+                  UnparkScope();
+               }
+               else {
+                  UnparkScopeAsync();
+               }
+               Settings.ParkStatus = ParkStatus.Unparked;
+            }
          }
       }
 

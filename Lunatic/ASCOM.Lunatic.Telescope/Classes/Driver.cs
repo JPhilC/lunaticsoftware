@@ -30,6 +30,7 @@ using Lunatic.Core;
 using Lunatic.SyntaController;
 using System.Threading.Tasks;
 using Core = Lunatic.Core;
+using Lunatic.Core.Geometry;
 
 namespace ASCOM.Lunatic.Telescope
 {
@@ -117,23 +118,6 @@ namespace ASCOM.Lunatic.Telescope
          }
       }
 
-      //EQPARKSTATUS=parked
-      private ParkStatus _ParkStatus;
-      private ParkStatus ParkStatus
-      {
-         get
-         {
-            return _ParkStatus;
-         }
-         set
-         {
-            if (value == _ParkStatus) {
-               return;
-            }
-            _ParkStatus = value;
-            RaisePropertyChanged();
-         }
-      }
 
       public int RAEncoder
       {
@@ -185,29 +169,33 @@ namespace ASCOM.Lunatic.Telescope
          _EncoderTimer.Elapsed += _EncoderTimer_Elapsed;
          // EncoderTimer is started in the Connected property code.
 
+         _PulseTimer = new System.Timers.Timer(Settings.PulseTimerInterval);
+
          _Logger.LogMessage("Telescope", "Completed initialisation");
 
-         MaximumSyncDifference = (2 * Math.PI) / 8.0;    // Allow a 45.0 (360/8) but in degrees discrepancy in Radians.
+         MaximumSyncDifference = Core.Constants.TWO_PI / 16;    // Allow a 22.5.0 (360/16) but in degrees discrepancy in Radians.
       }
 
-
-      /// <summary>
-      /// Dispose the late-bound interface, if needed. Will release it via COM
-      /// if it is a COM object, else if native .NET will just dereference it
-      /// for GC.
-      /// </summary>
-      public new void Dispose()
+      bool disposed = false;
+      protected override void Dispose(bool disposing)
       {
-         System.Diagnostics.Trace.WriteLine("ASCOM.Lunatic.Telescope.Dispose() called.");
-         // Save the current settings one last time
-         SettingsProvider.Current.SaveSettings();
-         // Clean up the tracelogger and util objects
-         _Logger.Enabled = false;
-         _Logger.Dispose();
-         _Logger = null;
-         AscomTools.Dispose();
-         AscomTools = null;
-         base.Dispose();
+         if (!disposed) {
+            if (disposing) {
+               System.Diagnostics.Trace.WriteLine("ASCOM.Lunatic.Telescope.Dispose() called.");
+               // Save the current settings one last time
+               SettingsProvider.Current.SaveSettings();
+               // Clean up the tracelogger and util objects
+               _EncoderTimer.Dispose();
+               _PulseTimer.Dispose();
+               _Logger.Enabled = false;
+               _Logger.Dispose();
+               _Logger = null;
+               AscomTools.Dispose();
+               AscomTools = null;
+            }
+            disposed = true;
+         }
+         base.Dispose(disposing);
       }
 
       /// <summary>
@@ -370,8 +358,7 @@ namespace ASCOM.Lunatic.Telescope
          //MaximumSyncDifference = TotalStepsPer360[0] / 16;             // totalstep /16 = 22.5 degree field
          MeridianWest = AxisZeroPosition[RA_AXIS] + Core.Constants.HALF_PI;
          MeridianEast = AxisZeroPosition[RA_AXIS] - Core.Constants.HALF_PI;
-         AxisHomePosition[DEC_AXIS] = Core.Constants.HALF_PI + AxisZeroPosition[DEC_AXIS];
-         MaximumSyncDifference = Core.Constants.TWO_PI / 16;
+         
       }
       #endregion
 
@@ -418,7 +405,7 @@ namespace ASCOM.Lunatic.Telescope
          if (_Mount.EQ_GetMountStatus() == 1) {     // Make sure that we unpark only if the mount is online
 
 
-            if (ParkStatus == ParkStatus.Parked) {
+            if (Settings.ParkStatus == ParkStatus.Parked) {
 
 
                // HC.TrackingFrame.Caption = oLangDll.GetLangString(121) & " " & oLangDll.GetLangString(178)
@@ -454,9 +441,8 @@ namespace ASCOM.Lunatic.Telescope
                //  set status as unparked
 
                // Set status as unparked 
-               ParkStatus = ParkStatus.Unparked;
+               Settings.ParkStatus = ParkStatus.Unparked;
                // Persist the current Park status to disk
-               Settings.ParkStatus = ParkStatus;
                SettingsProvider.Current.SaveSettings();
             }
          }

@@ -5,6 +5,7 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace ASCOM.Lunatic.Telescope
@@ -23,6 +24,7 @@ namespace ASCOM.Lunatic.Telescope
    /// </summary>
    [CategoryOrder("Port Details", 1)]
    [CategoryOrder("ASCOM Options", 2)]
+   [ComVisible(false)]
    public class SetupViewModel : LunaticViewModelBase
    {
 
@@ -405,24 +407,24 @@ namespace ASCOM.Lunatic.Telescope
       public void PopProperties()
       {
 
-         SelectedCOMPort = COMPortService.GetCOMPortsInfo().Where(port => port.Name == Settings.COMPort).FirstOrDefault();
-         TimeOut = _Settings.Timeout;
-         Retry = _Settings.Retry;
-         BaudRate = _Settings.BaudRate;
-         PulseGuidingMode = _Settings.PulseGuidingMode;
+         _SelectedCOMPort = COMPortService.GetCOMPortsInfo().Where(port => port.Name == Settings.COMPort).FirstOrDefault();
+         _TimeOut = _Settings.Timeout;
+         _Retry = _Settings.Retry;
+         _BaudRate = _Settings.BaudRate;
+         _PulseGuidingMode = _Settings.PulseGuidingMode;
 
-         IsTraceOn = _Settings.IsTracing;
+         _IsTraceOn = _Settings.IsTracing;
 
-         SlewWithTrackingOff = _Settings.AscomCompliance.SlewWithTrackingOff;
-         AllowExceptions = _Settings.AscomCompliance.AllowExceptions;
-         AllowPulseGuide = _Settings.AscomCompliance.AllowPulseGuide;
-         AllowPulseGuidingExceptions = _Settings.AscomCompliance.AllowPulseGuidingExceptions;
-         UseSynchronousParking = _Settings.AscomCompliance.UseSynchronousParking;
-         Epoch = _Settings.AscomCompliance.Epoch;
-         SideOfPier = _Settings.AscomCompliance.SideOfPier;
-         SwapPointingSideOfPier = _Settings.AscomCompliance.SwapPointingSideOfPier;
-         SwapPhysicalSideOfPier = _Settings.AscomCompliance.SwapPhysicalSideOfPier;
-         StrictAscom = _Settings.AscomCompliance.Strict;
+         _SlewWithTrackingOff = _Settings.AscomCompliance.SlewWithTrackingOff;
+         _AllowExceptions = _Settings.AscomCompliance.AllowExceptions;
+         _AllowPulseGuide = _Settings.AscomCompliance.AllowPulseGuide;
+         _AllowPulseGuidingExceptions = _Settings.AscomCompliance.AllowPulseGuidingExceptions;
+         _UseSynchronousParking = _Settings.AscomCompliance.UseSynchronousParking;
+         _Epoch = _Settings.AscomCompliance.Epoch;
+         _SideOfPier = _Settings.AscomCompliance.SideOfPier;
+         _SwapPointingSideOfPier = _Settings.AscomCompliance.SwapPointingSideOfPier;
+         _SwapPhysicalSideOfPier = _Settings.AscomCompliance.SwapPhysicalSideOfPier;
+         _StrictAscom = _Settings.AscomCompliance.Strict;
 
       }
 

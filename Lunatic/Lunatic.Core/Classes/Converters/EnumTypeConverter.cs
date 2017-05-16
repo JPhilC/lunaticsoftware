@@ -2,9 +2,11 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Lunatic.Core
 {
+   [ComVisible(false)]
     public class EnumTypeConverter : EnumConverter
    {
       private Type m_EnumType;

@@ -1,6 +1,6 @@
 ﻿namespace Lunatic.Core
 {
-   public interface ISettingsProvider <T> where T : DataObjectBase
+   public interface ISettingsProvider <T> 
    {
       T Settings { get; }
       void SaveSettings();

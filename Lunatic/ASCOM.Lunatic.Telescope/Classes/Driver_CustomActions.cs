@@ -30,13 +30,11 @@ namespace ASCOM.Lunatic.Telescope
          string[] values = actionParameters.Split(delimiters);
          switch (actionName) {
             case "Lunatic:SetUnparkPositions":
-               Settings.RAEncoderUnparkPosition = Convert.ToInt32(values[0]);
-               Settings.DECEncoderUnparkPosition = Convert.ToInt32(values[1]);
+               Settings.AxisUnparkPosition = new AxisPosition(Convert.ToInt32(values[0]), Convert.ToInt32(values[1]));
                break;
 
             case "Lunatic:SetParkPositions":
-               Settings.RAEncoderParkPosition = Convert.ToInt32(values[0]);
-               Settings.DECEncoderParkPosition = Convert.ToInt32(values[1]);
+               Settings.AxisParkPosition = new AxisPosition(Convert.ToInt32(values[0]), Convert.ToInt32(values[1]));
                break;
 
             case "Lunatic:SetTrackUsingPEC":
@@ -74,6 +72,20 @@ namespace ASCOM.Lunatic.Telescope
                break;
             default:
                throw new ASCOM.DriverException(string.Format("CommandBool command is not recognised '{0}'.", command));
+
+         }
+         return result;
+      }
+
+      private string ProcessCommandString(string command, bool raw)
+      {
+         string result = "Error";
+         switch (command) {
+            case "Lunatic:GetParkStatus":
+               result = ((int)Settings.ParkStatus).ToString();
+               break;
+            default:
+               throw new ASCOM.DriverException(string.Format("CommandString command is not recognised '{0}'.", command));
 
          }
          return result;

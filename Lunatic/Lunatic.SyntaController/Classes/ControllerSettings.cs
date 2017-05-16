@@ -3,11 +3,12 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Collections;
+using System.Runtime.InteropServices;
 
 namespace Lunatic.SyntaController
 {
 
-
+   [ComVisible(false)]
    public class ControllerSettings : DataObjectBase
    {
 

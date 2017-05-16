@@ -6,9 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections;
+using System.Runtime.InteropServices;
 
 namespace Lunatic.Core
 {
+   [ComVisible(false)]
    public abstract class DataObjectBase : ObservableObject, INotifyDataErrorInfo
    {
       #region Notify data error

@@ -469,10 +469,10 @@ namespace ASCOM.Lunatic.Telescope
       {
          _IsSlewing = false;
 
-         if (ParkStatus == ParkStatus.Parking) {
+         if (Settings.ParkStatus == ParkStatus.Parking) {
             // we were slewing to park position
             // well its not happening now!
-            ParkStatus = ParkStatus.Unparked;
+            Settings.ParkStatus = ParkStatus.Unparked;
             // HC.ParkTimer.Enabled = False
             // HC.Frame15.Caption = oLangDll.GetLangString(146) & " " & oLangDll.GetLangString(179)
             // Call SetParkCaption
@@ -525,7 +525,7 @@ namespace ASCOM.Lunatic.Telescope
          LastPECRate = 0;
 
 
-         if (ParkStatus != ParkStatus.Unparked) {
+         if (Settings.ParkStatus != ParkStatus.Unparked) {
             //  no tracking if parked!
             // HC.Add_Message(oLangDll.GetLangString(5013))
             return;
@@ -566,7 +566,7 @@ namespace ASCOM.Lunatic.Telescope
       private void StartLunarTracking(bool mute)
       {
          LastPECRate = 0;
-         if (ParkStatus != ParkStatus.Unparked) {
+         if (Settings.ParkStatus != ParkStatus.Unparked) {
             // HC.Add_Message(oLangDll.GetLangString(5013))
             return;
          }
@@ -597,7 +597,7 @@ namespace ASCOM.Lunatic.Telescope
       private void StartSolarTracking(bool mute)
       {
          LastPECRate = 0;
-         if (ParkStatus != ParkStatus.Unparked) {
+         if (Settings.ParkStatus != ParkStatus.Unparked) {
             // HC.Add_Message(oLangDll.GetLangString(5013))
             return;
          }
@@ -628,7 +628,7 @@ namespace ASCOM.Lunatic.Telescope
       {
 
          LastPECRate = 0;
-         if (ParkStatus != ParkStatus.Unparked) {
+         if (Settings.ParkStatus != ParkStatus.Unparked) {
             // HC.Add_Message(oLangDll.GetLangString(5013))
             return;
          }
@@ -645,8 +645,6 @@ namespace ASCOM.Lunatic.Telescope
          }
 
          double[] rate = new double[2];
-         double i;
-         double j;
 
 
          // On Error GoTo handlerr

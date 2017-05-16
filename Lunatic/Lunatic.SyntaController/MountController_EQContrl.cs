@@ -129,24 +129,12 @@ namespace Lunatic.SyntaController
 
       #region Members ...
       //Detected mount type
-      private MountType MountType;      // EQG, NexStar, ..
-      private AxisId MountMotor;    // RA, DEC
       private double MountRate;     // in EQG values
       private MountSpeed MountSpeed;     // High/Low
       private MountTracking MountTracking;  // Sidereal, Solar, Lunar
       private MountMode MountMode;      // Step/Slew
       private AxisDirection MountDirection; // Forward/Reverse
       private HemisphereOption MountHemiSphere;   // North/South
-      private char MountCommand;   // Current command
-      private int MountParameter;
-      private int MountCount;
-      private int TargetRA;
-      private int TargetDEC;
-      private int FastRA;
-      private int FastDEC;
-      private int MountRA;
-      private int MountDEC;
-      private byte MountGOTO;
 
 
       // EQ Mount Active State
@@ -313,7 +301,6 @@ namespace Lunatic.SyntaController
          GuideRateOffset[0] = 0;            // RA Offset
          GuideRateOffset[1] = 0;            // DEC Offset
 
-         MountType = MountType.EqMount;         // EQG ..
          // qPort.eqnMountMotor = RAMotor;        // RA, DEC
          MountRate = 1;            // in EQG values
          MountSpeed = MountSpeed.LowSpeed;    // High/Low
@@ -1562,39 +1549,6 @@ namespace Lunatic.SyntaController
          }
       }
 
-      /// <summary>
-      /// Attempts to detect a mount by sending version commands
-      /// </summary>
-      /// <returns>
-      ///		301 - EQG Series mount
-      ///		302 - Nexstar Series mount
-      ///		998 - No valid mount detected
-      /// </returns>
-      public int EQ_GetMountType()
-      {
-         int i;
-
-         if (!MountActive) {
-            return Constants.MOUNT_NOCOMPORT;
-         }
-
-
-         // Set default value
-         MountType = MountType.EqMount;
-
-         // Check EQMOUNT
-         i = EQ_SendCommand(AxisId.Axis1_RA, 'e', 0, NO_PARAMS);
-         if ((i & Constants.EQ_ERROR) != Constants.EQ_ERROR)       // No errors so mount returned firmware version OK
-         {
-            MountType = MountType.EqMount;     // So its an EQG mount
-            return Constants.MOUNT_EQMOUNT;
-         }
-
-         // Else bad mount
-         return Constants.MOUNT_BADMOUNT;
-      }
-
-
 
       /// <summary>
       /// Get Mount//s Firmware version
@@ -1627,16 +1581,6 @@ namespace Lunatic.SyntaController
          else {
             return Constants.MOUNT_NOTCONNECTED;
          }
-      }
-
-
-      /// <summary>
-      /// Get Driver Version
-      /// </summary>
-      /// <returns>Driver Version</returns>
-      public int EQ_DriverVersion()
-      {
-         return DRIVER_VERSION;
       }
 
 
@@ -1972,7 +1916,6 @@ namespace Lunatic.SyntaController
                      break;
                   default:
                      return  Constants.MOUNT_BADPARAM;
-                     break;
                }
                switch (value) {
                   case 0:

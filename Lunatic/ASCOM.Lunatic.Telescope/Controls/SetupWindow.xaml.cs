@@ -19,10 +19,10 @@ using Xceed.Wpf.Toolkit.PropertyGrid;
 
 namespace ASCOM.Lunatic.Telescope
 {
-   [ComVisible(false)]
    /// <summary>
    /// Interaction logic for SetupWindow.xaml
    /// </summary>
+   [ComVisible(false)]
    public partial class SetupWindow : Window
    {
       SetupViewModel _ViewModel;

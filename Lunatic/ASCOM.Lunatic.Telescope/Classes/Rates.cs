@@ -21,7 +21,6 @@ namespace ASCOM.Lunatic.Telescope
    // [Guid("b0b05459-f794-45b5-9d47-20a6407e2c2f")]
    [Guid("26AE3E4D-7CC0-4F50-B146-218791FCD0CD")]
    [ClassInterface(ClassInterfaceType.None)]
-   [ComVisible(true)]
    public class Rate : IRate
    {
       private double maximum = 0;
@@ -72,7 +71,6 @@ namespace ASCOM.Lunatic.Telescope
    //
    [Guid("5ae6e451-5568-4ef8-83cb-cecf816f7b78")]
    [ClassInterface(ClassInterfaceType.None)]
-   [ComVisible(true)]
    public class AxisRates : IAxisRates, IEnumerable
    {
       private TelescopeAxes axis;
@@ -154,8 +152,7 @@ namespace ASCOM.Lunatic.Telescope
    //
    [Guid("2487a69d-a3cc-40e0-93da-7168a0e6362b")]
    [ClassInterface(ClassInterfaceType.None)]
-   [ComVisible(true)]
-   public class TrackingRates : ITrackingRates, IEnumerable, IEnumerator
+   public class TrackingRates : ITrackingRates, IEnumerable, IEnumerator, IDisposable
    {
       private readonly DriveRates[] trackingRates;
 
@@ -191,10 +188,6 @@ namespace ASCOM.Lunatic.Telescope
          return this as IEnumerator;
       }
 
-      public void Dispose()
-      {
-         throw new System.NotImplementedException();
-      }
 
       public DriveRates this[int index]
       {
@@ -231,6 +224,23 @@ namespace ASCOM.Lunatic.Telescope
       public void Reset()
       {
          pos.Value = -1;
+      }
+      #endregion
+
+      #region IDisposable ...
+      public void Dispose()
+      {
+         Dispose(true);
+         GC.SuppressFinalize(this);
+      }
+
+      protected virtual void Dispose(bool disposing)
+      {
+         if (disposing) {
+            if (pos != null) {
+               pos.Dispose();
+            }
+         }
       }
       #endregion
    }

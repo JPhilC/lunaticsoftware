@@ -7,12 +7,14 @@ using TA.Ascom.ReactiveCommunications;
 using System.Reactive.Linq;
 using System.Diagnostics;
 using TA.Ascom.ReactiveCommunications.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Lunatic.SyntaController.Transactions
 {
    /// <summary>
    /// Transaction for communicating with modified EQ (Synta) mounts
    /// </summary>
+   [ComVisible(false)]
    public class EQTransaction : DeviceTransaction
    {
 
@@ -84,6 +86,7 @@ namespace Lunatic.SyntaController.Transactions
       }
    }
 
+   [ComVisible(false)]
    public class EQContrlTransaction : DeviceTransaction
    {
 

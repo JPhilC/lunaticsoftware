@@ -177,7 +177,7 @@ namespace Lunatic.Core.Services
             _Watcher = new ManagementEventWatcher(deviceRemovalQuery);
             _Watcher.EventArrived += (sender, eventArgs) => RaisePortRemoved();
          }
-         catch (ManagementException err) {
+         catch (ManagementException) {
 
          }
       }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -78,6 +79,7 @@ namespace Lunatic.Core.Geometry
       private HourAngleFormat _Format;
       private bool _HasBeenSet;
 
+      [SuppressMessage("Microsoft.Usage", "CA2207: Initialize value type static fields inline")]
       static HourAngle()
       {
 

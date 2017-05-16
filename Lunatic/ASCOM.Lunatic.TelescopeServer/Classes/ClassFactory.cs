@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ASCOM.Lunatic
 {
@@ -27,7 +28,7 @@ namespace ASCOM.Lunatic
    // constructor, it implements IClassFactory for any interface
    // that the class implements. Magic!!!
    //
-   public class ClassFactory : IClassFactory
+   public sealed class ClassFactory : IClassFactory
    {
 
       #region Access to ole32.dll functions for class factories
@@ -76,6 +77,7 @@ namespace ASCOM.Lunatic
       // into COM's internal table of Class Factories.
       //
       [DllImport("ole32.dll")]
+      [SuppressMessage("Microsoft.Design", "CA1060: Move P / Invokes to NativeMethods class")]
       static extern int CoRegisterClassObject(
          [In] ref Guid rclsid,
          [MarshalAs(UnmanagedType.IUnknown)] object pUnk,
@@ -90,6 +92,7 @@ namespace ASCOM.Lunatic
       // classes, and begins letting activation requests into the server process.
       //
       [DllImport("ole32.dll")]
+      [SuppressMessage("Microsoft.Design", "CA1060: Move P/Invokes to NativeMethods class")]
       static extern int CoResumeClassObjects();
       //
       // Prevents any new activation requests from the SCM on all class objects
@@ -98,25 +101,27 @@ namespace ASCOM.Lunatic
       // registered, in the apartment it registered in.
       //
       [DllImport("ole32.dll")]
+      [SuppressMessage("Microsoft.Design", "CA1060: Move P / Invokes to NativeMethods class")]
       static extern int CoSuspendClassObjects();
       //
       // CoRevokeClassObject() is used to unregister a Class Factory
       // from COM's internal table of Class Factories.
       //
       [DllImport("ole32.dll")]
+      [SuppressMessage("Microsoft.Design", "CA1060: Move P / Invokes to NativeMethods class")]
       static extern int CoRevokeClassObject(uint dwRegister);
       #endregion
 
       #region Constructor and Private ClassFactory Data
 
-      protected Type m_ClassType;
-      protected Guid m_ClassId;
-      protected ArrayList m_InterfaceTypes;
-      protected uint m_ClassContext;
-      protected uint m_Flags;
-      protected UInt32 m_locked = 0;
-      protected uint m_Cookie;
-      protected string m_progid;
+      Type m_ClassType;
+      Guid m_ClassId;
+      ArrayList m_InterfaceTypes;
+      uint m_ClassContext;
+      uint m_Flags;
+      UInt32 m_locked = 0;
+      uint m_Cookie;
+      string m_progid;
 
       public ClassFactory(Type type)
       {

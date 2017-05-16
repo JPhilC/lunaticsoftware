@@ -12,6 +12,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 /// Imported from https://github.com/skywatcher-pacific/skywatcher_open
 
@@ -58,40 +59,23 @@ namespace ASCOM.Lunatic.Telescope
 
 
       #region Properties ....
-      private bool _IsConnected = false;   // Flag to indicate whether this instance has connected to the Shared COM Port
-
       /// <summary>
       /// Returns true if there is a valid connection to the driver hardware
       /// </summary>
-      protected bool IsConnected
-      {
-         get
-         {
-            return _IsConnected;
-         }
-         set
-         {
-            Set<bool>(ref _IsConnected, value);
-         }
-      }
+      protected bool IsConnected { get; set; }
 
       #endregion
 
 
       public SyntaMountBase() : base()
       {
-
          IsEQMount = false;
-
       }
 
       ~SyntaMountBase()
       {
-         System.Diagnostics.Trace.WriteLine("ASCOM.Lunatic.SyntaMountBase destructor is called.");
-         if (IsConnected) {
-            // SharedResources.Controller
-            IsConnected = false;
-         }
+         base.Dispose(false);
+
       }
 
    }

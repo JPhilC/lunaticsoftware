@@ -68,6 +68,38 @@
         <Setter Property="Foreground" Value="#FFFFD104" />
     </Style>
 
+    <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource YellowLEDValueLarge}" x:Key="ParkedTextBlock">
+        <Setter Property="FontSize" Value="38" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="MinWidth" Value="30" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextBlock.RenderTransform">
+        <Setter.Value>
+            <TransformGroup>
+                <ScaleTransform/>
+                <SkewTransform/>
+                <RotateTransform Angle="-45"/>
+                <TranslateTransform/>
+            </TransformGroup>
+        </Setter.Value>
+        </Setter>
+        <Style.Resources>
+            <Storyboard x:Key="FadeStoryboard">
+                <DoubleAnimation Storyboard.TargetProperty="(TextBlock.Opacity)" 
+                                From="0" To="1" Duration="0:0:0.5"
+                                RepeatBehavior="Forever" AutoReverse="True"/>
+            </Storyboard>
+        </Style.Resources>
+        <Style.Triggers>
+            <Trigger Property="Visibility" Value="Visible">
+                <Trigger.EnterActions>
+                    <BeginStoryboard Storyboard="{StaticResource FadeStoryboard}"/>
+                </Trigger.EnterActions>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- Textboxes -->
     <Style TargetType="{x:Type TextBox}">
         <Style.Triggers>
@@ -124,6 +156,7 @@
             </Trigger>
         </Style.Triggers>
     </Style>
+
 
 
     <!-- Checkbox -->

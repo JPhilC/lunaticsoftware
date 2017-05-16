@@ -8,6 +8,7 @@ using Lunatic.Core.Properties;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -131,8 +132,8 @@ namespace Lunatic.Core.Geometry
       private static Regex[] _DmsRegexes;
       private static Regex[] _CadRegexes;
       private static Regex[] _SimpleRegexes;
-      private static int _NumberDecimalDigitsForDegrees = NumberFormatInfo.CurrentInfo.NumberDecimalDigits;
-      private static int _NumberDecimalDigitsForSeconds = NumberFormatInfo.CurrentInfo.NumberDecimalDigits;
+      private static int _NumberDecimalDigitsForDegrees = 2;
+      private static int _NumberDecimalDigitsForSeconds = 2;
 
       private double _Value;        /* Always held in double degrees */
       private int _Degrees;
@@ -141,6 +142,7 @@ namespace Lunatic.Core.Geometry
       private AngularFormat _Format;
       private bool _HasBeenSet;
 
+      [SuppressMessage("Microsoft.Usage", "CA2207: Initialize value type static fields inline")]
       static Angle()
       {
          string[] degreesFormats = new string[] {DegreesPrefixedEw,
@@ -187,8 +189,6 @@ namespace Lunatic.Core.Geometry
          _DmsRegexes = BuildRegexArray(degMinSecFormats);
          _CadRegexes = BuildRegexArray(cadDegMinSecFormats);
          _SimpleRegexes = BuildRegexArray(simpleRegexes);
-         _NumberDecimalDigitsForDegrees = 2;
-         _NumberDecimalDigitsForSeconds = 2;
       }
 
       public static string StandardizeDegreesSymbol(string angle)

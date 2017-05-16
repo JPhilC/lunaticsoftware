@@ -147,6 +147,8 @@
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Classes\AlignmentPointCollection.cs" />
+    <Compile Include="Classes\Converters\AngleValueConverter.cs" />
+    <Compile Include="Classes\Converters\HourAngleValueConverter.cs" />
     <Compile Include="Geometry\Affine.cs" />
     <Compile Include="Geometry\AltAzCoordinate.cs" />
     <Compile Include="Geometry\Angle.cs" />

@@ -26,10 +26,6 @@ namespace ASCOM.Lunatic.Telescope.Classes
          double vRA;
          double vDEC;
 
-         //Dim DeltaRa As Double
-         //Dim DeltaDec As Double
-         double deltaRA;
-         double deltaDEC;
 
          //Dim curalign As Integer
          //Dim i As Integer
@@ -39,8 +35,6 @@ namespace ASCOM.Lunatic.Telescope.Classes
          //Dim RA_Hours As Double
          //Dim flipped As Boolean
          int alignmentPointCount;
-         int i;
-         int count;
          double eRA;
          double eDEC;
          double RAHours;

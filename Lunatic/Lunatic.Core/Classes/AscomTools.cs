@@ -78,8 +78,20 @@ namespace Lunatic.Core
 
       public void Dispose()
       {
-         _Util.Dispose();
-         _Transform.Dispose();
+         Dispose(true);
+         GC.SuppressFinalize(this);
+      }
+
+      protected virtual void Dispose(bool disposing)
+      {
+         if (disposing) {
+            if (_Util != null) {
+               _Util.Dispose();
+            }
+            if (_Transform != null) {
+               _Transform.Dispose();
+            }
+         }
       }
    }
 }

@@ -6,7 +6,7 @@ namespace ASCOM.Lunatic
    /// <summary>
    /// Summary description for GarbageCollection.
    /// </summary>
-   class GarbageCollection
+   class GarbageCollection: IDisposable
    {
       protected bool m_bContinueThread;
       protected bool m_GCWatchStopped;
@@ -50,5 +50,22 @@ namespace ASCOM.Lunatic
          m_EventThreadEnded.WaitOne();
          m_EventThreadEnded.Reset();
       }
+
+      #region IDisposable ...
+      public void Dispose()
+      {
+         Dispose(true);
+         GC.SuppressFinalize(this);
+      }
+
+      protected virtual void Dispose(bool disposing)
+      {
+         if (disposing) {
+            if (m_EventThreadEnded != null) {
+               m_EventThreadEnded.Dispose();
+            }
+         }
+      }
+      #endregion
    }
 }
