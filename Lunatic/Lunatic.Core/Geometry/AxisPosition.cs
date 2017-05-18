@@ -54,6 +54,19 @@ namespace Lunatic.Core.Geometry
          _DecAxis = new Angle() { Radians = decRadians };
       }
 
+
+      public AxisPosition(string axisPositions)
+      {
+         string[] positions = axisPositions.Split(',');
+         try {
+            _RAAxis = double.Parse(positions[0]);
+            _DecAxis = double.Parse(positions[1]);
+         }
+         catch  {
+            throw new ArgumentException("Badly formed axis position string");
+         }
+      }
+
       public double this[int index]
       {
          get
@@ -128,6 +141,14 @@ namespace Lunatic.Core.Geometry
       public override string ToString()
       {
          return string.Format("RAAxis = {0} Radians, DecAxis = {1} Radians", _RAAxis.Radians, _DecAxis.Radians);
+      }
+      public string ToDegreesString()
+      {
+         return string.Format("{0},{1}", _RAAxis.Value, _DecAxis.Value);
+      }
+      public string ToRadiansString()
+      {
+         return string.Format("{0},{1}", _RAAxis.Radians, _DecAxis.Radians);
       }
 
    }

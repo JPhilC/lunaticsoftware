@@ -149,6 +149,7 @@ namespace ASCOM.Lunatic.Telescope
             throw new ASCOM.DriverException("Unable to load configuration settings");
          }
          // Initialise current mount position to NCP
+         Settings.AxisHomePosition = new AxisPosition(0, Core.Constants.HALF_PI);
 
          _Logger = new TraceLogger("", "Winforms");
          _Logger.Enabled = Settings.IsTracing;       /// NOTE: This line triggers a load of the current settings
@@ -161,8 +162,6 @@ namespace ASCOM.Lunatic.Telescope
          _AlignmentMode = AlignmentModes.algGermanPolar;
          _TrackingRates = new TrackingRates();
 
-         // Initialise the current mount position using Greenwich Observatory position
-         InitialiseCurrentMountPosition();
          _Mount = SharedResources.Controller;
 
          _EncoderTimer = new System.Timers.Timer(Settings.EncoderTimerInterval);
@@ -210,6 +209,7 @@ namespace ASCOM.Lunatic.Telescope
          double dec = 90.0;
          Settings.CurrentMountPosition = new Core.Geometry.MountCoordinate(new Core.Geometry.EquatorialCoordinate(ra, dec),
             AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
+         Settings.CurrentMountPosition.SetObservedAxis(Settings.AxisHomePosition, AscomTools.LocalJulianTimeUTC); 
       }
 
       private TrackingStatus TrackingState { get; set; }

@@ -16,8 +16,14 @@ using System.Windows.Threading;
 using System.ComponentModel;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 using Lunatic.TelescopeControl.Controls;
+using ASCOM.DeviceInterface;
 using ASCOM.Lunatic.Telescope;
-
+using Lunatic.Core.Geometry;
+using System.Threading;
+using Lunatic.Core.Services;
+using GalaSoft.MvvmLight.Threading;
+using System.Collections;
+using System.Linq;
 
 namespace Lunatic.TelescopeControl.ViewModel
 {
@@ -41,6 +47,7 @@ namespace Lunatic.TelescopeControl.ViewModel
    {
 
       #region Properties ....
+      private bool LunaticDriver = false;
 
       #region Settings ...
       ISettingsProvider<TelescopeControlSettings> _SettingsProvider;
@@ -126,6 +133,9 @@ namespace Lunatic.TelescopeControl.ViewModel
                _Driver.Dispose();
             }
             _Driver = value;
+            if (_Driver != null) {
+               SetSupportedActions(_Driver.SupportedActions);
+            }
          }
       }
 
@@ -147,9 +157,33 @@ namespace Lunatic.TelescopeControl.ViewModel
                _Driver.Dispose();
             }
             _Driver = value;
+            if (_Driver != null) {
+               SetSupportedActions(_Driver.SupportedActions);
+            }
+             
          }
       }
 #endif
+
+      private List<string> DriverSupportedActions = null;
+
+      private void SetSupportedActions(ArrayList driverActions) {
+         if (DriverSupportedActions == null) {
+            DriverSupportedActions = new List<string>();
+         }
+         DriverSupportedActions.Clear();
+         DriverSupportedActions.AddRange(driverActions.Cast<string>().ToList());
+      }
+
+      private bool DriverActionAvailable(string action)
+      {
+         if (DriverSupportedActions != null) {
+            return DriverSupportedActions.Exists(a => String.Equals(a, action, StringComparison.OrdinalIgnoreCase));
+         }
+         else {
+            return false;
+         }
+      }
 
       public bool IsConnected
       {
@@ -275,6 +309,34 @@ namespace Lunatic.TelescopeControl.ViewModel
          get
          {
             return (DriverSelected ? "Connect to " + DriverName : "Connect ...");
+         }
+      }
+
+      private AxisPosition _AxisPosition;
+
+      public AxisPosition AxisPosition
+      {
+         get
+         {
+            return _AxisPosition;
+         }
+         set
+         {
+            Set<AxisPosition>("AxisPosition", ref _AxisPosition, value);
+         }
+      }
+
+      private PierSide _PierSide = PierSide.Unknown;
+
+      public PierSide PierSide
+      {
+         get
+         {
+            return _PierSide;
+         }
+         set
+         {
+            Set<PierSide>("PierSide", ref _PierSide, value);
          }
       }
 
@@ -646,9 +708,16 @@ End Property
          }
          else {
             // Code runs "for real"
+
+
             _SettingsProvider = settingsProvider;
             _Settings = settingsProvider.Settings;
             PopSettings();
+
+            // Get current temperature via call to OpenWeatherAPI
+            RefreshTemperature();   
+
+            _AxisPosition = new AxisPosition(0.0, 0.0);
             _DisplayTimer = new DispatcherTimer();
             _DisplayTimer.Interval = TimeSpan.FromMilliseconds(500);
             _DisplayTimer.Tick += new EventHandler(this.DisplayTimer_Tick);
@@ -663,10 +732,33 @@ End Property
          base.Cleanup();
       }
 
+      #region Weather API calls ...
+      private bool IsWeatherAPIAvailable = true;
+      private void RefreshTemperature()
+      {
+         if (IsWeatherAPIAvailable) {
+            ThreadPool.QueueUserWorkItem(async callback => {
+               double temp = await WeatherService.GetCurrentTemperature(
+                  _Settings.CurrentSite.Latitude,
+                  _Settings.CurrentSite.Longitude);
+               DispatcherHelper.CheckBeginInvokeOnUI(() => {
+                  if (!double.IsNaN(temp)) {
+                     _Settings.CurrentSite.Temperature = temp;
+                  }
+                  else {
+                     // Temperatures are not available so don't bother trying to update in future
+                     IsWeatherAPIAvailable = false;
+                  }
+               });
+            });
+         }
+      }
+      #endregion
       #region Timers ...
       // This code creates a new DispatcherTimer with an interval of 15 seconds.
       private DispatcherTimer _DisplayTimer;
       private bool _ProcessingDisplayTimerTick = false;
+
       private void DisplayTimer_Tick(object state, EventArgs e)
       {
          if (Driver != null && !_ProcessingDisplayTimerTick) {
@@ -676,7 +768,15 @@ End Property
             Declination = Driver.Declination;
             Altitude = Driver.Altitude;
             Azimuth = Driver.Azimuth;
-
+            PierSide = (PierSide)Driver.SideOfPier;
+            if (LunaticDriver) {
+               try {
+                  AxisPosition = new AxisPosition(Driver.CommandString("Lunatic:GetAxisPositions"));
+               }
+               catch {
+                  // TODO: Log message
+               }
+            }
             if (Driver.AtPark != IsParked) {
                RaisePropertyChanged("IsParked");
                ParkCommand.RaiseCanExecuteChanged();
@@ -684,6 +784,7 @@ End Property
             RefreshParkStatus();
 
             RaisePropertyChanged("IsSlewing");
+            RaiseCanExecuteChanged();
             _ProcessingDisplayTimerTick = false;
          }
       }
@@ -846,11 +947,15 @@ End Property
 
       private void UpdateDriverSiteDetails()
       {
+         RefreshTemperature();
          if (Driver != null) {
             // Transfer location any other initialisation needed.
             Driver.SiteElevation = Settings.CurrentSite.Elevation;
             Driver.SiteLatitude = Settings.CurrentSite.Latitude;
             Driver.SiteLongitude = Settings.CurrentSite.Longitude;
+            if (DriverActionAvailable("Lunatic:SetSiteTemperature")) {
+               Driver.Action("Lunatic:SetSiteTemperature", Settings.CurrentSite.Temperature.ToString());
+            }
          }
       }
       #endregion
@@ -904,10 +1009,27 @@ End Property
       // Perform the logic when connecting.
       private void Connect()
       {
+         bool initialiseNeeded = true; // Assume that we will be initialising the site details.
          try {
             // Check to see if the driver is already connected
-            bool initialiseNeeded = !Driver.CommandBool("Lunatic:IsInitialised", false);
+            try {
+               initialiseNeeded = !Driver.CommandBool("Lunatic:IsInitialised", false);
+               LunaticDriver = true;
+            }
+            catch {
+               LunaticDriver = false;
+               // See if the SiteLongitude throws an error if so they need to be initialised
+            }
             Driver.Connected = true;
+            if (!initialiseNeeded) {
+               // It may be that it isn't a Lunatic driver so test if SiteLongitude is initialised
+               try {
+                  double testLongitude = Driver.SiteLongitude;
+               }
+               catch (ASCOM.InvalidOperationException) {
+                  initialiseNeeded = true;
+               }
+            }
             if (initialiseNeeded) {
                UpdateDriverSiteDetails();
             }
@@ -927,6 +1049,7 @@ End Property
             Driver.Connected = false;
             Driver = null;
          }
+         LunaticDriver = false;
       }
 
       private RelayCommand _SetupCommand;
@@ -980,7 +1103,7 @@ End Property
                   }
 
 
-               }, (button) => { return (IsConnected); }));   // Check that we are connected
+               }, (button) => { return (IsConnected && !IsParked); }));   // Check that we are connected and not parked
          }
       }
 
@@ -1009,7 +1132,7 @@ End Property
                         Driver.MoveAxis(ASCOM.DeviceInterface.TelescopeAxes.axisPrimary, 0.0);
                         break;
                   }
-               }, (button) => { return (IsConnected); }));   // Check that we are connected
+               }, (button) => { return (IsConnected && !IsParked); }));   // Check that we are connected
          }
       }
       #endregion
@@ -1029,6 +1152,8 @@ End Property
                   else {
                      Driver.Park();
                   }
+                  RaisePropertyChanged("IsParked");
+                  RaiseCanExecuteChanged();
                }, () => { return (IsConnected && !IsSlewing); }));   // Check that we are connected
          }
       }

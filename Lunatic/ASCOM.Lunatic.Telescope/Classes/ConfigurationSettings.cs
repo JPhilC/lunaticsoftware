@@ -133,6 +133,7 @@ namespace ASCOM.Lunatic.Telescope
 
 
       public MountCoordinate CurrentMountPosition { get; set; }
+      
       /// <summary>
       /// The RA Axis position in Radians
       /// </summary>

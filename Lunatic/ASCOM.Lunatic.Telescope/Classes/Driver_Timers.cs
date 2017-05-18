@@ -31,8 +31,7 @@ namespace ASCOM.Lunatic.Telescope
                ProcessingEncoderTimerTick = true;
                if (EmulatorOneShot || Slewing || Settings.CheckRASync) {
                   // Read true motor positions
-                  CurrentAxisPosition[RA_AXIS] = _Mount.MCGetAxisPosition(AxisId.Axis1_RA);
-                  CurrentAxisPosition[DEC_AXIS] = _Mount.MCGetAxisPosition(AxisId.Axis2_DEC);
+                  CurrentAxisPosition = _Mount.MCGetAxisPosition();
                   EmulatorOneShot = false;
                }
                localJulianTimeUTC = AscomTools.LocalJulianTimeUTC;      // Grab the time at the time the motors were read
@@ -56,6 +55,8 @@ namespace ASCOM.Lunatic.Telescope
                   // Update the current mount position
                   Settings.CurrentMountPosition.Refresh(new EquatorialCoordinate(AstroConvert.Range24(tRa), decDegrees),
                      adjustedAxisPosition, AscomTools.Transform, localJulianTimeUTC);
+
+                  System.Diagnostics.Debug.WriteLine("Current axis position: " + Settings.CurrentMountPosition.ObservedAxes.ToString());
                   // Create a suggested mount coordinate.
                }
                else {

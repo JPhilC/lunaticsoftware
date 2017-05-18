@@ -465,6 +465,13 @@ namespace Lunatic.SyntaController
          return Positions[(int)Axis];
       }
 
+      public AxisPosition MCGetAxisPosition()
+      {
+         double ra = MCGetAxisPosition(AxisId.Axis1_RA);
+         double dec = MCGetAxisPosition(AxisId.Axis2_DEC);
+         return new AxisPosition(ra, dec);
+      }
+
       public AxisStatus MCGetAxisStatus(AxisId Axis)
       {
 

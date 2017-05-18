@@ -243,6 +243,25 @@ namespace Lunatic.TelescopeControl
          }
       }
 
+      private double _Temperature = 10.0;
+
+
+      [DisplayName("Temperature")]
+      [Description("Enter the temperature (°C)")]
+      [PropertyOrder(5)]
+      public double Temperature
+      {
+         get
+         {
+            return _Temperature;
+         }
+         set
+         {
+            Set<double>("Temperature", ref _Temperature, value);
+         }
+      }
+
+
       private bool _IsCurrentSite;
       [DisplayName("Current site")]
       [Description("Tick this box if this is the current site")]

@@ -24,5 +24,31 @@ namespace Lunatic.Core
          }
       }
 
+      /// <summary>
+      /// Extension method to convert a DateTime to a Julian date.
+      /// </summary>
+      /// <param name="date"></param>
+      /// <returns></returns>
+      public static double ToJulianDate(this DateTime date)
+      {
+         return date.ToOADate() + 2415018.5;
+      }
+
+
+      public static bool IsInitialised(this ASCOM.Astrometry.Transform.Transform transform)
+      {
+         bool initialised = false;
+         try {
+            initialised = !(double.IsNaN(transform.SiteElevation)
+                  || double.IsNaN(transform.SiteLatitude)
+                  || double.IsNaN(transform.SiteLongitude)
+                  || double.IsNaN(transform.SiteTemperature));
+         }
+         catch (ASCOM.Astrometry.Exceptions.TransformUninitialisedException ex) {
+            initialised = false;
+         }
+         catch { throw; }
+         return initialised;
+      }
    }
 }

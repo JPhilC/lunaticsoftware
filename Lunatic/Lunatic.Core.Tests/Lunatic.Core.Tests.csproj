@@ -70,6 +70,7 @@
     <Compile Include="AltAzCoordinateTests.cs" />
     <Compile Include="MountCoordinateTests.cs" />
     <Compile Include="CoordinateOperatorOverloadTests.cs" />
+    <Compile Include="WeatherServiceTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lunatic.Core\Lunatic.Core.csproj">

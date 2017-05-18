@@ -54,11 +54,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _SelectedCOMPort) {
-               return;
-            }
-            _SelectedCOMPort = value;
-            RaisePropertyChanged();
+            Set<COMPortInfo>("SelectedCOMPort", ref _SelectedCOMPort, value);
          }
       }
 
@@ -75,11 +71,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _BaudRate) {
-               return;
-            }
-            _BaudRate = value;
-            RaisePropertyChanged();
+            Set<BaudRate>("BaudRate", ref _BaudRate, value);
          }
       }
 
@@ -96,11 +88,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _TimeOut) {
-               return;
-            }
-            _TimeOut = value;
-            RaisePropertyChanged();
+            Set<TimeOutOption>("TimeOut", ref _TimeOut, value);
          }
       }
 
@@ -117,11 +105,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _Retry) {
-               return;
-            }
-            _Retry = value;
-            RaisePropertyChanged();
+            Set<RetryOption>("Retry", ref _Retry, value);
          }
       }
 
@@ -142,11 +126,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _PulseGuidingMode) {
-               return;
-            }
-            _PulseGuidingMode = value;
-            RaisePropertyChanged();
+            Set<PulseGuidingOption>("PulseGuidingMode", ref _PulseGuidingMode, value);
          }
       }
 
@@ -166,11 +146,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _IsTraceOn) {
-               return;
-            }
-            _IsTraceOn = value;
-            RaisePropertyChanged();
+            Set<bool>("IsTraceOn", ref _IsTraceOn, value);
          }
       }
 
@@ -192,9 +168,9 @@ namespace ASCOM.Lunatic.Telescope
             if (value == _StrictAscom) {
                return;
             }
-            _StrictAscom = value;
-            SetStrictAscom(_StrictAscom);
-            RaisePropertyChanged();
+            if (Set<bool>("StrictAscom", ref _StrictAscom, value)) {
+               SetStrictAscom(_StrictAscom);
+            }
          }
       }
 
@@ -211,11 +187,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _AllowPulseGuide) {
-               return;
-            }
-            _AllowPulseGuide = value;
-            RaisePropertyChanged();
+            Set<bool>("AllowPulseGuide", ref _AllowPulseGuide, value);
          }
       }
 
@@ -232,11 +204,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _AllowPulseGuidingExceptions) {
-               return;
-            }
-            _AllowPulseGuidingExceptions = value;
-            RaisePropertyChanged();
+            Set<bool>("AllowPulseGuidingExceptions", ref _AllowPulseGuidingExceptions, value);
          }
       }
 
@@ -253,11 +221,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _UseSynchronousParking) {
-               return;
-            }
-            _UseSynchronousParking = value;
-            RaisePropertyChanged();
+            Set<bool>("UseSynchronousParking", ref _UseSynchronousParking, value);
          }
       }
 
@@ -274,11 +238,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _AllowExceptions) {
-               return;
-            }
-            _AllowExceptions = value;
-            RaisePropertyChanged();
+            Set<bool>("AllowExceptions", ref _AllowExceptions, value);
          }
       }
 
@@ -295,11 +255,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _SlewWithTrackingOff) {
-               return;
-            }
-            _SlewWithTrackingOff = value;
-            RaisePropertyChanged();
+            Set<bool>("SlewWithTrackingOff", ref _SlewWithTrackingOff, value);
          }
       }
 
@@ -316,11 +272,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _SideOfPier) {
-               return;
-            }
-            _SideOfPier = value;
-            RaisePropertyChanged();
+            Set<SideOfPierOption>("SideOfPier", ref _SideOfPier, value);
          }
       }
 
@@ -337,11 +289,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _SwapPointingSideOfPier) {
-               return;
-            }
-            _SwapPointingSideOfPier = value;
-            RaisePropertyChanged();
+            Set<bool>("SwapPointingSideOfPier", ref _SwapPointingSideOfPier, value);
          }
       }
 
@@ -358,11 +306,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _SwapPhysicalSideOfPier) {
-               return;
-            }
-            _SwapPhysicalSideOfPier = value;
-            RaisePropertyChanged();
+            Set<bool>("SwapPhysicalSideOfPier", ref _SwapPhysicalSideOfPier, value);
          }
       }
 
@@ -379,11 +323,7 @@ namespace ASCOM.Lunatic.Telescope
          }
          set
          {
-            if (value == _Epoch) {
-               return;
-            }
-            _Epoch = value;
-            RaisePropertyChanged();
+            Set<EpochOption>("Epoch", ref _Epoch, value);
          }
       }
       #endregion

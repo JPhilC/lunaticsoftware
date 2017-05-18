@@ -113,8 +113,8 @@ namespace ASCOM.Lunatic.Telescope
       {
          get
          {
-            _Logger.LogMessage("SupportedActions Get", "Returning empty arraylist");
-            return new ArrayList();
+            _Logger.LogMessage("SupportedActions",  "Get - ");
+            return new ArrayList(_SupportedActions);
          }
       }
 
@@ -397,14 +397,21 @@ namespace ASCOM.Lunatic.Telescope
 
                      // Initialise the axes at the home position
                      if (motorStatus == Core.Constants.MOUNT_MOTORINACTIVE) {
+                        // Initialise the current mount position using Greenwich Observatory position
+                        InitialiseCurrentMountPosition();
+
                         CurrentAxisPosition = Settings.AxisHomePosition;
                         int result = _Mount.MCInitialiseAxes(CurrentAxisPosition);
                         if (result != Core.Constants.MOUNT_SUCCESS) {
                            throw new ASCOM.DriverException("There was an error initialising the mount axes. The mount returned: " + result.ToString());
                         };
                      }
-
-
+                     else {
+                        CurrentAxisPosition = _Mount.MCGetAxisPosition();
+                        // Work out the current position
+                        System.Diagnostics.Debug.WriteLine("Mount axis position: " + CurrentAxisPosition.ToString());
+                        System.Diagnostics.Debug.WriteLine("Current axis position: " + Settings.CurrentMountPosition.ObservedAxes.ToString());
+                     }
 
                      // set up rates collection
                      // MaxRate = Core.Constants.SIDEREAL_RATE_ARCSECS * 800 / 3600;      
@@ -1666,8 +1673,23 @@ namespace ASCOM.Lunatic.Telescope
       {
          get
          {
-            _Logger.LogMessage("SideOfPier Get", "Not implemented");
-            throw new ASCOM.PropertyNotImplementedException("SideOfPier", false);
+            PierSide value = PierSide.pierUnknown;
+            switch (Settings.AscomCompliance.SideOfPier) {
+               case SideOfPierOption.Pointing:
+                  value = SOP_Pointing(Settings.CurrentMountPosition.ObservedAxes.DecAxis.Radians);
+                  break;
+               case SideOfPierOption.Physical:
+                  value = SOP_Physical(Settings.CurrentMountPosition.Equatorial.RightAscention);
+                  break;
+               case SideOfPierOption.None:
+                  value = PierSide.pierUnknown;
+                  break;
+               case SideOfPierOption.V124g:
+                  value = SOP_Dec(Settings.CurrentMountPosition.ObservedAxes.DecAxis.Radians);
+                  break;
+            }
+            _Logger.LogMessage("SideOfPier", "Get - " + value.ToString());
+            return value;
          }
          set
          {
@@ -1747,7 +1769,9 @@ namespace ASCOM.Lunatic.Telescope
             else {
                _SiteElevation = value;
                AscomTools.Transform.SiteElevation = value;
-               Settings.CurrentMountPosition.Refresh(AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
+               if (AscomTools.Transform.IsInitialised()) {
+                  Settings.CurrentMountPosition.Refresh(AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
+               }
             }
          }
       }
@@ -1787,7 +1811,9 @@ namespace ASCOM.Lunatic.Telescope
             else {
                _SiteLatitude = value;
                AscomTools.Transform.SiteLatitude = value;
-               Settings.CurrentMountPosition.Refresh(AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
+               if (AscomTools.Transform.IsInitialised()) {
+                  Settings.CurrentMountPosition.Refresh(AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
+               }
             }
          }
       }
@@ -1828,7 +1854,9 @@ namespace ASCOM.Lunatic.Telescope
             else {
                _SiteLongitude = value;
                AscomTools.Transform.SiteLongitude = value;
-               Settings.CurrentMountPosition.Refresh(AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
+               if (AscomTools.Transform.IsInitialised()) {
+                  Settings.CurrentMountPosition.Refresh(AscomTools.Transform, AscomTools.LocalJulianTimeUTC);
+               }
             }
          }
       }

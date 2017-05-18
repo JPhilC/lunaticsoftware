@@ -1,14 +1,8 @@
 ﻿using System;
-using System.Text;
-using ASCOM.DeviceInterface;
-using System.Globalization;
-using System.Collections;
 using Lunatic.Core;
-using System.Threading;
-using ASCOM.Lunatic.Telescope;
-using ASCOM.Lunatic.Telescope.Classes;
 using Lunatic.Core.Geometry;
 using Lunatic.SyntaController;
+using System.Collections.Generic;
 
 /// <summary>
 /// The ASCOM ITelescopeV3 implimentation for the driver.
@@ -17,6 +11,17 @@ namespace ASCOM.Lunatic.Telescope
 {
    partial class Telescope
    {
+
+      private List<string> _SupportedActions = new List<string>() {
+            "Lunatic:SetUnparkPositions",
+            "Lunatic:SetParkPositions",
+            "Lunatic:SetTrackUsingPEC",
+            "Lunatic:SetCheckRASync",
+            "Lunatic:SetAutoGuiderPortRates",
+            "Lunatic:SetCustomTrackingRates",
+            "Lunatic:SetSiteTemperature"
+      };
+
       /// <summary>
       /// Processes customer actions
       /// </summary>
@@ -57,6 +62,10 @@ namespace ASCOM.Lunatic.Telescope
                CustomTrackingRate[1] = Convert.ToDouble(values[1]);
                break;
 
+            case "Lunatic:SetSiteTemperature":
+               AscomTools.Transform.SiteTemperature = Convert.ToDouble(values[0]);
+               break;
+
             default:
                throw new ASCOM.ActionNotImplementedException("Action " + actionName + " is not implemented by this driver");
          }
@@ -83,6 +92,9 @@ namespace ASCOM.Lunatic.Telescope
          switch (command) {
             case "Lunatic:GetParkStatus":
                result = ((int)Settings.ParkStatus).ToString();
+               break;
+            case "Lunatic:GetAxisPositions":
+               result = Settings.CurrentMountPosition.ObservedAxes.ToDegreesString();
                break;
             default:
                throw new ASCOM.DriverException(string.Format("CommandString command is not recognised '{0}'.", command));

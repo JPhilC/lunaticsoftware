@@ -16,7 +16,7 @@ namespace Lunatic.Core.Geometry
    /// </summary>
    public class MountCoordinate
    {
-      public enum MasterCoordinate
+      public enum MasterCoordinateEnum
       {
          Equatorial,
          AltAzimuth
@@ -25,20 +25,36 @@ namespace Lunatic.Core.Geometry
       private EquatorialCoordinate _Equatorial;
       private AltAzCoordinate _AltAzimuth;
       private AxisPosition _AxesPosition;
-      private DateTime _AxisObservationTime;
+      private double _AxisJulianTimeUTC;
       private double _LocalJulianTimeUTC;
 
       /// <summary>
       /// Held for reference so that when a refresh is requested we know which coordinate
       /// is the master.
       /// </summary>
-      private MasterCoordinate _MasterCoordinate;
+      private MasterCoordinateEnum _MasterCoordinate;
+
+      public MasterCoordinateEnum MasterCoordinate
+      {
+         get
+         {
+            return _MasterCoordinate;
+         }
+         private set
+         {
+            _MasterCoordinate = value;
+         }
+      }
 
       public EquatorialCoordinate Equatorial
       {
          get
          {
             return _Equatorial;
+         }
+         private set
+         {
+            _Equatorial = value;
          }
       }
 
@@ -61,16 +77,24 @@ namespace Lunatic.Core.Geometry
          {
             return _AxesPosition;
          }
+         private set
+         {
+            _AxesPosition = value;
+         }
       }
 
       /// <summary>
       /// The time at which the axis values were determined.
       /// </summary>
-      public DateTime AxisObservationTime
+      public double AxisJulianTimeUTC
       {
          get
          {
-            return _AxisObservationTime;
+            return _AxisJulianTimeUTC;
+         }
+         private set
+         {
+            _AxisJulianTimeUTC = value;
          }
       }
 
@@ -83,6 +107,10 @@ namespace Lunatic.Core.Geometry
          {
             return _LocalJulianTimeUTC;
          }
+         private set
+         {
+            _LocalJulianTimeUTC = value;
+         }
       }
 
       /// <summary>
@@ -93,7 +121,7 @@ namespace Lunatic.Core.Geometry
       /// <param name="localTime">The local time of the observation</param>
       public MountCoordinate(string ra, string dec):this(new EquatorialCoordinate(ra, dec))
       {
-         _MasterCoordinate = MasterCoordinate.Equatorial;
+         _MasterCoordinate = MasterCoordinateEnum.Equatorial;
       }
 
       /// <summary>
@@ -102,7 +130,7 @@ namespace Lunatic.Core.Geometry
       public MountCoordinate(EquatorialCoordinate equatorial) 
       {
          _Equatorial = equatorial;
-         _MasterCoordinate = MasterCoordinate.Equatorial;
+         _MasterCoordinate = MasterCoordinateEnum.Equatorial;
       }
 
       /// <summary>
@@ -111,7 +139,7 @@ namespace Lunatic.Core.Geometry
       public MountCoordinate(AltAzCoordinate altAz)
       {
          _AltAzimuth = altAz;
-         _MasterCoordinate = MasterCoordinate.AltAzimuth;
+         _MasterCoordinate = MasterCoordinateEnum.AltAzimuth;
       }
 
       /// <summary>
@@ -125,6 +153,21 @@ namespace Lunatic.Core.Geometry
       }
 
       /// <summary>
+      /// Initialise a mount coordinate with Ra/Dec strings and axis positions in radians.
+      /// </summary>
+      /// <param name="altAz">The AltAzimuth coordinate for the mount</param>
+      /// <param name="suggested">The suggested position for the axes (e.g. via a star catalogue lookup)</param>
+      /// <param name="localTime">The local time of the observation</param>
+      public MountCoordinate(string ra, string dec, AxisPosition axisPosition, Transform transform, double localJulianTimeUTC) : this(new EquatorialCoordinate(ra, dec))
+      {
+         _Equatorial = new EquatorialCoordinate(ra, dec);
+         _AltAzimuth = this.GetAltAzimuth(transform, localJulianTimeUTC);
+         _AxesPosition = axisPosition;
+         _AxisJulianTimeUTC = localJulianTimeUTC;
+         _MasterCoordinate = MasterCoordinateEnum.Equatorial;
+      }
+
+      /// <summary>
       /// Initialisation with an equatorial coordinate, a transform instance and the local julian time (corrected)
       /// which then means that the AltAzimunth at the time is available.
       /// </summary>
@@ -133,6 +176,7 @@ namespace Lunatic.Core.Geometry
          _AltAzimuth = this.GetAltAzimuth(transform, localJulianTimeUTC);
          _LocalJulianTimeUTC = localJulianTimeUTC;
          _AxesPosition = axisPosition;
+         _AxisJulianTimeUTC = localJulianTimeUTC;
 
       }
 
@@ -151,21 +195,9 @@ namespace Lunatic.Core.Geometry
          _LocalJulianTimeUTC = localJulianTimeUTC;
          _Equatorial = this.GetEquatorial(transform, localJulianTimeUTC);
          _AxesPosition = axisPosition;
+         _AxisJulianTimeUTC = localJulianTimeUTC;
       }
 
-      /// <summary>
-      /// Initialise a mount coordinate with Ra/Dec strings and axis positions in radians.
-      /// </summary>
-      /// <param name="altAz">The AltAzimuth coordinate for the mount</param>
-      /// <param name="suggested">The suggested position for the axes (e.g. via a star catalogue lookup)</param>
-      /// <param name="localTime">The local time of the observation</param>
-      public MountCoordinate(string ra, string dec, double axis1Radians, double axis2Radians, DateTime observationTime)
-      {
-         _Equatorial = new EquatorialCoordinate(ra, dec);
-         _AxesPosition = new AxisPosition(axis1Radians, axis2Radians);
-         _AxisObservationTime = observationTime;
-         _MasterCoordinate = MasterCoordinate.Equatorial;
-      }
 
 
       /// <summary>
@@ -213,16 +245,16 @@ namespace Lunatic.Core.Geometry
       }
 
 
-      public void SetObservedAxis(AxisPosition axisPosition, DateTime observationTime)
+      public void SetObservedAxis(AxisPosition axisPosition, double observationTime)
       {
          _AxesPosition = axisPosition;
-         _AxisObservationTime = observationTime;
+         _AxisJulianTimeUTC = observationTime;
       }
 
       public void Refresh(Transform transform, double julianDateUTC)
       {
          transform.JulianDateUTC = julianDateUTC;
-         if (_MasterCoordinate == MasterCoordinate.Equatorial) {
+         if (_MasterCoordinate == MasterCoordinateEnum.Equatorial) {
             // Update the AltAzimuth
             transform.SetTopocentric(_Equatorial.RightAscention, _Equatorial.Declination);
             transform.Refresh();
@@ -242,7 +274,7 @@ namespace Lunatic.Core.Geometry
          _AxesPosition = axisPosition;
          _LocalJulianTimeUTC = localJulianTimeUTC;
          _AltAzimuth = this.GetAltAzimuth(transform, localJulianTimeUTC);
-         _MasterCoordinate = MasterCoordinate.Equatorial;
+         _MasterCoordinate = MasterCoordinateEnum.Equatorial;
 
       }
 
@@ -252,7 +284,7 @@ namespace Lunatic.Core.Geometry
          _AxesPosition = axisPosition;
          _LocalJulianTimeUTC = localJulianTimeUTC;
          _Equatorial = this.GetEquatorial(transform, localJulianTimeUTC);
-         _MasterCoordinate = MasterCoordinate.AltAzimuth;
+         _MasterCoordinate = MasterCoordinateEnum.AltAzimuth;
       }
 
    }

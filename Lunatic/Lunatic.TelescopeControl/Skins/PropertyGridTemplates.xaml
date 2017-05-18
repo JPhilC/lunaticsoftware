@@ -59,6 +59,7 @@
                                                          Elevation,
                                                          Latitude,
                                                          Longitude,
+                                                         Temperature,
                                                          Hemisphere"/>
             </xctk:PropertyGrid.PropertyDefinitions>
         </xctk:PropertyGrid>

@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:Lunatic.TelescopeControl.Controls"
              xmlns:lcc="clr-namespace:Lunatic.Controls;assembly=Lunatic.Core"
              mc:Ignorable="d"
+             d:DesignWidth="240"
              DataContext="{Binding Main, Source={StaticResource Locator}}">
     <UserControl.Resources>
         <lcc:HourAngleValueConverter x:Key="HourAngleValueConverter" />
@@ -16,7 +17,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="5" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />

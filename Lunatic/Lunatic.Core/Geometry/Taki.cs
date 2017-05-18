@@ -101,13 +101,13 @@ namespace Lunatic.Core.Geometry
       /// Constant of multiplication for the solar and sidereal time relation.
       /// </summary>
       const double _k = 1.002737908;    // // Constant.. Relationship between the solar time (M) and the sidereal time (S): (S = M * 1.002737908)
-      DateTime _timeZero;
+      double _timeZero;
 
 
       /// <summary>
-      /// Get or set the initial time.
+      /// Get or set the initial sidereal time.
       /// </summary>
-      public DateTime Time
+      public double Time
       {
          get
          {
@@ -116,35 +116,35 @@ namespace Lunatic.Core.Geometry
       }
 
 
-      public TakiEQMountMapper(MountCoordinate ref1, MountCoordinate ref2, MountCoordinate ref3, DateTime timeZero)
+      public TakiEQMountMapper(MountCoordinate ref1, MountCoordinate ref2, MountCoordinate ref3, double timeZero)
       {
          //TODO: Sort out what time should be used.
          _timeZero = timeZero;
          _lmn1 = GetHVC(ref1.ObservedAxes);
-         _LMN1 = GetEVC(ref1.Equatorial, ref1.AxisObservationTime);
+         _LMN1 = GetEVC(ref1.Equatorial, ref1.AxisJulianTimeUTC);
          _lmn2 = GetHVC(ref2.ObservedAxes);
-         _LMN2 = GetEVC(ref2.Equatorial, ref3.AxisObservationTime);
+         _LMN2 = GetEVC(ref2.Equatorial, ref3.AxisJulianTimeUTC);
          _lmn3 = GetHVC(ref3.ObservedAxes);
-         _LMN3 = GetEVC(ref3.Equatorial, ref3.AxisObservationTime);
+         _LMN3 = GetEVC(ref3.Equatorial, ref3.AxisJulianTimeUTC);
          setT();
       }
 
-      public TakiEQMountMapper(MountCoordinate ref1, MountCoordinate ref2, DateTime timeZero)
+      public TakiEQMountMapper(MountCoordinate ref1, MountCoordinate ref2, double timeZero)
       {
          _timeZero = timeZero;
          _lmn1 = GetHVC(ref1.ObservedAxes);
-         _LMN1 = GetEVC(ref1.Equatorial, ref1.AxisObservationTime);
+         _LMN1 = GetEVC(ref1.Equatorial, ref1.AxisJulianTimeUTC);
          _lmn2 = GetHVC(ref2.ObservedAxes);
-         _LMN2 = GetEVC(ref2.Equatorial, ref2.AxisObservationTime);
+         _LMN2 = GetEVC(ref2.Equatorial, ref2.AxisJulianTimeUTC);
          // 
          GenRef3();
          setT();
       }
 
-      public AxisPosition GetAxisPosition(EquatorialCoordinate eq, DateTime targetTime)
+      public AxisPosition GetAxisPosition(EquatorialCoordinate eq, double targetSiderealTime)
       {
 
-         Vector EVC = GetEVC(eq, targetTime);
+         Vector EVC = GetEVC(eq, targetSiderealTime);
          Vector HVC = new Vector(0.0, 0.0, 0.0);
          for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
@@ -155,11 +155,11 @@ namespace Lunatic.Core.Geometry
          return new AxisPosition(AstroConvert.Range2Pi(Math.Atan2(HVC[1], HVC[0])), AstroConvert.Range2Pi(Math.Asin(HVC[2])));
       }
 
-      public EquatorialCoordinate GetEquatorialCoords(AxisPosition axes, DateTime localTime)
+      public EquatorialCoordinate GetEquatorialCoords(AxisPosition axes, double localSiderealTime)
       {
          Vector EVC = new Vector(0.0, 0.0, 0.0);
          Vector HVC = GetHVC(axes);
-         double deltaTime = AstroConvert.HrsToRad((localTime.ToOADate() - _timeZero.ToOADate())*24);   // (OADate-OADate)*24 yealds hours, need to convert to Radians
+         double deltaTime = AstroConvert.HrsToRad((localSiderealTime - _timeZero));   
          for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                EVC[i] += _iT[i, j] * HVC[j];
@@ -175,9 +175,9 @@ namespace Lunatic.Core.Geometry
       /// <param name="coord"></param>
       /// <param name="time"></param>
       /// <returns></returns>
-      private Vector GetEVC(EquatorialCoordinate coord, DateTime observationTime)
+      private Vector GetEVC(EquatorialCoordinate coord, double localSiderealTime)
       {
-         double deltaTime = AstroConvert.HrsToRad((observationTime.ToOADate() - _timeZero.ToOADate())*24);  // (OADate-OADate)*24 yealds hours, need to convert to Radians
+         double deltaTime = AstroConvert.HrsToRad((localSiderealTime - _timeZero));  
          Vector evc = new Vector(0.0, 0.0, 0.0);
          evc[0] = Math.Cos(coord.Declination.Radians) * Math.Cos(coord.RightAscention.Radians - (_k * deltaTime));
          evc[1] = Math.Cos(coord.Declination.Radians) * Math.Sin(coord.RightAscention.Radians - (_k * deltaTime));

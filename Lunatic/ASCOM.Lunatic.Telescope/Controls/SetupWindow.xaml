@@ -39,11 +39,20 @@
                 <xctk:PropertyGrid.PropertyDefinitions>
                     <xctk:PropertyDefinition TargetProperties="
                                              TimeOut,
-                    Retry,
-                    BaudRate,
-                    SelectedCOMPort,
-                    IsTraceOn,
-                     StrictAscom"/>
+                                             Retry,
+                                             BaudRate,
+                                             SelectedCOMPort,
+                                             IsTraceOn,
+                                            SlewWithTrackingOff,
+                                            AllowExceptions,
+                                            AllowPulseGuide,
+                                            AllowPulseGuidingExceptions,
+                                            UseSynchronousParking,
+                                            Epoch,
+                                            SideOfPier,
+                                            SwapPointingSideOfPier,
+                                            SwapPhysicalSideOfPier,
+                                             StrictAscom"/>
                 </xctk:PropertyGrid.PropertyDefinitions>
 
             </xctk:PropertyGrid>
