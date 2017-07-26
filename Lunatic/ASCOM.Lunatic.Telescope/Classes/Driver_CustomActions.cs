@@ -79,6 +79,9 @@ namespace ASCOM.Lunatic.Telescope
             case "Lunatic:IsInitialised":
                result = (_Mount.EQ_GetMountStatus() == 1);
                break;
+            case "Lunatic:SetLimitsActive":
+               CheckLimitsActive = raw;
+               break;
             default:
                throw new ASCOM.DriverException(string.Format("CommandBool command is not recognised '{0}'.", command));
 

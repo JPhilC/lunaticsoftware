@@ -94,7 +94,7 @@ namespace ASCOM.Lunatic.Telescope
 
       private bool RAAxisSlewing = false;
       private bool AllowCounterWeightUpSlewing = false;    // gCWUP
-      private GotoParameters GotoParameters = new GotoParameters();  // gGotoParams
+      // private GotoParameters GotoParameters = new GotoParameters();  // gGotoParams
 
       private double[] CustomTrackingRate = new double[2];      // Custom tracking rates (RA/DEC)
       private string CustomTrackFile = string.Empty;           // 
@@ -350,8 +350,8 @@ namespace ASCOM.Lunatic.Telescope
       /// </summary>
       private void InitialiseMeridians()
       {
-         TotalStepsPer360[0] = _Mount.EQ_GetTotal360microstep(AxisId.Axis1_RA);
-         TotalStepsPer360[1] = _Mount.EQ_GetTotal360microstep(AxisId.Axis2_DEC);
+         TotalStepsPer360[RA_AXIS] = _Mount.EQ_GetTotal360microstep(AxisId.Axis1_RA);
+         TotalStepsPer360[DEC_AXIS] = _Mount.EQ_GetTotal360microstep(AxisId.Axis2_DEC);
          //MeridianWest = EncoderZeroPosition[0] + (TotalStepsPer360[0] / 4);
          //MeridianEast = EncoderZeroPosition[0] - (TotalStepsPer360[0] / 4);
          //EncoderHomePosition[DEC_AXIS] = (TotalStepsPer360[1] / 4) + EncoderZeroPosition[1];    // totstep/4 + Homepos

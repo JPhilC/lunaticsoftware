@@ -191,6 +191,10 @@
     <Compile Include="Classes\Driver_CustomActions.cs">
       <DependentUpon>Driver.cs</DependentUpon>
     </Compile>
+    <Compile Include="Classes\Driver_Goto.cs">
+      <DependentUpon>Driver.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Classes\Driver_Limits.cs" />
     <Compile Include="Classes\Driver_Timers.cs">
       <DependentUpon>Driver.cs</DependentUpon>
     </Compile>

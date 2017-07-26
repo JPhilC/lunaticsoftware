@@ -31,6 +31,9 @@ namespace ASCOM.Lunatic.Telescope
       public int GotoRACompensation { get; set; }
 
       public bool ListDisplayMode { get; set; }
+
+      [Description("Goto Slew Limit")]
+      public int GotoSlewLimit { get; set; }
    }
 
    public class CustomMount

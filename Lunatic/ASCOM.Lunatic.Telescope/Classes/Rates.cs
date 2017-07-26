@@ -171,8 +171,8 @@ namespace ASCOM.Lunatic.Telescope
          // the tracking rates supported by your telescope. The one value
          // (tracking rate) that MUST be supported is driveSidereal!
          //
-         this.trackingRates = new[] { DriveRates.driveSidereal, DriveRates.driveLunar, DriveRates.driveSolar };
-         // TODO Initialize this array with any additional tracking rates that your driver may provide
+         this.trackingRates = new[] { DriveRates.driveSidereal, DriveRates.driveLunar, DriveRates.driveSolar, DriveRates.driveKing };
+         // Using DriveRates.King
       }
 
       #region ITrackingRates Members

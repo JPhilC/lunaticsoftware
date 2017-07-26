@@ -113,7 +113,7 @@ namespace ASCOM.Lunatic.Telescope
       {
          get
          {
-            _Logger.LogMessage("SupportedActions",  "Get - ");
+            _Logger.LogMessage("SupportedActions", "Get - ");
             return new ArrayList(_SupportedActions);
          }
       }
@@ -296,26 +296,26 @@ namespace ASCOM.Lunatic.Telescope
                      // Call readRALimit
                      // Call readCustomMount
 
-                     if (TotalStepsPer360[0] != Core.Constants.EQ_ERROR) {
-                        GotoResolution[0] = Settings.DevelopmentOptions.GotoResolution * 1296000 / TotalStepsPer360[0];  // 1296000 = seconds per 360 degrees
-                        WormSteps[0] = _Mount.EQ_GetMountParameter(AxisId.Axis1_RA, 10006);
+                     if (TotalStepsPer360[RA_AXIS] != Core.Constants.EQ_ERROR) {
+                        GotoResolution[RA_AXIS] = Settings.DevelopmentOptions.GotoResolution * 1296000 / TotalStepsPer360[RA_AXIS];  // 1296000 = seconds per 360 degrees
+                        WormSteps[RA_AXIS] = _Mount.EQ_GetMountParameter(AxisId.Axis1_RA, 10006);
                         // HC.Add_Message CStr(gRAWormSteps) & " RAWormSteps read"
                         if (Settings.MountOption == MountOptions.AutoDetect) {
-                           switch (WormSteps[0]) {
+                           switch (WormSteps[RA_AXIS]) {
                               case 0:
                                  if (TotalStepsPer360[0] == 5184000) {   // AZEQ5GT detected, worm steps need fixing!
-                                    WormSteps[0] = 38400;
+                                    WormSteps[RA_AXIS] = 38400;
                                     // HC.Add_Message "AZEQ5GT:RAWormSteps=38400"
                                  }
                                  else {
                                     // prevent divide by 0 later
-                                    WormSteps[0] = 1;
+                                    WormSteps[RA_AXIS] = 1;
                                  }
                                  break;
 
                               case 61866:
-                                 if (TotalStepsPer360[0] == 11136000) {  //EQ8 detected, worm steps need fixing!
-                                    WormSteps[0] = 25600;
+                                 if (TotalStepsPer360[RA_AXIS] == 11136000) {  //EQ8 detected, worm steps need fixing!
+                                    WormSteps[RA_AXIS] = 25600;
                                     // HC.Add_Message "EQ8:RAWormSteps=25600"
                                  }
                                  break;
@@ -330,38 +330,38 @@ namespace ASCOM.Lunatic.Telescope
                         }
                         else {
                            // Custom mount so read values from settings.
-                           TotalStepsPer360[0] = Settings.CustomMount.RAStepsPer360;
-                           WormSteps[0] = Settings.CustomMount.RAWormSteps;
+                           TotalStepsPer360[RA_AXIS] = Settings.CustomMount.RAStepsPer360;
+                           WormSteps[RA_AXIS] = Settings.CustomMount.RAWormSteps;
                         }
 
-                        WormPeriod[0] = (int)((Core.Constants.SECONDS_PER_SIDERIAL_DAY * WormSteps[0] / TotalStepsPer360[0]) + 0.5);
+                        WormPeriod[RA_AXIS] = (int)((Core.Constants.SECONDS_PER_SIDERIAL_DAY * WormSteps[RA_AXIS] / TotalStepsPer360[RA_AXIS]) + 0.5);
                      }
 
 
 
-                     if (TotalStepsPer360[1] != Core.Constants.EQ_ERROR) {
-                        GotoResolution[1] = Settings.DevelopmentOptions.GotoResolution * 1296000 / TotalStepsPer360[1];  // 1296000 = seconds per 360 degrees
-                        WormSteps[1] = _Mount.EQ_GetMountParameter(AxisId.Axis2_DEC, 10006);
+                     if (TotalStepsPer360[DEC_AXIS] != Core.Constants.EQ_ERROR) {
+                        GotoResolution[DEC_AXIS] = Settings.DevelopmentOptions.GotoResolution * 1296000 / TotalStepsPer360[DEC_AXIS];  // 1296000 = seconds per 360 degrees
+                        WormSteps[DEC_AXIS] = _Mount.EQ_GetMountParameter(AxisId.Axis2_DEC, 10006);
                         // HC.Add_Message CStr(gDECWormSteps) & " DECWormSteps read"
 
                         if (Settings.MountOption == MountOptions.AutoDetect) {
-                           switch (WormSteps[1]) {
+                           switch (WormSteps[DEC_AXIS]) {
 
                               case 0:
 
-                                 if (TotalStepsPer360[1] == 5184000) {  //AZEQ5GT detected, worm steps need fixing!
-                                    WormSteps[1] = 38400;
+                                 if (TotalStepsPer360[DEC_AXIS] == 5184000) {  //AZEQ5GT detected, worm steps need fixing!
+                                    WormSteps[DEC_AXIS] = 38400;
                                     // HC.Add_Message "AZEQ5GT:DECWormSteps=38400"
                                  }
                                  else {
                                     // prevent divide by 0 later
-                                    WormSteps[1] = 1;
+                                    WormSteps[DEC_AXIS] = 1;
                                  }
                                  break;
                               case 61866:
 
-                                 if (TotalStepsPer360[1] == 11136000) {  // EQ8 detected, worm steps need fixing!
-                                    WormSteps[1] = 25600;
+                                 if (TotalStepsPer360[DEC_AXIS] == 11136000) {  // EQ8 detected, worm steps need fixing!
+                                    WormSteps[DEC_AXIS] = 25600;
                                     // HC.Add_Message "EQ8:DECWormSteps=25600"
                                  }
                                  break;
@@ -376,8 +376,8 @@ namespace ASCOM.Lunatic.Telescope
                         }
                         else {
                            // Custom mount so read values from settings.
-                           TotalStepsPer360[1] = Settings.CustomMount.DecStepsPer360;
-                           WormSteps[1] = Settings.CustomMount.DecWormSteps;
+                           TotalStepsPer360[DEC_AXIS] = Settings.CustomMount.DecStepsPer360;
+                           WormSteps[DEC_AXIS] = Settings.CustomMount.DecWormSteps;
                         }
 
                      }
@@ -409,8 +409,8 @@ namespace ASCOM.Lunatic.Telescope
                      else {
                         CurrentAxisPosition = _Mount.MCGetAxisPosition();
                         // Work out the current position
-                        System.Diagnostics.Debug.WriteLine("Mount axis position: " + CurrentAxisPosition.ToString());
-                        System.Diagnostics.Debug.WriteLine("Current axis position: " + Settings.CurrentMountPosition.ObservedAxes.ToString());
+                        //System.Diagnostics.Debug.WriteLine("Mount axis position: " + CurrentAxisPosition.ToString());
+                        //System.Diagnostics.Debug.WriteLine("Current axis position: " + Settings.CurrentMountPosition.ObservedAxes.ToString());
                      }
 
                      // set up rates collection
@@ -789,6 +789,9 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             _Logger.LogMessage("CanPark", "Get - " + true.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return true;
          }
       }
@@ -807,6 +810,9 @@ namespace ASCOM.Lunatic.Telescope
          {
             bool canPulseGuide = (Settings.PulseGuidingMode == PulseGuidingOption.ASCOM);
             _Logger.LogMessage("CanPulseGuide", "Get - " + canPulseGuide.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return canPulseGuide;
          }
       }
@@ -823,6 +829,9 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             _Logger.LogMessage("CanSetDeclinationRate", "Get - " + true.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return true;
          }
       }
@@ -841,6 +850,9 @@ namespace ASCOM.Lunatic.Telescope
          {
             bool canSetGuideRates = (Settings.PulseGuidingMode == PulseGuidingOption.ASCOM);
             _Logger.LogMessage("CanSetGuideRates", "Get - " + canSetGuideRates.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return canSetGuideRates;
          }
       }
@@ -858,6 +870,9 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             _Logger.LogMessage("CanSetPark", "Get - " + true.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return true;
          }
       }
@@ -876,6 +891,9 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             _Logger.LogMessage("CanSetPierSide", "Get - " + false.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return false;
          }
       }
@@ -892,6 +910,9 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             _Logger.LogMessage("CanSetRightAscensionRate", "Get - " + true.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return true;
          }
       }
@@ -908,6 +929,9 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             _Logger.LogMessage("CanSetTracking", "Get - " + true.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return true;
          }
       }
@@ -926,6 +950,9 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             _Logger.LogMessage("CanSlew", "Get - " + true.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return true;
          }
       }
@@ -944,6 +971,9 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             _Logger.LogMessage("CanSlewAltAz", "Get - " + false.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return false;
          }
       }
@@ -962,6 +992,9 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             _Logger.LogMessage("CanSlewAltAzAsync", "Get - " + false.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return false;
          }
       }
@@ -980,6 +1013,9 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             _Logger.LogMessage("CanSlewAsync", "Get - " + true.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return true;
          }
       }
@@ -996,6 +1032,9 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             _Logger.LogMessage("CanSync", "Get - " + true.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return true;
          }
       }
@@ -1012,6 +1051,9 @@ namespace ASCOM.Lunatic.Telescope
          get
          {
             _Logger.LogMessage("CanSyncAltAz", "Get - " + false.ToString());
+            if (!IsConnected) {
+               throw new ASCOM.NotConnectedException();
+            }
             return false;
          }
       }
@@ -1974,8 +2016,25 @@ namespace ASCOM.Lunatic.Telescope
       /// </remarks>
       public void SlewToCoordinatesAsync(double RightAscension, double Declination)
       {
-         _Logger.LogMessage("SlewToCoordinatesAsync", "Not implemented");
-         throw new ASCOM.MethodNotImplementedException("SlewToCoordinatesAsync");
+         _Logger.LogMessage("Command", String.Format("SlewToCoordinatesAsync({0}, {1})", RightAscension, Declination));
+         if (Settings.ParkStatus == ParkStatus.Unparked) {
+            if (!Settings.AscomCompliance.SlewWithTrackingOff && !Tracking) {
+               throw new ASCOM.InvalidOperationException("SlewToCoordinateAsyc() RaDec slew is not permittted if mount is not Tracking.");
+            }
+            else {
+               if (ValidateRADEC(RightAscension, Declination)) {
+                  RADecAsyncSlew(RightAscension, Declination);
+                  // TODO: EQ_Beep(20)
+               }
+               else {
+                  throw new ASCOM.InvalidValueException("SlewToCoordinates() a property value is out of range.");
+               }
+            }
+         }
+         else {
+            // TODO: HC.Add_Message(oLangDll.GetLangString(5000))
+            throw new ASCOM.InvalidOperationException("SlewToCoordinateAsyc() is not permitted while mount is parked or parking.");
+         }
       }
 
       /// <summary>
@@ -2221,7 +2280,7 @@ namespace ASCOM.Lunatic.Telescope
                if (value) {
                   if (RateAdjustment[0] == 0 && RateAdjustment[1] == 0) {
                      // track at sidereal
-                     // Call EQStartSidereal2
+                     StartSiderealTracking(true);
                      EmulatorOneShot = true;                 //  Get One shot cap
                   }
                   else {
@@ -2250,8 +2309,6 @@ namespace ASCOM.Lunatic.Telescope
                // HC.Add_Message(oLangDll.GetLangString(5013))
                throw new ASCOM.ParkedException("Tracking change not allowed when mount is parked.");
             }
-
-            throw new ASCOM.PropertyNotImplementedException("Tracking", true);
          }
       }
 
@@ -2282,18 +2339,8 @@ namespace ASCOM.Lunatic.Telescope
          set
          {
             _Logger.LogMessage("TrackingRate", "Set - " + value.ToString());
-            if (value == _TrackingRate) {
+            if (Tracking && value == _TrackingRate) {
                return;
-            }
-            bool isValidRate = false;
-            foreach (DriveRates rate in _TrackingRates) {
-               if (value == rate) {
-                  isValidRate = true;
-                  break;
-               }
-            }
-            if (!isValidRate) {
-               throw new ASCOM.InvalidValueException("TrackingRate");
             }
             switch (value) {
                case DriveRates.driveSidereal:
@@ -2374,7 +2421,7 @@ namespace ASCOM.Lunatic.Telescope
       {
          _Logger.LogMessage("COMMAND", "Unpark");
          if (Settings.ParkStatus == ParkStatus.Parked) {
-            lock(_Lock) {
+            lock (_Lock) {
                Settings.ParkStatus = ParkStatus.Unparking;
                // ASCOM, in their wisdom (or lack of it), require that park blocks the client until completion.
                // This is rather poor and we have chosen to ignor that part of the spec believing that

@@ -56,7 +56,7 @@ namespace ASCOM.Lunatic.Telescope
                   Settings.CurrentMountPosition.Refresh(new EquatorialCoordinate(AstroConvert.Range24(tRa), decDegrees),
                      adjustedAxisPosition, AscomTools.Transform, localJulianTimeUTC);
 
-                  System.Diagnostics.Debug.WriteLine("Current axis position: " + Settings.CurrentMountPosition.ObservedAxes.ToString());
+                  //System.Diagnostics.Debug.WriteLine("Current axis position: " + Settings.CurrentMountPosition.ObservedAxes.ToString());
                   // Create a suggested mount coordinate.
                }
                else {
@@ -129,7 +129,7 @@ namespace ASCOM.Lunatic.Telescope
                   MotorStatus[RA_AXIS] = _Mount.EQ_GetMotorStatus(AxisId.Axis1_RA);
                   MotorStatus[DEC_AXIS] = _Mount.EQ_GetMotorStatus(AxisId.Axis2_DEC);
                   if (Settings.ParkStatus == ParkStatus.Unparked) {
-                     //TODO: ManageGoto();
+                     ManageGoto();
                   }
                }
 

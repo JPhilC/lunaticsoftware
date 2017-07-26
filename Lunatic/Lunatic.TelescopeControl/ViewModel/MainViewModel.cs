@@ -167,7 +167,8 @@ namespace Lunatic.TelescopeControl.ViewModel
 
       private List<string> DriverSupportedActions = null;
 
-      private void SetSupportedActions(ArrayList driverActions) {
+      private void SetSupportedActions(ArrayList driverActions)
+      {
          if (DriverSupportedActions == null) {
             DriverSupportedActions = new List<string>();
          }
@@ -246,6 +247,19 @@ namespace Lunatic.TelescopeControl.ViewModel
          set
          {
             Set<string>("ParkStatusPosition", ref _ParkStatusPosition, value);
+         }
+      }
+
+      private TrackingMode _CurrentTrackingMode;
+      public TrackingMode CurrentTrackingMode
+      {
+         get
+         {
+            return _CurrentTrackingMode;
+         }
+         set
+         {
+            Set<TrackingMode>("CurrentTrackingMode", ref _CurrentTrackingMode, value);
          }
       }
 
@@ -715,7 +729,7 @@ End Property
             PopSettings();
 
             // Get current temperature via call to OpenWeatherAPI
-            RefreshTemperature();   
+            RefreshTemperature();
 
             _AxisPosition = new AxisPosition(0.0, 0.0);
             _DisplayTimer = new DispatcherTimer();
@@ -838,20 +852,31 @@ End Property
             }
          }
 #endif
+         // TODO: Replace the following to determine it from the driver
+         CurrentTrackingMode = TrackingMode.Stop;
       }
 
       private void Sites_PropertyChanged(object sender, PropertyChangedEventArgs e)
       {
-         if (e.PropertyName == "CurrentSite") {
-            RaisePropertyChanged("CurrentSite");
-            SaveSettings();
-            UpdateDriverSiteDetails();
+         switch (e.PropertyName) {
+            case "CurrentSite":
+               RaisePropertyChanged("CurrentSite");
+               SaveSettings();
+               UpdateDriverSiteDetails();
+               break;
+            case "CurrentSite.Latitude":
+            case "CurrentSite.Longitude":
+            case "CurrentSite.Elevation":
+               SaveSettings();
+               UpdateDriverSiteDetails();
+               break;
+            case "CurrentSite.Temperature":
+               SaveSettings();
+               UpdateDriverSiteDetails(true);
+               break;
          }
       }
 
-      private void Sites_CurrentSiteChanged(object sender, EventArgs e)
-      {
-      }
 
       private void PushSettings()
       {
@@ -945,9 +970,11 @@ End Property
          }
       }
 
-      private void UpdateDriverSiteDetails()
+      private void UpdateDriverSiteDetails(bool skipTempCheck = false)
       {
-         RefreshTemperature();
+         if (!skipTempCheck) {
+            RefreshTemperature();
+         }
          if (Driver != null) {
             // Transfer location any other initialisation needed.
             Driver.SiteElevation = Settings.CurrentSite.Elevation;
@@ -1137,6 +1164,69 @@ End Property
       }
       #endregion
 
+      #region Tracking Command ...
+      private RelayCommand<TrackingMode> _StartTrackingCommand;
+
+      public RelayCommand<TrackingMode> StartTrackingCommand
+      {
+         get
+         {
+            return _StartTrackingCommand
+               ?? (_StartTrackingCommand = new RelayCommand<TrackingMode>((trackingMode) => {
+                  switch (trackingMode) {
+                     case TrackingMode.Stop:
+                        _Driver.Action("Lunatic:SetTrackUsingPEC", "false");
+                        _Driver.Tracking = false;
+                        break;
+                     case TrackingMode.Sidereal:
+                        _Driver.Action("Lunatic:SetTrackUsingPEC", "false");
+                        _Driver.TrackingRate = DriveRates.driveSidereal;
+                        break;
+                     case TrackingMode.SiderealPEC:
+                        _Driver.Action("Lunatic:SetTrackUsingPEC", "true");
+                        _Driver.TrackingRate = DriveRates.driveSidereal;
+                        break;
+                     case TrackingMode.Lunar:
+                        _Driver.Action("Lunatic:SetTrackUsingPEC", "false");
+                        _Driver.TrackingRate = DriveRates.driveLunar;
+                        break;
+                     case TrackingMode.Solar:
+                        _Driver.Action("Lunatic:SetTrackUsingPEC", "false");
+                        _Driver.TrackingRate = DriveRates.driveSolar;
+                        break;
+                     case TrackingMode.Custom:
+                        // Get the current tracking speed
+                        double baseRATrackingRate = 0.0;
+                        switch (_Driver.TrackingRate) {
+                           case DriveRates.driveSidereal:
+                              baseRATrackingRate = Core.Constants.SIDEREAL_RATE_ARCSECS;
+                              break;
+                           case DriveRates.driveLunar:
+                              baseRATrackingRate = Core.Constants.LUNAR_RATE;
+                              break;
+                           case DriveRates.driveSolar:
+                              baseRATrackingRate = Core.Constants.SOLAR_RATE;
+                              break;
+                           default:
+                              throw new ArgumentOutOfRangeException("Unexpected Driver Tracking rate");
+                        }
+                        if (_Driver.CanSetDeclinationRate || _Driver.CanSetRightAscensionRate) {
+                           _Driver.Action("Lunatic:SetTrackUsingPEC", "false");
+
+                           _Driver.RightAscensionRate = baseRATrackingRate;
+                        }
+                        else {
+                           // Log message "Custom tracking is not supported by the currently selected driver."
+                        }
+                        break;
+                  }
+                  CurrentTrackingMode = trackingMode;
+               }, (trackingMode) => { return (IsConnected && !IsParked && _Driver.CanSetTracking); }));   // Check that we are connected and not parked
+         }
+      }
+
+      #endregion
+
       #region Parking and unparking commands ...
       private RelayCommand _ParkCommand;
 
@@ -1170,6 +1260,7 @@ End Property
          StartSlewCommand.RaiseCanExecuteChanged();
          StopSlewCommand.RaiseCanExecuteChanged();
          ParkCommand.RaiseCanExecuteChanged();
+         StartTrackingCommand.RaiseCanExecuteChanged();
       }
 
       #region IDisposable ...

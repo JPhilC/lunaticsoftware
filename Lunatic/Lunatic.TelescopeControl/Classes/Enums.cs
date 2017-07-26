@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Lunatic.Core;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -53,5 +55,21 @@ namespace Lunatic.TelescopeControl
       PulseGuideMonitor = Modules.PulseGuide | Modules.Tracking | Modules.ParkStatus | Modules.Expander,
    }
 
+   [TypeConverter(typeof(EnumTypeConverter))]
+   public enum TrackingMode
+   {
+      [Description("Solar")]
+      Solar,
+      [Description("Sidereal")]
+      Sidereal,
+      [Description("Sidereal with PEC")]
+      SiderealPEC,
+      [Description("Lunar")]
+      Lunar,
+      [Description("Custom")]
+      Custom,
+      [Description("Not tracking")]
+      Stop
+   }
 
 }

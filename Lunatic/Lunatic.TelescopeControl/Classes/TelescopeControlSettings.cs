@@ -352,7 +352,7 @@ namespace Lunatic.TelescopeControl
             }
          }
          if (site.IsCurrentSite) {
-            RaisePropertyChanged("CurrentSite." + e.PropertyName);
+           RaisePropertyChanged("CurrentSite." + e.PropertyName);
          }
       }
 

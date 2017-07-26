@@ -694,11 +694,27 @@ namespace Lunatic.SyntaController
       /// <param name="axisId"></param>
       /// <param name="hemisphere"></param>
       /// <param name="direction"></param>
+      /// <param name="deltaAngle">Angle to move</param>
+      /// <param name="stepSlowDown">Angle at which to slow down</param>
+      /// <returns></returns>
+      public int EQ_StartMoveMotor(AxisId axisId, HemisphereOption hemisphere, AxisDirection direction, double deltaAngle, double slowdownAngle)
+      {
+         return EQ_StartMoveMotor(axisId, hemisphere, direction, AngleToStep(axisId, deltaAngle), AngleToStep(axisId, slowdownAngle));
+      }
+
+
+      /// <summary>
+      /// Slew RA/DEC Motor based on provided microstep counts
+      /// </summary>
+      /// <param name="axisId"></param>
+      /// <param name="hemisphere"></param>
+      /// <param name="direction"></param>
       /// <param name="steps">Steps count</param>
       /// <param name="stepSlowDown">Motor de-acceleration  point (set between 50% t0 90% of total steps)</param>
       /// <returns></returns>
       public int EQ_StartMoveMotor(AxisId axisId, HemisphereOption hemisphere, AxisDirection direction, int steps, int stepSlowDown)
       {
+
          int i, j;
 
          // Check Mount
