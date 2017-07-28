@@ -383,6 +383,19 @@ namespace Lunatic.TelescopeControl.ViewModel
          }
       }
 
+      EquatorialCoordinate _GotoTargetCoordinate = new EquatorialCoordinate();
+      public EquatorialCoordinate GotoTargetCoordinate
+      {
+         get
+         {
+            return _GotoTargetCoordinate;
+         }
+         set
+         {
+            Set<EquatorialCoordinate>("GotoTargetCoordinate", ref _GotoTargetCoordinate, value);
+         }
+      }
+
       #endregion
 
       #region Visibility display properties ...
@@ -1062,6 +1075,7 @@ End Property
             }
             _ProcessingDisplayTimerTick = false;
             _DisplayTimer.Start();
+            StatusMessage = "Connected to " + DriverName + ".";
          }
          catch (Exception ex) {
             StatusMessage = ex.Message;
@@ -1077,6 +1091,7 @@ End Property
             Driver = null;
          }
          LunaticDriver = false;
+         StatusMessage = "Not connected.";
       }
 
       private RelayCommand _SetupCommand;
@@ -1163,6 +1178,50 @@ End Property
          }
       }
       #endregion
+
+      #region Goto relay commands ...
+      GotoWindow gotoWindow = null;
+      private RelayCommand _ShowGotoWindowCommand;
+
+      public RelayCommand ShowGotoWindowCommand
+      {
+         get
+         {
+            return _ShowGotoWindowCommand
+               ?? (_ShowGotoWindowCommand = new RelayCommand(() => {
+                  if (gotoWindow == null) {
+                     gotoWindow = new GotoWindow(this);
+                     gotoWindow.Show();
+                  }
+                  else {
+                     gotoWindow.Activate();
+                  }
+
+               }));
+         }
+      }
+
+      public void OnGotoWindowClosed()
+      {
+         gotoWindow = null;
+      }
+
+      private RelayCommand _GotoCommand;
+
+      public RelayCommand GotoCommand
+      {
+         get
+         {
+            return _GotoCommand
+               ?? (_GotoCommand = new RelayCommand(() => {
+                  StatusMessage = GotoTargetCoordinate.ToString();
+               }));
+            //, () => { return (IsConnected && !IsParked); }
+         }
+      }
+
+
+      #endregion  
 
       #region Tracking Command ...
       private RelayCommand<TrackingMode> _StartTrackingCommand;
@@ -1261,6 +1320,7 @@ End Property
          StopSlewCommand.RaiseCanExecuteChanged();
          ParkCommand.RaiseCanExecuteChanged();
          StartTrackingCommand.RaiseCanExecuteChanged();
+         GotoCommand.RaiseCanExecuteChanged();
       }
 
       #region IDisposable ...

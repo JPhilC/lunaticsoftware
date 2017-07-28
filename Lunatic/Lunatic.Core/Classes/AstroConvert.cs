@@ -483,7 +483,7 @@ namespace Lunatic.Core
       {
          double alt = 0.0;
          double az = 0.0;
-         aaha_aux(latitude.Radians, equatorial.RightAscention.Radians, equatorial.Declination.Radians, ref alt, ref az);
+         aaha_aux(latitude.Radians, equatorial.RightAscension.Radians, equatorial.Declination.Radians, ref alt, ref az);
          return new AltAzCoordinate(new Angle(alt, true), new Angle(az, true));
       }
 

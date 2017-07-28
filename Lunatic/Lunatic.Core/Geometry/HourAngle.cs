@@ -1,4 +1,5 @@
-﻿using Lunatic.Core.Properties;
+﻿using GalaSoft.MvvmLight;
+using Lunatic.Core.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -45,8 +46,8 @@ namespace Lunatic.Core.Geometry
    }
 
 
-   public struct HourAngle
-      : IComparable
+   public class HourAngle
+      : ObservableObject, IComparable
    {
       private const int HmsHours = 0;
       private const int HmsMinutes = 1;
@@ -104,10 +105,10 @@ namespace Lunatic.Core.Geometry
       public HourAngle(double hour, bool radians = false)
       {
          if (radians) {
-            _Value = (double)HourAngle.RadiansToHours(hour);
+            Value = (double)HourAngle.RadiansToHours(hour);
          }
          else {
-            _Value = hour;
+            Value = hour;
          }
          _Format = HourAngleFormat.DecimalHours;
          _HasBeenSet = true;
@@ -115,9 +116,9 @@ namespace Lunatic.Core.Geometry
          /* All members must be set before calling out of the constructor so set dummy values
             so compiler is happy.
          */
-         _Hours = 0;
-         _Minutes = 0;
-         _Seconds = 0.0;
+         Hours = 0;
+         Minutes = 0;
+         Seconds = 0.0;
          SetHmsFromHours(hour);
       }
 
@@ -127,25 +128,25 @@ namespace Lunatic.Core.Geometry
          /* All members must be set before calling out of the constructor so set dummy values
             so compiler is happy.
          */
-         _Value = 0.0;
+         Value = 0.0;
 
          if (hour.Length == 2) {
             _Format = HourAngleFormat.HoursDecimalMinutes;
-            _Minutes = (int)Truncate(hour[HmsMinutes]);
-            _Seconds = (hour[HmsMinutes] - (double)_Minutes) * 60.0;
+            Minutes = (int)Truncate(hour[HmsMinutes]);
+            Seconds = (hour[HmsMinutes] - (double)Minutes) * 60.0;
          }
          else if (hour.Length == 3) {
             _Format = HourAngleFormat.HoursMinutesSeconds;
-            _Minutes = (int)Truncate(hour[HmsMinutes]);
-            _Seconds = hour[HmsSeconds];
+            Minutes = (int)Truncate(hour[HmsMinutes]);
+            Seconds = hour[HmsSeconds];
          }
          else {
             throw new ArgumentException("Array must contain either two or three elements.", "angle");
          }
 
          _HasBeenSet = true;
-         _Hours = (int)Truncate(hour[HmsHours]);
-         _Value = SetHoursFromHms();
+         Hours = (int)Truncate(hour[HmsHours]);
+         Value = SetHoursFromHms();
       }
 
       public HourAngle(int hours, int minutes, double seconds)
@@ -153,14 +154,14 @@ namespace Lunatic.Core.Geometry
          /* All members must be set before calling out of the constructor so set dummy values
             so compiler is happy.
          */
-         _Value = 0.0;
+         Value = 0.0;
 
          _Format = HourAngleFormat.HoursMinutesSeconds;
          _HasBeenSet = true;
-         _Hours = hours;
-         _Minutes = minutes;
-         _Seconds = seconds;
-         _Value = SetHoursFromHms();
+         Hours = hours;
+         Minutes = minutes;
+         Seconds = seconds;
+         Value = SetHoursFromHms();
       }
 
       public HourAngle(string hour)
@@ -168,10 +169,10 @@ namespace Lunatic.Core.Geometry
          /* All members must be set before calling out of the constructor so set dummy values
             so compiler is happy.
          */
-         _Value = 0.0;
-         _Hours = 0;
-         _Minutes = 0;
-         _Seconds = 0.0;
+         Value = 0.0;
+         Hours = 0;
+         Minutes = 0;
+         Seconds = 0.0;
          _Format = HourAngleFormat.NotSpecified;
          _HasBeenSet = false;
 
@@ -182,12 +183,12 @@ namespace Lunatic.Core.Geometry
          foreach (Regex regex in _CadRegexes) {
             Match match = regex.Match(hour);
             if (match.Success) {
-               _Hours = System.Convert.ToInt32(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
-               _Minutes = System.Convert.ToInt32(match.Groups["Mins"].Value, CultureInfo.InvariantCulture);
-               _Seconds = System.Convert.ToDouble(match.Groups["Secs"].Value, CultureInfo.InvariantCulture);
+               Hours = System.Convert.ToInt32(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
+               Minutes = System.Convert.ToInt32(match.Groups["Mins"].Value, CultureInfo.InvariantCulture);
+               Seconds = System.Convert.ToDouble(match.Groups["Secs"].Value, CultureInfo.InvariantCulture);
 
 
-               _Value = SetHoursFromHms();
+               Value = SetHoursFromHms();
                _Format = HourAngleFormat.CadHoursMinutesSeconds;
                _HasBeenSet = true;
                break;
@@ -204,8 +205,8 @@ namespace Lunatic.Core.Geometry
             foreach (Regex regex in _HrsRegexes) {
                Match match = regex.Match(hour);
                if (match.Success) {
-                  _Value = System.Convert.ToDouble(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
-                  SetHmsFromHours(_Value);
+                  Value = System.Convert.ToDouble(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
+                  SetHmsFromHours(Value);
                   _Format = HourAngleFormat.DecimalHours;
                   _HasBeenSet = true;
                   break;
@@ -218,13 +219,13 @@ namespace Lunatic.Core.Geometry
                Match match = regex.Match(hour);
                if (match.Success) {
                   double minutes = 0.0;
-                  _Hours = System.Convert.ToInt32(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
+                  Hours = System.Convert.ToInt32(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
                   minutes = System.Convert.ToDouble(match.Groups["Mins"].Value, CultureInfo.InvariantCulture);
 
-                  _Minutes = (int)Truncate(minutes);
-                  _Seconds = (minutes - (double)_Minutes) * 60.0;
+                  Minutes = (int)Truncate(minutes);
+                  Seconds = (minutes - (double)Minutes) * 60.0;
 
-                  _Value = SetHoursFromHms();
+                  Value = SetHoursFromHms();
                   _Format = HourAngleFormat.HoursDecimalMinutes;
                   _HasBeenSet = true;
                   break;
@@ -236,11 +237,11 @@ namespace Lunatic.Core.Geometry
             foreach (Regex regex in _HmsRegexes) {
                Match match = regex.Match(hour);
                if (match.Success) {
-                  _Hours = System.Convert.ToInt32(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
-                  _Minutes = System.Convert.ToInt32(match.Groups["Mins"].Value, CultureInfo.InvariantCulture);
-                  _Seconds = System.Convert.ToDouble(match.Groups["Secs"].Value, CultureInfo.InvariantCulture);
+                  Hours = System.Convert.ToInt32(match.Groups["Hrs"].Value, CultureInfo.InvariantCulture);
+                  Minutes = System.Convert.ToInt32(match.Groups["Mins"].Value, CultureInfo.InvariantCulture);
+                  Seconds = System.Convert.ToDouble(match.Groups["Secs"].Value, CultureInfo.InvariantCulture);
 
-                  _Value = SetHoursFromHms();
+                  Value = SetHoursFromHms();
                   _Format = HourAngleFormat.HoursMinutesSeconds;
                   _HasBeenSet = true;
                   break;
@@ -265,13 +266,14 @@ namespace Lunatic.Core.Geometry
       {
          get
          {
-            return (double)_Value;
+            return _Value;
          }
          set
          {
-            _Value = (double)value;
-            _HasBeenSet = true;
-            SetHmsFromHours(_Value);
+            if (Set<double>("Value", ref _Value, value)) {
+               _HasBeenSet = true;
+               SetHmsFromHours(Value);
+            }
          }
       }
 
@@ -287,13 +289,15 @@ namespace Lunatic.Core.Geometry
       {
          get
          {
-            return HourAngle.HoursToRadians((double)_Value);
+            return HourAngle.HoursToRadians(_Value);
          }
          set
          {
-            _Value = (double)HourAngle.RadiansToHours(value);
-            _HasBeenSet = true;
-            SetHmsFromHours(_Value);
+            if (Set<double>("Radians", ref _Value, HourAngle.RadiansToHours(value))) {
+               RaisePropertyChanged("Value");
+               _HasBeenSet = true;
+               SetHmsFromHours(Value);
+            }
          }
       }
 
@@ -308,11 +312,11 @@ namespace Lunatic.Core.Geometry
          }
          set
          {
-            _Hours = value;
-            MatchHmsSigns(value);
-
-            _Value = HmsToHours(_Hours, _Minutes, _Seconds);
-            _HasBeenSet = true;
+            if (Set<int>("Hours", ref _Hours, value)) {
+               MatchHmsSigns(value);
+               Value = HmsToHours(Hours, Minutes, Seconds);
+               _HasBeenSet = true;
+            }
          }
       }
 
@@ -331,12 +335,11 @@ namespace Lunatic.Core.Geometry
                 || value > 60) {
                throw new ArgumentException("Minutes must be between -60 and 60", "value");
             }
-
-            _Minutes = value;
-            MatchHmsSigns(value);
-
-            _Value = HmsToHours(_Hours, _Minutes, _Seconds);
-            _HasBeenSet = true;
+            if (Set<int>("Minutes", ref _Minutes, value)) {
+               MatchHmsSigns(value);
+               Value = HmsToHours(Hours, Minutes, Seconds);
+               _HasBeenSet = true;
+            }
          }
       }
 
@@ -347,7 +350,7 @@ namespace Lunatic.Core.Geometry
       {
          get
          {
-            return (double)_Seconds;
+            return _Seconds;
          }
          set
          {
@@ -355,12 +358,11 @@ namespace Lunatic.Core.Geometry
                 || value > 60.0) {
                throw new ArgumentException("Seconds must be between -60.0 and 60.0", "value");
             }
-
-            _Seconds = (double)value;
-            MatchHmsSigns(value);
-
-            _Value = HmsToHours(_Hours, _Minutes, _Seconds);
-            _HasBeenSet = true;
+            if (Set<double>("Seconds", ref _Seconds, value)) {
+               MatchHmsSigns(value);
+               Value = HmsToHours(Hours, Minutes, Seconds);
+               _HasBeenSet = true;
+            }
          }
       }
 
@@ -372,7 +374,7 @@ namespace Lunatic.Core.Geometry
       {
          get
          {
-            return (_Hours * 3600.0) + (_Minutes * 60.0) + (double)_Seconds;
+            return (_Hours * 3600.0) + (_Minutes * 60.0) + _Seconds;
          }
          set
          {
@@ -383,6 +385,12 @@ namespace Lunatic.Core.Geometry
 
             _Value = HmsToHours(_Hours, _Minutes, _Seconds);
             _HasBeenSet = true;
+            RaisePropertyChanged("Hours");
+            RaisePropertyChanged("Minutes");
+            RaisePropertyChanged("Seconds");
+            RaisePropertyChanged("Value");
+            RaisePropertyChanged("Radians");
+
          }
       }
 
@@ -397,7 +405,7 @@ namespace Lunatic.Core.Geometry
          get
          {
             /* Use the individual elements to avoid rounding errors */
-            return new HourAngle(Math.Abs(_Hours), Math.Abs(_Minutes), (double)Math.Abs(_Seconds));
+            return new HourAngle(Math.Abs(Hours), Math.Abs(Minutes), (double)Math.Abs(Seconds));
          }
       }
 
@@ -439,7 +447,7 @@ namespace Lunatic.Core.Geometry
 
       public static implicit operator double(HourAngle hour)
       {
-         return hour._Value;
+         return hour.Value;
       }
 
 
@@ -459,10 +467,10 @@ namespace Lunatic.Core.Geometry
       public static bool operator ==(HourAngle hour1, HourAngle hour2)
       {
          /* Just in case of rounding errors... */
-         return (Math.Abs(hour1._Value - hour2._Value) <= HourAngle.DefaultHoursDelta
-                 || (hour1._Hours == hour2._Hours
-                     && hour1._Minutes == hour2._Minutes
-                     && Math.Abs(hour1._Seconds - hour2._Seconds) <= (HourAngle.DefaultHoursDelta * 3600.0)));
+         return (Math.Abs(hour1.Value - hour2.Value) <= HourAngle.DefaultHoursDelta
+                 || (hour1.Hours == hour2.Hours
+                     && hour1.Minutes == hour2.Minutes
+                     && Math.Abs(hour1.Seconds - hour2.Seconds) <= (HourAngle.DefaultHoursDelta * 3600.0)));
       }
 
       public static bool operator !=(HourAngle hour1, HourAngle hour2)
@@ -473,28 +481,28 @@ namespace Lunatic.Core.Geometry
       public static bool operator <(HourAngle hour1, HourAngle hour2)
       {
          return (hour1.Format == HourAngleFormat.DecimalHours
-                     ? (hour1._Value < hour2._Value)
+                     ? (hour1.Value < hour2.Value)
                      : (hour1.TotalSeconds < hour2.TotalSeconds));
       }
 
       public static bool operator <=(HourAngle hour1, HourAngle hour2)
       {
          return (hour1.Format == HourAngleFormat.DecimalHours
-                     ? (hour1._Value <= hour2._Value)
+                     ? (hour1.Value <= hour2.Value)
                      : (hour1.TotalSeconds <= hour2.TotalSeconds));
       }
 
       public static bool operator >(HourAngle hour1, HourAngle hour2)
       {
          return (hour1.Format == HourAngleFormat.DecimalHours
-                     ? (hour1._Value > hour2._Value)
+                     ? (hour1.Value > hour2.Value)
                      : (hour1.TotalSeconds > hour2.TotalSeconds));
       }
 
       public static bool operator >=(HourAngle hour1, HourAngle hour2)
       {
          return (hour1.Format == HourAngleFormat.DecimalHours
-                     ? (hour1._Value >= hour2._Value)
+                     ? (hour1.Value >= hour2.Value)
                      : (hour1.TotalSeconds >= hour2.TotalSeconds));
       }
 
@@ -553,13 +561,13 @@ namespace Lunatic.Core.Geometry
       public static double operator /(HourAngle hour1, HourAngle hour2)
       {
          return (hour2.Format == HourAngleFormat.DecimalHours
-                     ? (double)(hour1._Value / hour2._Value)
+                     ? (double)(hour1.Value / hour2.Value)
                      : hour1.TotalSeconds / hour2.TotalSeconds);
       }
 
       public override int GetHashCode()
       {
-         return _Value.GetHashCode();
+         return Value.GetHashCode();
       }
 
       public override bool Equals(object obj)
@@ -570,17 +578,17 @@ namespace Lunatic.Core.Geometry
 
       public double[] ToHms()
       {
-         return new double[] {(double)_Hours,
-                              (double)_Minutes,
-                              (double)_Seconds,
+         return new double[] {(double)Hours,
+                              (double)Minutes,
+                              (double)Seconds,
                              };
       }
 
       public double Delta(HourAngle hour)
       {
-         double delta = hour.Value - (double)_Value;
+         double delta = hour.Value - (double)Value;
          return (Math.Abs(delta) <= 180.0 ? delta
-                                          : (360.0 - Math.Abs(delta)) * (hour.Value > (double)_Value ? -1.0 : 1.0));
+                                          : (360.0 - Math.Abs(delta)) * (hour.Value > (double)Value ? -1.0 : 1.0));
 
       }
 
@@ -591,7 +599,7 @@ namespace Lunatic.Core.Geometry
 
       public string ToString(string format)
       {
-         return _Value.ToString(format);
+         return Value.ToString(format);
       }
 
       public string ToString(HourAngleFormat format)
@@ -605,18 +613,18 @@ namespace Lunatic.Core.Geometry
 
          switch (format) {
             case HourAngleFormat.DecimalHours:
-               text = CustomFormat.ToString(Resources.HourAngleInDecimalHours, _NumberDecimalDigitsForHours, _Value);
+               text = CustomFormat.ToString(Resources.HourAngleInDecimalHours, _NumberDecimalDigitsForHours, Value);
                break;
 
             case HourAngleFormat.HoursDecimalMinutes:
-               increment = (_Value >= 0.0 ? 1 : -1);
-               doubleMinutes = Math.Round((double)_Minutes + (_Seconds / 60.0), _NumberDecimalDigitsForHours);
+               increment = (Value >= 0.0 ? 1 : -1);
+               doubleMinutes = Math.Round((double)Minutes + (Seconds / 60.0), _NumberDecimalDigitsForHours);
                if (Math.Abs(doubleMinutes) < 60.0) {
-                  hours = _Hours;
+                  hours = Hours;
                }
                else {
                   doubleMinutes = 0.0;
-                  hours = _Hours + increment;
+                  hours = Hours + increment;
                }
 
                text = CustomFormat.ToString(Resources.HourAngleInHoursDecimalMinutes, _NumberDecimalDigitsForHours,
@@ -626,24 +634,24 @@ namespace Lunatic.Core.Geometry
             case HourAngleFormat.HoursMinutesSeconds:
             case HourAngleFormat.CadHoursMinutesSeconds:
             case HourAngleFormat.CompactHoursMinutesSeconds:
-               increment = (_Value >= 0.0 ? 1 : -1);
-               seconds = Math.Round(_Seconds, format != HourAngleFormat.CompactHoursMinutesSeconds ? _NumberDecimalDigitsForSeconds
+               increment = (Value >= 0.0 ? 1 : -1);
+               seconds = Math.Round(Seconds, format != HourAngleFormat.CompactHoursMinutesSeconds ? _NumberDecimalDigitsForSeconds
                                                                                                       : HourAngle.NumberDecimalDigitsForCompactSeconds);
 
                if (Math.Abs(seconds) < 60.0) {
-                  minutes = _Minutes;
+                  minutes = Minutes;
                }
                else {
                   seconds = 0.0;
-                  minutes = _Minutes + increment;
+                  minutes = Minutes + increment;
                }
 
                if (Math.Abs(minutes) < 60) {
-                  hours = _Hours;
+                  hours = Hours;
                }
                else {
                   minutes = 0;
-                  hours = _Hours + increment;
+                  hours = Hours + increment;
                }
 
                if (format == HourAngleFormat.HoursMinutesSeconds) {
@@ -667,7 +675,7 @@ namespace Lunatic.Core.Geometry
 
             default:
                Debug.Assert(format == HourAngleFormat.NotSpecified, "Unrecognised HourAngleFormat value - " + format.ToString());
-               text = CustomFormat.ToString(Resources.HourAngleWithNoFormat, _NumberDecimalDigitsForHours, _Value);
+               text = CustomFormat.ToString(Resources.HourAngleWithNoFormat, _NumberDecimalDigitsForHours, Value);
                break;
          }
 
@@ -676,8 +684,8 @@ namespace Lunatic.Core.Geometry
 
       public void Normalize()
       {
-         _Value = HourAngle.Normalize(_Value);
-         _Hours = (int)HourAngle.Normalize((double)_Hours);
+         Value = HourAngle.Normalize(Value);
+         Hours = (int)HourAngle.Normalize((double)Hours);
       }
 
       /// <summary>
@@ -703,8 +711,8 @@ namespace Lunatic.Core.Geometry
       /// </summary>
       public void NormalizeTo180()
       {
-         _Value = HourAngle.NormalizeTo180(_Value);
-         SetHmsFromHours(_Value);
+         Value = HourAngle.NormalizeTo180(Value);
+         SetHmsFromHours(Value);
       }
 
 
@@ -781,19 +789,19 @@ namespace Lunatic.Core.Geometry
 
       private void SetHmsFromHours(double hour)
       {
-         _Hours = (int)Truncate(hour);
-         hour = (hour - _Hours) * 60.0;
-         _Minutes = (int)Truncate(hour);
-         _Seconds = (hour - _Minutes) * 60.0;
+         Hours = (int)Truncate(hour);
+         hour = (hour - Hours) * 60.0;
+         Minutes = (int)Truncate(hour);
+         Seconds = (hour - Minutes) * 60.0;
       }
 
       private double SetHoursFromHms()
       {
-         if (_Hours < 0 || _Minutes < 0 || _Seconds < 0.0) {
+         if (Hours < 0 || Minutes < 0 || Seconds < 0.0) {
             SetHmsToNegative();
          }
 
-         return (double)_Hours + ((double)_Minutes / 60.0) + (_Seconds / 3600.0);
+         return (double)Hours + ((double)Minutes / 60.0) + (Seconds / 3600.0);
       }
 
       private void MatchHmsSigns(double value)
@@ -809,31 +817,31 @@ namespace Lunatic.Core.Geometry
 
       private void SetHmsToPositive()
       {
-         if (_Hours < 0) {
-            _Hours *= -1;
+         if (Hours < 0) {
+            Hours *= -1;
          }
 
-         if (_Minutes < 0) {
-            _Minutes *= -1;
+         if (Minutes < 0) {
+            Minutes *= -1;
          }
 
-         if (_Seconds < 0.0) {
-            _Seconds *= -1.0;
+         if (Seconds < 0.0) {
+            Seconds *= -1.0;
          }
       }
 
       private void SetHmsToNegative()
       {
-         if (_Hours > 0) {
-            _Hours *= -1;
+         if (Hours > 0) {
+            Hours *= -1;
          }
 
-         if (_Minutes > 0) {
-            _Minutes *= -1;
+         if (Minutes > 0) {
+            Minutes *= -1;
          }
 
-         if (_Seconds > 0.0) {
-            _Seconds *= -1.0;
+         if (Seconds > 0.0) {
+            Seconds *= -1.0;
          }
       }
 
@@ -850,7 +858,7 @@ namespace Lunatic.Core.Geometry
          }
          else {
             HourAngle that = (HourAngle)obj;
-            result = _Value.CompareTo(that._Value);
+            result = Value.CompareTo(that.Value);
          }
 
          return result;

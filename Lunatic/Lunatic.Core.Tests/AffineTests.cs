@@ -215,7 +215,7 @@ namespace Lunatic.Core.Tests
       //         System.Diagnostics.Debug.WriteLine("(Catalog {0}:  Observed {1} -> AxisPositions ({2},{3})",
       //            mc.Equatorial,
       //            eqPosition,
-      //            AstroConvert.HrsToRad(eqPosition.RightAscention),
+      //            AstroConvert.HrsToRad(eqPosition.RightAscension),
       //            AstroConvert.DegToRad(eqPosition.Declination));
       //      }
       //   }

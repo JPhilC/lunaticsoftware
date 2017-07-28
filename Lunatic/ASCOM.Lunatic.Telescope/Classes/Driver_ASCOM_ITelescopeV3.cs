@@ -1526,7 +1526,7 @@ namespace ASCOM.Lunatic.Telescope
          {
             double rightAscension = 0.0;
             if (Settings.CurrentMountPosition != null) {
-               rightAscension = Settings.CurrentMountPosition.Equatorial.RightAscention.Value;
+               rightAscension = Settings.CurrentMountPosition.Equatorial.RightAscension.Value;
             }
             else {
                // Assume we are looking at the NCP or SCP.
@@ -1721,7 +1721,7 @@ namespace ASCOM.Lunatic.Telescope
                   value = SOP_Pointing(Settings.CurrentMountPosition.ObservedAxes.DecAxis.Radians);
                   break;
                case SideOfPierOption.Physical:
-                  value = SOP_Physical(Settings.CurrentMountPosition.Equatorial.RightAscention);
+                  value = SOP_Physical(Settings.CurrentMountPosition.Equatorial.RightAscension);
                   break;
                case SideOfPierOption.None:
                   value = PierSide.pierUnknown;

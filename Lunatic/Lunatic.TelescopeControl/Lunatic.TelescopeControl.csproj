@@ -171,6 +171,12 @@
     <Compile Include="Classes\Converters\ReversedBooleanToVisibilityConverter.cs" />
     <Compile Include="Classes\Enums.cs" />
     <Compile Include="Classes\SettingsProvider.cs" />
+    <Compile Include="Controls\GotoControl.xaml.cs">
+      <DependentUpon>GotoControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\GotoWindow.xaml.cs">
+      <DependentUpon>GotoWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\MapWindow.xaml.cs">
       <DependentUpon>MapWindow.xaml</DependentUpon>
     </Compile>
@@ -201,6 +207,14 @@
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\MapViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
+    <Page Include="Controls\GotoControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\GotoWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\MapWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

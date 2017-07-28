@@ -10,7 +10,7 @@ namespace Lunatic.Core.Geometry
    /// <summary>
    /// A structure to represent an Altitude Azimuth coordinate
    /// </summary>
-   public struct AltAzCoordinate
+   public class AltAzCoordinate
    {
       private Angle _Alt;
       private Angle _Az;
@@ -75,6 +75,12 @@ namespace Lunatic.Core.Geometry
          }
       }
 
+      public AltAzCoordinate()
+      {
+         _Alt = new Angle(0.0);
+         _Az = new Angle(0.0);
+      }
+
       public AltAzCoordinate(string altitude, string azimuth)
       {
 
@@ -84,7 +90,7 @@ namespace Lunatic.Core.Geometry
          _Y = Math.Sin(_Az.Radians) * (_Alt + ALT_OFFSET);
          _Flag = false;
       }
-      public AltAzCoordinate(double altitude,double azimuth)
+      public AltAzCoordinate(double altitude,double azimuth):this()
       {
          if (azimuth < 0 || azimuth >= 360) {
             throw new ArgumentOutOfRangeException("Azimuth must be >= 0 and < 360");
@@ -92,8 +98,8 @@ namespace Lunatic.Core.Geometry
          if (altitude < -90 || altitude > 90) {
             throw new ArgumentOutOfRangeException("Altitude must be between -90 and 90.");
          }
-         _Alt = new Angle(altitude);
-         _Az = new Angle(azimuth);
+         _Alt.Value = altitude;
+         _Az.Value = azimuth;
          _X = Math.Cos(_Az.Radians) * (_Alt + ALT_OFFSET);
          _Y = Math.Sin(_Az.Radians) * (_Alt + ALT_OFFSET);
          _Flag = false;

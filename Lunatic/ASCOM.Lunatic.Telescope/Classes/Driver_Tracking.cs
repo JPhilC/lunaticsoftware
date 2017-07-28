@@ -502,7 +502,7 @@ namespace ASCOM.Lunatic.Telescope
          // clear an active flips
          // HC.ChkForceFlip.Value = 0
          AllowCounterWeightUpSlewing = false;
-         GotoParameters.SuperSafeMode = false;
+         GotoParameters.SuperSafeMode = 0;
 
 
          RAAxisSlewing = false;
@@ -679,7 +679,7 @@ namespace ASCOM.Lunatic.Telescope
             if (CustomTrackDefinition.TrackIdx != -1) {
                if (CustomTrackDefinition.IsWaypoint) {
                   // Call GetTrackTarget(i, j)
-                  CustomTrackDefinition.RAAdjustment = Settings.CurrentMountPosition.Equatorial.RightAscention - rate[0];
+                  CustomTrackDefinition.RAAdjustment = Settings.CurrentMountPosition.Equatorial.RightAscension - rate[0];
                   CustomTrackDefinition.DECAdjustment = Settings.CurrentMountPosition.Equatorial.Declination - rate[1];
                }
                else {

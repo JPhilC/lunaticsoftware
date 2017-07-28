@@ -47,7 +47,7 @@ namespace ASCOM.Lunatic.Telescope
             // a counterweights up slew has been requested
             if (!LimitsActive) {
                // Limits are off so play safe and slew RA and DEC independently
-               if (Settings.CurrentMountPosition.Equatorial.RightAscention > 12) {
+               if (Settings.CurrentMountPosition.Equatorial.RightAscension > 12) {
                   //  we're currently in a counterweights up position
                   if (GotoParameters.CurrentAxisPosition[RA_AXIS] > Constants.RAEncoder_Home_pos) {
                      // single axis slew to nearest limit position
@@ -152,7 +152,7 @@ namespace ASCOM.Lunatic.Telescope
          double tRa;
          double tHa;
          int tPier;
-         double rightAscension = GotoParameters.TargetCoordinate.RightAscention;
+         double rightAscension = GotoParameters.TargetCoordinate.RightAscension;
          double declination = GotoParameters.TargetCoordinate.Declination;
          // stop the motors
          // TODO:    PEC_StopTracking
@@ -528,7 +528,7 @@ namespace ASCOM.Lunatic.Telescope
                   GotoParameters.SlewCount = GotoParameters.SlewCount - 1;
 
                   //  calculate the difference (arcsec)  between target and current coords
-                  raDiff = 3600 * Math.Abs(Settings.CurrentMountPosition.Equatorial.RightAscention - GotoParameters.TargetCoordinate.RightAscention);
+                  raDiff = 3600 * Math.Abs(Settings.CurrentMountPosition.Equatorial.RightAscension - GotoParameters.TargetCoordinate.RightAscension);
                   decDiff = 3600 * Math.Abs(Settings.CurrentMountPosition.Equatorial.Declination - GotoParameters.TargetCoordinate.Declination);
 
 

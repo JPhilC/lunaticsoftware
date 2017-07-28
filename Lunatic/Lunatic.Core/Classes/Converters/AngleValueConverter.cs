@@ -22,7 +22,7 @@ namespace Lunatic.Controls
       /// <returns> The coordinate angle as a double</returns>
       public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
       {
-         string incomingValue = (string)value;
+            string incomingValue = (string)value;
          Angle angle = new Angle(incomingValue);
          return angle.Value;
       }

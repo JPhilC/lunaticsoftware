@@ -208,7 +208,7 @@ namespace Lunatic.Core.Geometry
       /// <returns></returns>
       public AltAzCoordinate GetAltAzimuth(Transform transform)
       {
-         transform.SetTopocentric(_Equatorial.RightAscention, _Equatorial.Declination);
+         transform.SetTopocentric(_Equatorial.RightAscension, _Equatorial.Declination);
          transform.Refresh();
          AltAzCoordinate coord = new AltAzCoordinate(transform.ElevationTopocentric, transform.AzimuthTopocentric);
          return coord;
@@ -223,7 +223,7 @@ namespace Lunatic.Core.Geometry
       public AltAzCoordinate GetAltAzimuth(Transform transform, double julianDateUTC)
       {
          transform.JulianDateUTC = julianDateUTC;
-         transform.SetTopocentric(_Equatorial.RightAscention, _Equatorial.Declination);
+         transform.SetTopocentric(_Equatorial.RightAscension, _Equatorial.Declination);
          transform.Refresh();
          AltAzCoordinate coord = new AltAzCoordinate(transform.ElevationTopocentric, transform.AzimuthTopocentric);
          return coord;
@@ -256,7 +256,7 @@ namespace Lunatic.Core.Geometry
          transform.JulianDateUTC = julianDateUTC;
          if (_MasterCoordinate == MasterCoordinateEnum.Equatorial) {
             // Update the AltAzimuth
-            transform.SetTopocentric(_Equatorial.RightAscention, _Equatorial.Declination);
+            transform.SetTopocentric(_Equatorial.RightAscension, _Equatorial.Declination);
             transform.Refresh();
             _AltAzimuth = new AltAzCoordinate(transform.ElevationTopocentric, transform.AzimuthTopocentric);
          }

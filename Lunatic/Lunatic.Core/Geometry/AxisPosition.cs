@@ -10,7 +10,7 @@ namespace Lunatic.Core.Geometry
    /// <summary>
    /// A structure to represent telecope mount axis positions
    /// </summary>
-   public struct AxisPosition
+   public class AxisPosition
    {
       private Angle _RAAxis;
       private Angle _DecAxis;
@@ -38,6 +38,12 @@ namespace Lunatic.Core.Geometry
          }
       }
 
+      public AxisPosition()
+      {
+         _RAAxis = new Angle(0.0);
+         _DecAxis = new Angle(0.0);
+      }
+
       /// <summary>
       /// Initialise the Axis positions
       /// </summary>
@@ -48,19 +54,19 @@ namespace Lunatic.Core.Geometry
          _RAAxis = new Angle(raPosition);
          _DecAxis = new Angle(decPosition);
       }
-      public AxisPosition(double raRadians, double decRadians)
+      public AxisPosition(double raRadians, double decRadians):this()
       {
-         _RAAxis = new Angle() { Radians = raRadians };
-         _DecAxis = new Angle() { Radians = decRadians };
+         _RAAxis.Radians = raRadians ;
+         _DecAxis.Radians = decRadians ;
       }
 
 
-      public AxisPosition(string axisPositions)
+      public AxisPosition(string axisPositions):this()
       {
          string[] positions = axisPositions.Split(',');
          try {
-            _RAAxis = double.Parse(positions[0]);
-            _DecAxis = double.Parse(positions[1]);
+            _RAAxis.Value = double.Parse(positions[0]);
+            _DecAxis.Value = double.Parse(positions[1]);
          }
          catch  {
             throw new ArgumentException("Badly formed axis position string");

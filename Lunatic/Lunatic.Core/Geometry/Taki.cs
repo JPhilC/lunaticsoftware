@@ -179,8 +179,8 @@ namespace Lunatic.Core.Geometry
       {
          double deltaTime = AstroConvert.HrsToRad((localSiderealTime - _timeZero));  
          Vector evc = new Vector(0.0, 0.0, 0.0);
-         evc[0] = Math.Cos(coord.Declination.Radians) * Math.Cos(coord.RightAscention.Radians - (_k * deltaTime));
-         evc[1] = Math.Cos(coord.Declination.Radians) * Math.Sin(coord.RightAscention.Radians - (_k * deltaTime));
+         evc[0] = Math.Cos(coord.Declination.Radians) * Math.Cos(coord.RightAscension.Radians - (_k * deltaTime));
+         evc[1] = Math.Cos(coord.Declination.Radians) * Math.Sin(coord.RightAscension.Radians - (_k * deltaTime));
          evc[2] = Math.Sin(coord.Declination.Radians);
          return evc;
       }

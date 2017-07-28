@@ -9,14 +9,14 @@ namespace Lunatic.Core.Geometry
    /// <summary>
    /// A structure to represent an EquatorialCoordinate
    /// </summary>
-   public struct EquatorialCoordinate
+   public class EquatorialCoordinate
    {
       private HourAngle _RA;
       private Angle _Dec;
       //private DateTime _ObservedWhen;
       //private Angle _Longitude;
 
-      public HourAngle RightAscention
+      public HourAngle RightAscension
       {
          get
          {
@@ -31,29 +31,27 @@ namespace Lunatic.Core.Geometry
          }
       }
 
-      public EquatorialCoordinate(double rightAscention, double declination)   // , double longitude, DateTime observedTime)
+      public EquatorialCoordinate()   // , double longitude, DateTime observedTime)
       {
-         if (rightAscention < 0 || rightAscention > 24.0) { throw new ArgumentOutOfRangeException("Right Ascension must be between 0 and 24."); }
-         if (declination < -90 || declination > 90) { throw new ArgumentOutOfRangeException("Declination must be between -90 and 90."); }
-         _RA = new HourAngle(rightAscention);
-         _Dec = new Angle(declination);
-         //_Longitude = new Angle(longitude);
-         //_ObservedWhen = observedTime;
+         _RA = new HourAngle(0.0);
+         _Dec = new Angle(0.0);
       }
 
-      //public EquatorialCoordinate(HourAngle rightAscention, Angle declination)    // , Angle longitude)
-      //   :this(rightAscention, declination, longitude, DateTime.Now)
-      //{
-      //}
-
-      public EquatorialCoordinate(HourAngle rightAscention, Angle declination)    // , Angle longitude, DateTime observedTime)
+      public EquatorialCoordinate(double rightAscension, double declination):this()   // , double longitude, DateTime observedTime)
       {
-         if (rightAscention.Value < 0 || rightAscention.Value > 24.0) { throw new ArgumentOutOfRangeException("Right Ascension must be between 0 and 24."); }
+         if (rightAscension < 0 || rightAscension > 24.0) { throw new ArgumentOutOfRangeException("Right Ascension must be between 0 and 24."); }
+         if (declination < -90 || declination > 90) { throw new ArgumentOutOfRangeException("Declination must be between -90 and 90."); }
+         _RA.Value = rightAscension;
+         _Dec.Value = declination;
+      }
+
+
+      public EquatorialCoordinate(HourAngle rightAscension, Angle declination)    // , Angle longitude, DateTime observedTime)
+      {
+         if (rightAscension.Value < 0 || rightAscension.Value > 24.0) { throw new ArgumentOutOfRangeException("Right Ascension must be between 0 and 24."); }
          if (declination.Value < -90 || declination.Value > 90) { throw new ArgumentOutOfRangeException("Declination must be between -90 and 90."); }
-         _RA = rightAscention;
+         _RA = rightAscension;
          _Dec = declination;
-         //_Longitude = longitude;
-         //_ObservedWhen = observedTime;
       }
 
       #region Operator overloads ...
@@ -62,7 +60,7 @@ namespace Lunatic.Core.Geometry
       /// </summary>
       public static bool operator ==(EquatorialCoordinate pos1, EquatorialCoordinate pos2)
       {
-         return (pos1.RightAscention.Value == pos2.RightAscention.Value && pos1.Declination.Value == pos2.Declination.Value);
+         return (pos1.RightAscension.Value == pos2.RightAscension.Value && pos1.Declination.Value == pos2.Declination.Value);
       }
 
       public static bool operator !=(EquatorialCoordinate pos1, EquatorialCoordinate pos2)
@@ -90,12 +88,12 @@ namespace Lunatic.Core.Geometry
 
       public static EquatorialCoordinate operator -(EquatorialCoordinate pos1, EquatorialCoordinate pos2)
       {
-         return new EquatorialCoordinate(pos1.RightAscention - pos2.RightAscention, pos1.Declination - pos2.Declination);
+         return new EquatorialCoordinate(pos1.RightAscension - pos2.RightAscension, pos1.Declination - pos2.Declination);
       }
 
       public static EquatorialCoordinate operator +(EquatorialCoordinate pos1, EquatorialCoordinate pos2)
       {
-         return new EquatorialCoordinate(pos1.RightAscention + pos2.RightAscention, pos1.Declination + pos2.Declination);
+         return new EquatorialCoordinate(pos1.RightAscension + pos2.RightAscension, pos1.Declination + pos2.Declination);
       }
 
 
@@ -115,7 +113,7 @@ namespace Lunatic.Core.Geometry
             cartCoord = polar.ToCartesean();
          }
          else {
-            cartCoord = new CarteseanCoordinate(this.RightAscention.Radians, this.Declination.Radians, 1.0);
+            cartCoord = new CarteseanCoordinate(this.RightAscension.Radians, this.Declination.Radians, 1.0);
          }
          return cartCoord;
       }
